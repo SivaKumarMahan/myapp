@@ -1,0 +1,377 @@
+import type { InterviewQuestion } from '../../../types'
+
+const MIGRATION_APPROACH = [
+  'I inventory the application, data, network, identity, DNS, compliance, and managed-service dependencies, and define the RTO/RPO and acceptance tests up front. I build the target environment with separate provider-specific Terraform modules and private connectivity, migrate one low-risk service first, and keep data replicating continuously.',
+  "While both environments run in parallel, I compare correctness, latency, observability, backup, security, and cost. Cutover uses weighted traffic or DNS with a tested rollback window, and write ownership is carefully controlled so two sides don't both think they own the data.",
+  'Once things are stable, I bring Terraform state back in line with reality, revoke any temporary cross-cloud access, archive the evidence, and only decommission the source resources after retention requirements and business approval are met.',
+]
+
+const SECRETS_APPROACH = [
+  'Secrets belong in Vault, Key Vault, Secret Manager, or the CI credential store — never in Git, YAML, images, command arguments, or artifacts. Jobs get a short-lived identity and fetch only the secret they need for that stage. Masking is a backup control, since an encoded or transformed value can still leak.',
+  "Rotation works with an overlap: issue the new value, update consumers, verify it works, revoke the old value, and audit for failures. If a scan finds a committed secret, I revoke it right away, check how it was used, remove it from active history where appropriate, and rotate anything downstream that trusted it — just deleting the line isn't enough.",
+  'Pre-commit and server-side scans, protected logs, minimal access, expiry, and rotation tests all help prevent it from happening again.',
+]
+
+const IAM_APPROACH = [
+  'I pin down the exact principal, resource, action, scope, and denied condition from the error and the cloud audit logs. I check the effective IAM/RBAC picture, including inherited roles, deny policies, conditional bindings, the tenant/project/subscription, and token audience and expiry.',
+  'I reproduce a harmless call with the same identity, then grant a narrow predefined or custom role at the smallest scope that works — never owner or admin just to unblock the pipeline. Workload identity or managed identity replaces static service-account keys.',
+  'If a key leaked, I disable or revoke it right away, check what it was used for and what it touched, rotate related secrets, and rebuild the workload identity path. Regular access reviews, expiry, policy tests, and audit alerts keep roles from sprawling over time.',
+]
+
+/** Cloud scenarios, three-tier architecture, platform design and microservices. */
+export const myGeneralCloudQuestions: InterviewQuestion[] = [
+  {
+    id: 'itv-mygen-24',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'How do you ensure data encryption in GCP/Azure storage?',
+    probing: 'Encryption at rest and in transit, CMEK key custody and verification.',
+    answer: [
+      '**Short answer:** turn on default encryption with KMS-managed keys, and for extra security, use customer-managed encryption keys (CMEK).',
+      'Cloud storage already encrypts data at rest, but I still confirm the compliance requirement: provider-managed or customer-managed keys, rotation, region, separation of duties, and audit retention.',
+      'For CMEK, I place the key in the approved KMS/Key Vault, give only the storage service identity encrypt/decrypt permission, turn on rotation and deletion protection, and keep key administration separate from data administration.',
+      "I also enforce TLS and private endpoints for data in transit, disable public access, and log every object and key operation. I test upload and download with the application's identity and with a denied identity, then set alerts for public access, key disablement, and unusual reads.",
+      'Backups need to use keys that are just as well protected.',
+    ],
+    tags: ['cloud', 'encryption', 'kms'],
+  },
+  {
+    id: 'itv-mygen-25',
+    level: 'advanced',
+    kind: 'scenario',
+    prompt: 'A GCP IAM service account key has leaked. How do you handle it?',
+    probing: 'Immediate revocation, impact analysis and moving to keyless identity.',
+    answer: [
+      '**Short answer:** immediately disable and rotate the compromised key, audit access logs, redeploy workloads with the new key, and give the new identity only the access it needs.',
+      ...SECRETS_APPROACH,
+    ],
+    followUps: ['How would you remove the need for service account keys entirely?'],
+    tags: ['cloud', 'gcp', 'iam', 'secrets'],
+  },
+  {
+    id: 'itv-mygen-26',
+    level: 'advanced',
+    kind: 'open',
+    prompt:
+      'How do you migrate workloads from GCP to Azure with minimal downtime (including with Terraform)?',
+    probing: 'Parallel run, continuous data sync, controlled cutover and rollback.',
+    answer: [
+      '**Short answer:** use containerization, abstract infrastructure with Terraform modules, run both clouds side by side temporarily, sync data continuously, and shift traffic over gradually. Mini-case: we ran GCP and Azure clusters side by side for a week. Once data sync was stable, a DNS cutover moved traffic fully to Azure.',
+      '**With Terraform:** write separate Terraform provider configs for GCP and Azure and test in a lower environment before production. Terraform state is per provider, so resources are not "exported" from GCP state and imported into Azure — the Azure side is built with its own Azure modules (or existing Azure resources are brought in with `terraform import`).',
+      ...MIGRATION_APPROACH,
+    ],
+    followUps: ['How do you prevent both clouds writing to the database during cutover?'],
+    tags: ['cloud', 'migration', 'terraform', 'multi-cloud'],
+  },
+  {
+    id: 'itv-mygen-27',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'How do you manage CI/CD for hybrid cloud (on-prem + cloud)?',
+    probing: 'Agent placement and private connectivity for hybrid delivery.',
+    answer: [
+      '**Short answer:** use self-hosted Jenkins or Azure DevOps agents, connect to on-prem over VPN, and manage infrastructure with Terraform/Ansible.',
+      'The self-hosted agents sit where they can reach both the on-prem targets and the cloud control plane, so the pipeline never needs the on-prem network exposed publicly.',
+    ],
+    tags: ['cloud', 'hybrid', 'ci/cd'],
+  },
+  {
+    id: 'itv-mygen-28',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'How do you handle GCP IAM role sprawl?',
+    probing: 'Least privilege and periodic access review.',
+    answer: [
+      '**Short answer:** audit IAM bindings, merge duplicate roles, use custom roles, and give every identity only the access it needs.',
+      ...IAM_APPROACH,
+    ],
+    tags: ['cloud', 'gcp', 'iam'],
+  },
+  {
+    id: 'itv-mygen-29',
+    level: 'advanced',
+    kind: 'scenario',
+    prompt: 'An Azure VM will not start. How do you troubleshoot it?',
+    probing:
+      'Separating control-plane start failures from OS boot failures and protecting the disk first.',
+    answer: [
+      "**Short answer:** check Azure Activity Logs, verify quota limits, validate boot diagnostics, and recreate the VM if it's corrupted.",
+      "I start with the Azure Activity Log and the VM's instance/power state, then check subscription quota, locks/policy, disk attachment, networking, extensions, and the Boot Diagnostics screenshot or serial log.",
+      'A control-plane start failure is different from an OS boot failure: a quota or allocation issue needs more capacity or a different size/zone, while a filesystem, fstab, kernel, or extension problem needs rescue access instead.',
+      'I protect the OS disk with a snapshot first, then use Serial Console or attach a copy to a recovery VM, fix the specific boot problem, and reattach and start it. Recreating the VM entirely is a last resort, using the existing protected disks or an image/IaC definition.',
+      "I verify the OS, extensions, network, and application are healthy, then add backup and monitoring so it's easier to catch next time.",
+    ],
+    followUps: ['How would you fix a bad /etc/fstab entry on an Azure Linux VM?'],
+    tags: ['cloud', 'azure', 'vm', 'troubleshooting'],
+  },
+  {
+    id: 'itv-mygen-30',
+    level: 'intermediate',
+    kind: 'scenario',
+    prompt: 'GCP Cloud Build fails with a quota exceeded error. How do you troubleshoot it?',
+    probing: 'Finding the exact quota metric and stopping retry storms before asking for more.',
+    answer: [
+      '**Short answer:** check quotas in the GCP console, optimize build concurrency, request a quota increase, and split builds up.',
+      'I identify the exact quota metric, project/region, current usage, concurrency, and which builds are consuming it, using Cloud Build logs and the quota dashboards. I stop any retry storms, cancel obsolete duplicate builds, and either reduce concurrency or route approved work to another pool while protecting urgent releases.',
+      'For a permanent fix, I look at batching stages, caching artifacts, right-sizing worker pools, path-based triggers, and requesting a quota increase backed by real growth data. I also check service-account/API quotas and regional capacity, since the error message can point in the wrong direction.',
+      "Alerts on queue time and quota usage catch it before exhaustion, and making pipeline stages safe to rerun means a delayed retry doesn't cause a mess.",
+    ],
+    tags: ['cloud', 'gcp', 'ci/cd', 'quota'],
+  },
+  {
+    id: 'itv-mygen-31',
+    level: 'intermediate',
+    kind: 'scenario',
+    prompt: 'A GCP Cloud Function deployment is failing in CI/CD. How do you troubleshoot it?',
+    probing: 'Separating packaging/deploy errors from runtime health failures.',
+    answer: [
+      '**Short answer:** check the logs in Cloud Build, validate IAM permissions, make sure environment variables are configured, and rebuild with the correct runtime.',
+      'I check the deployment stage and Cloud Build logs for source or packaging errors, an unsupported runtime, the entry point, a dependency lock issue, service-account permissions, API enablement, region/quota, environment limits, and network configuration.',
+      'I compare the artifact and command against a known-good release, and test the handler locally or in a lower environment.',
+      'If the deployment succeeds but the health check fails, I look at cold-start and runtime logs, memory and timeout settings, secret access, the VPC connector, and downstream calls. I fix the code or IaC, redeploy the exact same artifact through approval, then run a real test and watch error rate and latency.',
+      'Pinned runtimes and dependencies, packaging tests, quota alerts, and staged traffic all help prevent this from recurring.',
+    ],
+    tags: ['cloud', 'gcp', 'serverless', 'troubleshooting'],
+  },
+  {
+    id: 'itv-mygen-32',
+    level: 'advanced',
+    kind: 'open',
+    prompt: 'How do you implement centralized secrets management in multi-cloud (GCP + Azure)?',
+    probing: 'Runtime secret retrieval with workload identity and a small blast radius.',
+    answer: [
+      '**Short answer:** use HashiCorp Vault, or integrate GCP Secret Manager and Azure Key Vault with CI/CD, and fetch secrets at runtime.',
+      'I use either one primary enterprise Vault, or a controlled setup with Azure Key Vault and GCP Secret Manager each kept close to their own workloads. Applications and pipelines authenticate with managed/workload identity and fetch secrets at runtime — no static cross-cloud credentials ever go into Git or images.',
+      'Naming, ownership, access policy, rotation, expiry, audit, replication, and break-glass recovery are all standardized, while the actual secret values stay scoped to their environment. Rotation overlaps the old and new values, verifies every consumer picked up the change, then revokes the old access.',
+      'I test what happens during a provider outage and how caching behaves, without letting stale credentials linger indefinitely. A central inventory and audit trail gives good governance, while regional stores and short-lived dynamic credentials keep latency low and the blast radius small.',
+    ],
+    followUps: ['When would you pick one central Vault over native per-cloud stores?'],
+    tags: ['cloud', 'secrets', 'multi-cloud', 'vault'],
+  },
+  {
+    id: 'itv-mygen-33',
+    level: 'intermediate',
+    kind: 'scenario',
+    prompt: 'A pipeline gets GCP IAM permission denied errors. How do you troubleshoot it?',
+    probing: 'Precise diagnosis and granting the narrowest role, not owner.',
+    answer: [
+      "**Short answer:** check the service account's roles, use `gcloud projects get-iam-policy`, grant the minimal role actually needed, and retry the operation.",
+      ...IAM_APPROACH,
+    ],
+    tags: ['cloud', 'gcp', 'iam', 'troubleshooting'],
+  },
+  {
+    id: 'itv-mygen-34',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'How do you rotate service account keys in GCP/Azure?',
+    probing: 'Overlap-based rotation that does not break consumers.',
+    answer: [
+      '**Short answer:** automate it with GCP IAM key rotation or Azure Key Vault rotation policies, and update CI/CD pipelines to use the new keys.',
+      ...SECRETS_APPROACH,
+    ],
+    tags: ['cloud', 'secrets', 'rotation'],
+  },
+  {
+    id: 'itv-mygen-35',
+    level: 'advanced',
+    kind: 'scenario',
+    prompt: 'Your GCP/Azure costs suddenly spike. What do you do?',
+    probing: 'Baseline comparison, confirmed containment and ongoing FinOps controls.',
+    answer: [
+      '**Short answer:**\n- Check billing reports.\n- Look for unused resources — VMs, disks, load balancers.\n- Set budgets and alerts.\n- Use autoscaling and reserved instances.',
+      'I compare cost by service, account, region, tag, SKU, and usage metric against the normal baseline and any recent deployments. I check whether the rise is from real traffic growth, runaway autoscaling, orphaned resources, log or egress volume, a pricing/commitment change, or compromised compute.',
+      "I only contain what I've confirmed: budgets, scaling caps, quotas, or stopping non-production waste I own — I don't delete stateful production resources without being sure. Terraform plans get cost estimates, and changes above a threshold need policy approval.",
+      'Required tags, anomaly alerts, right-sizing, schedules, lifecycle retention, reserved vs. spot choices, and owner-level cost visibility keep the optimization ongoing. I always check performance and SLOs after making a cost change.',
+    ],
+    followUps: ['How would you tell a cost spike from compromised compute such as crypto-mining?'],
+    tags: ['cloud', 'finops', 'cost'],
+  },
+  {
+    id: 'itv-mygen-36',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'How do you manage multi-cloud deployments (GCP + Azure)?',
+    probing: 'Provider-separated modules and state, and disciplined parallel operation.',
+    answer: [
+      '**Short answer:** use Terraform with multiple providers, create a module for each cloud, and keep separate state files for GCP and Azure.',
+      ...MIGRATION_APPROACH,
+    ],
+    tags: ['cloud', 'multi-cloud', 'terraform'],
+  },
+  {
+    id: 'itv-mygen-37',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'How do you automate infrastructure scaling in the cloud?',
+    probing: 'Choosing the right scaling signal and testing scale-in safety.',
+    answer: [
+      '**Short answer:** configure autoscaling groups in GCP (Managed Instance Groups) or Azure (VM Scale Sets), and manage them through Terraform.',
+      'I pick the scaling signal based on the workload — request or queue depth, or latency, is usually a better signal than CPU alone. The application tier uses an autoscaling group, VM scale set, Kubernetes HPA, or serverless concurrency, with a tested minimum, maximum, cooldown period, health checks, and graceful scale-in.',
+      'Node or cluster autoscaling provides the underlying capacity, while databases and downstream quotas are scaled or protected separately. Terraform defines the policy and alarms, and the runtime controllers make the frequent moment-to-moment decisions.',
+      'I load-test both scale-up and failure behavior, confirm new instances are actually ready before they take traffic, make sure busy or stateful capacity never gets removed by mistake, and add cost and maximum-size alerts. I also document a manual override and rollback for when metrics go bad or scaling runs away.',
+    ],
+    tags: ['cloud', 'autoscaling', 'terraform'],
+  },
+  {
+    id: 'itv-mygen-38',
+    level: 'basic',
+    kind: 'open',
+    prompt: 'Explain a three-tier application architecture.',
+    probing: 'Tier responsibilities and what production needs beyond the tiers.',
+    answer: [
+      'A three-tier design separates responsibilities so each tier can be secured, changed, and scaled independently:\n1. **Presentation tier:** web, mobile, or desktop interface. It displays information, accepts input, and calls application APIs.\n2. **Application tier:** business logic and API services. It authenticates and authorizes requests, validates rules, coordinates workflows, and accesses approved data services.\n3. **Data tier:** databases, caches, object storage, and data services. It persists and retrieves data with controlled access, encryption, backup, and recovery.',
+      'For an online purchase, the presentation tier submits the order, the application tier checks identity, inventory, price, and the payment workflow, and the data tier records the order and the inventory transaction. The response then travels back through the application and presentation tiers.',
+      "Separating the tiers improves maintainability and security, but tiers alone don't guarantee a good system. A production design also needs stateless scaling wherever possible, health-based load balancing, caching, asynchronous messaging, network paths that only allow the access they need, secrets management, observability, timeouts and retries on dependencies, data consistency, backups, and a tested disaster-recovery plan.",
+      'Scale whichever tier the metrics show is actually the bottleneck, not every tier equally.',
+    ],
+    code: [
+      {
+        title: 'Three-tier flow',
+        language: 'text',
+        code: `user -> edge/load balancer -> presentation -> application -> data
+                                                    |
+                                          cache/queue/services`,
+      },
+    ],
+    tags: ['cloud', 'architecture', 'three-tier'],
+  },
+  {
+    id: 'itv-mygen-39',
+    level: 'advanced',
+    kind: 'open',
+    prompt: 'How do you design a DevOps platform for 100+ microservices?',
+    probing: 'Paved-road platform engineering with clear ownership and feedback metrics.',
+    answer: [
+      '**Short answer:** provide standardized CI/CD templates, centralized logging and monitoring, shared Helm charts, self-service infrastructure modules, and enforce guardrails through GitOps. Mini-case: our platform team built a Jenkins shared library, and all 100 services onboarded onto consistent pipelines with the same compliance checks built in.',
+      'Instead of a custom pipeline per service, I offer paved-road templates: versioned CI workflows, base images, Helm charts, Terraform modules, observability libraries, security policies, and a self-service catalog.',
+      'Teams own their own application configuration, while the platform team owns the supported contracts, upgrades, documentation, examples, and SLOs.',
+      'Guardrails run in CI and at admission, with clear error messages and an exception process that expires automatically. I design for tenant isolation, artifact and secret identity, cost attribution, and disaster recovery from day one.',
+      'I measure adoption and quality through onboarding time, pipeline reliability, deployment frequency, security findings, and support tickets. That feedback shapes the next version of the platform, rather than teams forking it to work around it.',
+    ],
+    followUps: ['How do you roll out a breaking change to a shared pipeline template?'],
+    tags: ['platform engineering', 'microservices', 'ci/cd'],
+  },
+  {
+    id: 'itv-mygen-40',
+    level: 'basic',
+    kind: 'open',
+    prompt: 'What are microservices, and how are they different from a monolith?',
+    probing: 'A balanced view: benefits and the real costs of each service boundary.',
+    answer: [
+      'A monolith bundles several capabilities into one application unit. **Microservices** split a system into independently owned, independently deployable services, each aligned to one cohesive business capability, with its own logic and, usually, its own data, talking to others through stable APIs or events. For example, orders, payments, and inventory might each have their own team, API, and data store.',
+      "Microservices help when capabilities really need to release, scale, or be owned independently — improving team autonomy, independent scaling, and fault isolation. They're not automatically better — every boundary you add brings extra latency, a new way to partially fail, distributed data consistency, API compatibility work, security, deployment, observability and operational overhead.",
+      'I start with a modular design and only pull out a separate service once the boundary has measurable value and a team is ready to operate it. A **modular monolith** is often safer until independent ownership or scaling actually provides measurable value.',
+    ],
+    code: [
+      {
+        title: 'Microservices shape',
+        language: 'text',
+        code: `client -> API gateway -> service A -> service B
+                         |             |
+                       data A        data B
+                         \\-> event broker -> service C`,
+      },
+    ],
+    tags: ['microservices', 'architecture'],
+  },
+  {
+    id: 'itv-mygen-41',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'How do microservices communicate reliably?',
+    probing: 'Sync versus async choices, timeouts, bounded retries and idempotent consumers.',
+    answer: [
+      "Synchronous HTTP/gRPC makes sense when the caller needs an answer right away. Asynchronous queues or events decouple services and absorb traffic spikes when an immediate response isn't necessary. Contracts are versioned and stay backward-compatible.",
+      "Every remote call has a deadline or timeout. Retries are capped, use backoff with jitter (a growing, slightly randomized wait between attempts), and only apply to operations that are temporary failures and safe to repeat. Retries should never multiply load or accidentally repeat work that isn't safe to repeat.",
+      "Circuit breakers, bulkheads, connection-pool limits, and rate limits keep one struggling dependency from taking down the whole system. Messages carry stable IDs, consumers are built to handle a duplicate message safely, and there's dead-letter handling and visible retry state.",
+    ],
+    tags: ['microservices', 'resilience', 'messaging'],
+  },
+  {
+    id: 'itv-mygen-42',
+    level: 'advanced',
+    kind: 'open',
+    prompt: 'How do you handle transactions across multiple microservices?',
+    probing: 'Sagas, the outbox pattern and idempotency instead of distributed transactions.',
+    answer: [
+      'I try to avoid a distributed database transaction spanning multiple services. Instead, each service commits its own local transaction. Avoid a shared database that lets every service modify every table.',
+      'A saga coordinates a sequence of steps plus compensating actions if something fails partway through. An outbox pattern writes the business change and the event record in one local transaction, so an async publisher can never lose that event.',
+      'For an order: Order creates it as `Pending`, Payment authorizes the charge, Inventory reserves stock, and Order becomes `Confirmed`. If inventory fails, a compensating action releases the payment authorization.',
+      "Every command and event carries a key that makes it safe to process twice, since delivery can repeat. I'm explicit about which parts of the system need immediate consistency versus which can be eventually consistent, and I monitor for stuck saga steps and dead letters.",
+    ],
+    followUps: ['Orchestrated or choreographed saga — which would you choose and why?'],
+    tags: ['microservices', 'saga', 'transactions'],
+  },
+  {
+    id: 'itv-mygen-43',
+    level: 'advanced',
+    kind: 'scenario',
+    prompt: 'A release causes high latency across many services. How do you investigate?',
+    probing: 'Using traces to find the earliest slow hop and stabilising without blind restarts.',
+    answer: [
+      "First I pin down the start time, which paths, regions, and versions are affected, then check the gateway's P95/P99 latency, error ratio, traffic, and saturation.",
+      'Distributed traces show me the earliest slow hop. I compare processing time against database, cache, queue, and external calls, and line it up against deployment or configuration events. I check for retry storms, pool exhaustion, DNS/TLS issues, autoscaling lag, and payload changes.',
+      "To stabilize things, I roll back or shift traffic, disable the costly feature, add rate limiting, or scale the confirmed bottleneck — I don't restart or scale every service blindly.",
+      'Recovery means the real user transaction, latency, errors, saturation, and backlog all return to normal. Afterward, I add whatever was missing: a performance test, a timeout/retry budget, a capacity rule, or a deployment gate.',
+    ],
+    followUps: ['How can a retry storm make one slow dependency look like a platform-wide outage?'],
+    tags: ['microservices', 'latency', 'troubleshooting'],
+  },
+  {
+    id: 'itv-mygen-44',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'How do you secure and observe microservices?',
+    probing: 'Edge and internal security plus consistent telemetry tied to SLOs.',
+    answer: [
+      "At the edge, I use strong authentication, authorization, rate limits, and input validation. Internally, workloads use short-lived identities, mTLS where it's needed, service-to-service authorization limited to what's needed, network policy, and external secret management.",
+      'Images are minimal, signed and scanned, and run as non-root with resource limits.',
+      'Every service emits a limited set of metrics, structured and redacted logs, and distributed traces tagged with service, environment, version, and trace ID. Dashboards show latency, traffic, errors, saturation, dependency health, queue age, and business outcomes, and alerts are tied to SLOs with a clear owner. Monitoring follows the real user transaction across the gateway, services, queues, and data stores, and includes deployment and version context.',
+      'Audit logs cover sensitive actions. Observability data should never contain tokens or unnecessary personal data.',
+    ],
+    tags: ['microservices', 'security', 'observability'],
+  },
+  {
+    id: 'itv-mygen-45',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'When would you use SQS rather than Kafka, or vice versa?',
+    probing: 'Queue versus event log semantics and operational cost.',
+    answer: [
+      "I use SQS when I need a managed queue for decoupled work, simple producer/consumer scaling, retries, and dead-letter queues, without running a whole streaming platform. It's a good fit for async commands and background jobs.",
+      'I use Kafka when multiple consumers need an ordered, durable event log, replay, high throughput, consumer-managed offsets, and stream processing. Neither one guarantees exactly-once behavior at the business level on its own — consumers still need to handle duplicates safely, and you still need to watch lag, failures, and dead-letter queues.',
+      "The choice comes down to delivery semantics, whether you need retention/replay, how wide the ordering needs to be, throughput, and who's going to operate it.",
+    ],
+    tags: ['microservices', 'sqs', 'kafka'],
+  },
+  {
+    id: 'itv-mygen-46',
+    level: 'basic',
+    kind: 'open',
+    prompt: 'What are a Kafka broker and a consumer group?',
+    probing: 'Core Kafka concepts and partition-to-consumer assignment.',
+    answer: [
+      'A Kafka broker is a server in the cluster that stores topic partitions, serves producers and consumers, and takes part in replication and leader election.',
+      'A consumer group is a set of consumers sharing a group ID. Kafka assigns each partition to at most one active consumer within that group, so you get parallel processing while still preserving order within each partition.',
+      'Different groups can consume the same topic independently of each other. I keep an eye on consumer lag, partition balance, broker disk and replication health, the in-sync replica count, throughput, and failed consumers — and consumers need to handle duplicates safely, since retries and rebalances can cause the same message to be reprocessed.',
+    ],
+    tags: ['kafka', 'messaging'],
+  },
+  {
+    id: 'itv-mygen-47',
+    level: 'advanced',
+    kind: 'open',
+    prompt: 'How would you implement microservices on Azure?',
+    probing:
+      'Mapping microservice needs to Azure services without forgetting distributed-systems basics.',
+    answer: [
+      'On Azure, a practical implementation runs independently deployable services on AKS, stores signed and scanned images in ACR, uses Helm or GitOps for release configuration, and exposes only the necessary routes through an ingress/Gateway with a WAF-capable edge.',
+      "Cosmos DB or Azure SQL gets chosen per service based on its data needs, Redis handles low-latency caching, and Service Bus provides durable async work with back-pressure. These services should use private endpoints and private DNS wherever that's supported.",
+      "Workloads use managed or workload identity to reach Key Vault and other Azure services, instead of putting shared connection strings in manifests. Azure Monitor, Log Analytics, and Application Insights provide the platform's monitoring data, logs, traces, and availability checks.",
+      "The design still needs contract versioning, retry limits, safe-to-repeat operations, dead-letter handling, data backup and recovery, and failure testing — cloud services don't remove the usual distributed-systems failure modes.",
+    ],
+    followUps: ['Service Bus or Event Hubs — when would you use each?'],
+    tags: ['microservices', 'azure', 'aks'],
+  },
+]
