@@ -4,12 +4,12 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 /**
  * The app is designed to be hosted from a repository sub-path on GitHub Pages
- * (for example https://<user>.github.io/Devops/). The base path can be overridden
+ * (for example https://<user>.github.io/myapp/). The base path can be overridden
  * at build time with BASE_PATH so the same code can be hosted at a domain root:
  *
  *   BASE_PATH=/ npm run build
  */
-const basePath = process.env.BASE_PATH ?? '/Devops/'
+const basePath = process.env.BASE_PATH ?? '/myapp/'
 
 export default defineConfig(({ mode }) => ({
   // Dev server always runs from "/" so local development needs no sub-path juggling.

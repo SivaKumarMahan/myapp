@@ -1,6 +1,6 @@
 /**
  * GitHub Pages serves static files only, so a deep link such as
- * /Devops/az104/topics/az1-rbac has no file behind it and Pages answers with
+ * /myapp/az104/topics/az1-rbac has no file behind it and Pages answers with
  * 404.html. Copying index.html to 404.html lets the client side router take
  * over, which keeps real URLs (instead of hash URLs) working on Pages.
  *

@@ -15,7 +15,7 @@ An installable, offline-capable study app for Microsoft Azure certifications and
 - **Azure topics** — 165 questions in 8 topics written for this app
 - **DevOps topics** — 697 questions in 13 topics from the original DevOps Learning Hub
 
-**Live site:** https://sivakumarmahan.github.io/Devops/ (after deploying — see below)
+**Live site:** https://sivakumarmahan.github.io/myapp/ (after deploying — see below)
 
 Built as a React + TypeScript + Vite Progressive Web App. There is no backend and no tracking: everything runs in your browser, and your progress stays on your device. Opening the app asks for an email address and checks it against a list you control.
 
@@ -122,17 +122,17 @@ npm install        # install dependencies
 npm run dev        # dev server on http://localhost:5173
 ```
 
-| Command             | What it does                                     |
-| ------------------- | ------------------------------------------------ |
-| `npm run dev`       | Dev server with hot reload                       |
-| `npm run build`     | Production build into `dist/`                    |
-| `npm run preview`   | Serve the build at http://localhost:4173/Devops/ |
-| `npm test`          | Run the test suite (419 tests)                   |
-| `npm run lint`      | ESLint                                           |
-| `npm run typecheck` | TypeScript, no emit                              |
-| `npm run format`    | Prettier, write                                  |
-| `npm run icons`     | Regenerate the PWA icons                         |
-| `npm run validate`  | format check + lint + typecheck + test + build   |
+| Command             | What it does                                    |
+| ------------------- | ----------------------------------------------- |
+| `npm run dev`       | Dev server with hot reload                      |
+| `npm run build`     | Production build into `dist/`                   |
+| `npm run preview`   | Serve the build at http://localhost:4173/myapp/ |
+| `npm test`          | Run the test suite (419 tests)                  |
+| `npm run lint`      | ESLint                                          |
+| `npm run typecheck` | TypeScript, no emit                             |
+| `npm run format`    | Prettier, write                                 |
+| `npm run icons`     | Regenerate the PWA icons                        |
+| `npm run validate`  | format check + lint + typecheck + test + build  |
 
 Run `npm run validate` before pushing; CI runs it too.
 
@@ -142,7 +142,7 @@ Run `npm run validate` before pushing; CI runs it too.
 
 A workflow is included at `.github/workflows/deploy-pages.yml`.
 
-1. Create a GitHub repository named `Devops` under your account (`SivaKumarMahan`) and push this folder to `main`.
+1. Push this folder to `main` of https://github.com/SivaKumarMahan/myapp.
 2. In the repository, go to **Settings → Pages** and set **Source** to **GitHub Actions**.
 3. Push to `main` (or run the workflow from the **Actions** tab).
 4. The site appears at `https://<your-username>.github.io/<repository-name>/`.
