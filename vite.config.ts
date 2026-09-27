@@ -123,6 +123,9 @@ export default defineConfig(({ mode }) => ({
     css: false,
     include: ['src/**/*.test.{ts,tsx}'],
     restoreMocks: true,
+    // Page tests render the whole app in jsdom, which is several times slower
+    // on a shared CI runner than on a laptop. 5s (the default) was not enough.
+    testTimeout: 20_000,
     alias: {
       // The generated service-worker registration module only exists during a
       // real build, so tests use a stub. The logic worth testing lives in

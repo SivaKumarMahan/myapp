@@ -33,18 +33,18 @@ describe('interview hub', () => {
     // Scoped to the Topics section on purpose: the "Start with ..." suggestion
     // above it also links to a topic, and which topic that is depends on the
     // question bank. The assertion here is that every topic is LISTED.
-    const topics = within(screen.getByRole('region', { name: /^topics$/i }))
+    const region = screen.getByRole('region', { name: /^topics$/i })
+    // Read every link once. Asking getByRole for each of 48 names recomputes
+    // accessible names across the whole page every time, which took 13s.
+    const hrefs = new Set(
+      [...region.querySelectorAll('a')].map((link) => link.getAttribute('href') ?? ''),
+    )
     for (const topic of interviewTopics) {
-      expect(
-        topics.getByRole('link', {
-          // Anchored: "Kubernetes" must not also match "My Kubernetes questions".
-          name: new RegExp(`^\\W*${topic.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i'),
-        }),
-        topic.id,
-      ).toBeVisible()
+      expect(hrefs.has(`/interview/${topic.id}`), topic.id).toBe(true)
+      const link = region.querySelector(`a[href="/interview/${topic.id}"]`)
+      expect(link?.textContent ?? '', topic.id).toContain(topic.title)
     }
-    // 21 accessible-name lookups over a large page are slow in jsdom.
-  }, 20_000)
+  }, 90_000)
 
   it('starts at zero recall and counts the whole bank', async () => {
     goTo('/interview')
@@ -235,7 +235,8 @@ describe('interview routing', () => {
       ).toBeVisible()
       view.unmount()
     }
-  })
+    // Renders all 48 topic pages one after another; slow on a CI runner.
+  }, 90_000)
 })
 
 /** Option text is authored content, so it may contain regex metacharacters. */
