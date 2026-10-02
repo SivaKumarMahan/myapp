@@ -11,12 +11,17 @@ import { QuestionView } from '../components/QuestionView'
 import { Badge } from '../components/ui/Badge'
 import { EmptyState } from '../components/ui/StateBlock'
 import { ProgressBar } from '../components/ui/ProgressBar'
+import { ConfidencePicker, NextReview } from '../components/SrsControls'
+import { practiceCardId, type Confidence } from '../lib/srs'
+import { mistakesFor } from '../lib/review-deck'
 
 /**
  * Untimed practice runner.
  *
- * The route id is either a domain id or the literal `review`, which drills
- * every question whose most recent attempt was wrong.
+ * The route id is a domain id, the literal `review`, which drills every
+ * question whose most recent attempt was wrong, or `mistakes`, which drills
+ * the mistake notebook - wrong practice and mock-exam answers you have not yet
+ * answered correctly without guessing.
  */
 export function QuizPage() {
   const catalog = useCourseIndex()
@@ -28,12 +33,14 @@ function QuizView({ catalog }: { catalog: CourseIndex }) {
   const { course } = catalog
   const { domainId } = useParams<{ domainId: string }>()
   const [params] = useSearchParams()
-  const { state, recordAnswer, clearAnswer } = useProgress()
+  const { state, recordAnswer, clearAnswer, recordPracticeResult } = useProgress()
 
-  const isReview = domainId === 'review'
+  const isMistakes = domainId === 'mistakes'
+  const isReview = domainId === 'review' || isMistakes
   const domain = domainId ? catalog.domainById.get(domainId) : undefined
 
   const questions = useMemo<Question[]>(() => {
+    if (isMistakes) return mistakesFor(state, catalog)
     if (isReview) {
       return Object.entries(state.questions)
         .filter(([, record]) => !record.lastCorrect)
@@ -57,6 +64,7 @@ function QuizView({ catalog }: { catalog: CourseIndex }) {
   const [responses, setResponses] = useState<Record<string, string[]>>({})
   const [revealed, setRevealed] = useState<Record<string, boolean>>({})
   const [grades, setGrades] = useState<Record<string, GradeResult>>({})
+  const [confidence, setConfidence] = useState<Record<string, Confidence | undefined>>({})
 
   if (!isReview && !domain) {
     return (
@@ -82,15 +90,29 @@ function QuizView({ catalog }: { catalog: CourseIndex }) {
     return (
       <div className="page stack-lg">
         <header className="page-header">
-          <h1>{isReview ? 'Retry incorrect questions' : `Practise: ${domain?.shortTitle}`}</h1>
+          <h1>
+            {isMistakes
+              ? 'Mistake notebook'
+              : isReview
+                ? 'Retry incorrect questions'
+                : `Practise: ${domain?.shortTitle}`}
+          </h1>
         </header>
         <EmptyState
           icon={isReview ? '🎉' : '📭'}
-          title={isReview ? 'Nothing to retry' : 'No questions in this set yet'}
+          title={
+            isMistakes
+              ? 'No mistakes to drill'
+              : isReview
+                ? 'Nothing to retry'
+                : 'No questions in this set yet'
+          }
           description={
-            isReview
-              ? 'Every question you have answered was correct on your most recent attempt.'
-              : 'This domain has no questions yet.'
+            isMistakes
+              ? 'Wrong practice and mock-exam answers collect here until you answer them correctly without guessing.'
+              : isReview
+                ? 'Every question you have answered was correct on your most recent attempt.'
+                : 'This domain has no questions yet.'
           }
           action={
             <Link className="btn" to={`${course.route}/practice`}>
@@ -118,7 +140,10 @@ function QuizView({ catalog }: { catalog: CourseIndex }) {
     setRevealed((previous) => ({ ...previous, [current.id]: true }))
     // Task questions are self-verified after reveal, so their result is
     // recorded when the learner confirms checkpoints, not now.
-    if (result.correct !== null) recordAnswer(current.id, result.correct)
+    if (result.correct !== null) {
+      recordAnswer(current.id, result.correct)
+      recordPracticeResult(current.id, course.id, result.correct, confidence[current.id])
+    }
   }
 
   const updateResponse = (next: string[]) => {
@@ -145,9 +170,22 @@ function QuizView({ catalog }: { catalog: CourseIndex }) {
           <span aria-hidden="true">/</span>
           <Link to={`${course.route}/practice`}>Practice</Link>
           <span aria-hidden="true">/</span>
-          <span>{isReview ? 'Retry incorrect' : (domain?.shortTitle ?? '')}</span>
+          <span>
+            {isMistakes ? 'Mistakes' : isReview ? 'Retry incorrect' : (domain?.shortTitle ?? '')}
+          </span>
         </nav>
-        <h1>{isReview ? 'Retry incorrect questions' : `Practise: ${domain?.title}`}</h1>
+        <h1>
+          {isMistakes
+            ? 'Mistake notebook'
+            : isReview
+              ? 'Retry incorrect questions'
+              : `Practise: ${domain?.title}`}
+        </h1>
+        {isMistakes && (
+          <p className="muted">
+            Answer one correctly without picking &ldquo;Guessed&rdquo; and it leaves the notebook.
+          </p>
+        )}
         {!isReview && domain?.examWeight !== null && domain && (
           <p className="muted">
             {domain.examWeight}% of the exam · {questions.length} questions · answers reveal
@@ -229,6 +267,18 @@ function QuizView({ catalog }: { catalog: CourseIndex }) {
         index={index + 1}
         total={questions.length}
       />
+
+      {current.kind !== 'task' &&
+        (isRevealed ? (
+          <NextReview card={state.srs[practiceCardId(current.id)]} />
+        ) : (
+          <ConfidencePicker
+            value={confidence[current.id]}
+            onChange={(value) =>
+              setConfidence((previous) => ({ ...previous, [current.id]: value }))
+            }
+          />
+        ))}
 
       <div className="lesson-nav">
         <button

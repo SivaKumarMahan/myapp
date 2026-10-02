@@ -20,6 +20,9 @@ export function TopBar() {
       >
         <span aria-hidden="true">🔎</span>
       </Link>
+      <Link to="/playground" className="btn btn--ghost btn--icon" aria-label="Code playground">
+        <span aria-hidden="true">🧪</span>
+      </Link>
       <Link
         to="/progress"
         className="btn btn--ghost btn--icon"

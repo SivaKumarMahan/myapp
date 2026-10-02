@@ -5,7 +5,9 @@ import type {
   ThemePreference,
   TopicStatus,
   InterviewStatus,
+  DailyGoal,
 } from './storage'
+import type { Confidence, Rating } from './srs'
 
 export interface ProgressApi {
   state: ProgressState
@@ -19,6 +21,28 @@ export interface ProgressApi {
   clearAnswer: (questionId: string) => void
   /** Self-assessed recall for an interview question. `null` clears it. */
   setInterviewStatus: (questionId: string, status: InterviewStatus | null) => void
+  /** Rates one spaced-repetition card (`itv:<id>` or `q:<id>`). */
+  rateCard: (cardId: string, rating: Rating) => void
+  /**
+   * A graded practice answer: schedules its card from the result and your
+   * confidence, and adds it to or clears it from the mistake notebook.
+   */
+  recordPracticeResult: (
+    questionId: string,
+    courseId: string,
+    correct: boolean,
+    confidence?: Confidence,
+  ) => void
+  removeMistake: (questionId: string) => void
+  setNewCardsPerDay: (count: number) => void
+  setDailyGoal: (goal: DailyGoal) => void
+  /** `null` clears the date. */
+  setExamDate: (courseId: string, date: string | null) => void
+  /** A playground challenge was checked. Counts towards today's questions. */
+  recordChallengeCheck: (key: string, solved: boolean) => void
+  /** Called by the study timer while the app is in active use. */
+  addStudyMinutes: (minutes: number) => void
+  /** Also files every wrong answer in the mistake notebook. */
   saveExamAttempt: (attempt: ExamAttempt) => void
   updateExamAttempt: (attemptId: string, next: ExamAttempt) => void
   deleteExamAttempt: (attemptId: string) => void

@@ -89,16 +89,15 @@ export type ReadinessLevel = 'just-starting' | 'building' | 'consolidating' | 'e
 export interface Readiness {
   level: ReadinessLevel
   label: string
-  /** 0-100 composite indicator, not a predicted exam score. */
-  score: number
   headline: string
   signals: { label: string; value: string; met: boolean }[]
   nextAction: string
 }
 
 /**
- * Combines three independent signals into a readiness indicator:
+ * Combines independent signals into a readiness LEVEL and checklist:
  * lesson coverage, practice accuracy, and the best recent mock-exam score.
+ * The 0-100 readiness score lives in `analytics.ts` (`examReadiness`).
  *
  * Deliberately conservative: you cannot look ready without having sat a full
  * mock exam, because time pressure is the part of these exams that catches
@@ -119,14 +118,6 @@ export function readinessFor(course: Course, state: ProgressState): Readiness {
   const bestMock = attempts.reduce((best, attempt) => Math.max(best, attempt.scorePercent), 0)
   const fullLengthAttempts = attempts.filter(
     (attempt) => attempt.minutesAllowed >= course.examBlueprint.defaultMinutes,
-  )
-
-  const score = Math.round(
-    coverage.percent * 0.45 +
-      Math.min(practice.accuracy, 100) *
-        0.2 *
-        (practice.answered >= 25 ? 1 : practice.answered / 25) +
-      bestMock * 0.35,
   )
 
   const signals = [
@@ -166,7 +157,6 @@ export function readinessFor(course: Course, state: ProgressState): Readiness {
     return {
       level: 'just-starting',
       label: 'Just starting',
-      score,
       headline: 'Nothing completed yet - start with the first domain on the path.',
       signals,
       nextAction:
@@ -177,7 +167,6 @@ export function readinessFor(course: Course, state: ProgressState): Readiness {
     return {
       level: 'exam-ready',
       label: 'Exam ready',
-      score,
       headline: `All readiness signals met. You are consistently clearing the ${course.examBlueprint.passingScore}% pass mark with room to spare.`,
       signals,
       nextAction:
@@ -188,7 +177,6 @@ export function readinessFor(course: Course, state: ProgressState): Readiness {
     return {
       level: 'consolidating',
       label: 'Consolidating',
-      score,
       headline: 'Good coverage. Now convert knowledge into speed under a timer.',
       signals,
       nextAction:
@@ -200,7 +188,6 @@ export function readinessFor(course: Course, state: ProgressState): Readiness {
   return {
     level: 'building',
     label: 'Building knowledge',
-    score,
     headline: 'You are moving. Keep completing lessons before you chase mock-exam scores.',
     signals,
     nextAction: 'Finish the domain you are furthest through, then drill its practice questions.',

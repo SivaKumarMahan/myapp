@@ -15,6 +15,7 @@
  */
 
 import { normalizeEmail, readSession } from './access'
+import { AGAIN, GOOD, interviewCardId, schedule, type Rating, type SrsCard } from './srs'
 
 /** The shared record, used when nobody is signed in. Also the key prefix. */
 export const STORAGE_KEY = 'azure-learning-hub.progress'
@@ -28,7 +29,16 @@ export const CLAIMED_KEY = 'azure-learning-hub.progress.claimed-by'
  * progress record to read the preference from; this is what it uses instead.
  */
 export const THEME_KEY = 'azure-learning-hub.theme'
-export const SCHEMA_VERSION = 1
+/**
+ * 2 added spaced repetition (`srs`, `newCardsByDay`), `mistakes` and
+ * `settings`; 3 added `activity`, the daily goal and exam dates; 4 added
+ * `challenges` for the playgrounds.
+ */
+export const SCHEMA_VERSION = 4
+export const DEFAULT_NEW_CARDS_PER_DAY = 20
+export const DEFAULT_DAILY_GOAL: DailyGoal = { kind: 'questions', target: 20 }
+/** About thirteen months: enough for a full calendar year plus the current week. */
+export const ACTIVITY_DAYS_KEPT = 400
 
 /**
  * Where one learner's record lives.
@@ -104,6 +114,53 @@ export interface ExamAttempt {
   answers: ExamAnswerRecord[]
 }
 
+/**
+ * A practice or mock-exam question you got wrong, kept until you answer it
+ * correctly without guessing (or remove it yourself).
+ */
+export interface MistakeEntry {
+  courseId: string
+  /** Where it was most recently missed. */
+  source: 'practice' | 'exam'
+  count: number
+  firstWrongAt: number
+  lastWrongAt: number
+}
+
+/** What one local day of study added up to. */
+export interface ActivityDay {
+  /** Practice, exam and interview questions answered or rated. */
+  questions: number
+  /** Lessons marked complete. */
+  lessons: number
+  /** Minutes the app was open and in use. */
+  minutes: number
+}
+
+/** One playground challenge (`sql:<id>`, and later `kql:`, `py:` ...). */
+export interface ChallengeProgress {
+  /** Times "Check" was pressed. */
+  attempts: number
+  /** Checks that failed - hints and the solution unlock from these. */
+  failures: number
+  /** When it was first solved. */
+  solvedAt?: number
+}
+
+export interface DailyGoal {
+  kind: 'questions' | 'minutes'
+  target: number
+}
+
+export interface Settings {
+  /** How many never-seen cards the Due today queue introduces per day. */
+  newCardsPerDay: number
+  /** Meeting it counts the day towards the study streak. */
+  dailyGoal: DailyGoal
+  /** course id -> exam date (YYYY-MM-DD). */
+  examDates: Record<string, string>
+}
+
 export interface ProgressState {
   schemaVersion: number
   createdAt: number
@@ -120,6 +177,17 @@ export interface ProgressState {
   lastVisitedTopicId?: string
   /** ISO date (YYYY-MM-DD) strings on which the learner opened a lesson. */
   studyDays: string[]
+  /** card id (`itv:<id>` or `q:<id>`) -> spaced-repetition state. */
+  srs: Record<string, SrsCard>
+  /** Local day (YYYY-MM-DD) -> new cards introduced that day. Recent days only. */
+  newCardsByDay: Record<string, number>
+  /** practice question id -> mistake notebook entry */
+  mistakes: Record<string, MistakeEntry>
+  settings: Settings
+  /** Local day (YYYY-MM-DD) -> what was studied. */
+  activity: Record<string, ActivityDay>
+  /** Playground challenge key -> progress. */
+  challenges: Record<string, ChallengeProgress>
 }
 
 export function createEmptyState(now = Date.now()): ProgressState {
@@ -133,6 +201,16 @@ export function createEmptyState(now = Date.now()): ProgressState {
     interview: {},
     exams: [],
     studyDays: [],
+    srs: {},
+    newCardsByDay: {},
+    mistakes: {},
+    settings: {
+      newCardsPerDay: DEFAULT_NEW_CARDS_PER_DAY,
+      dailyGoal: { ...DEFAULT_DAILY_GOAL },
+      examDates: {},
+    },
+    activity: {},
+    challenges: {},
   }
 }
 
@@ -149,6 +227,50 @@ const asStatus = (value: unknown): TopicStatus =>
   value === 'completed' || value === 'in-progress' || value === 'not-started'
     ? value
     : 'not-started'
+
+const asRating = (value: unknown): Rating =>
+  value === 1 || value === 2 || value === 3 || value === 4 ? value : GOOD
+
+function migrateSrs(raw: unknown, now: number): Record<string, SrsCard> {
+  const cards: Record<string, SrsCard> = {}
+  if (!isRecord(raw)) return cards
+  for (const [id, value] of Object.entries(raw)) {
+    if (!isRecord(value)) continue
+    const stability = asNumber(value.stability, 0)
+    if (stability <= 0) continue
+    cards[id] = {
+      stability,
+      difficulty: Math.min(10, Math.max(1, asNumber(value.difficulty, 5))),
+      due: asNumber(value.due, now),
+      lastReview: asNumber(value.lastReview, now),
+      reps: asNumber(value.reps, 1),
+      lapses: asNumber(value.lapses, 0),
+      lastRating: asRating(value.lastRating),
+    }
+  }
+  return cards
+}
+
+/**
+ * The first time a record without spaced repetition is opened, every
+ * interview question already marked "known" becomes a card rated Good on the
+ * day it was marked, and every "needs review" one a card rated Again - so it
+ * is due straight away.
+ */
+export function seedSrsFromInterview(
+  interview: Record<string, InterviewProgress>,
+): Record<string, SrsCard> {
+  return Object.fromEntries(
+    Object.entries(interview).map(([id, entry]) => [
+      interviewCardId(id),
+      schedule(undefined, entry.status === 'known' ? GOOD : AGAIN, entry.updatedAt),
+    ]),
+  )
+}
+
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/
+
+const asCount = (value: unknown) => Math.max(0, Math.floor(asNumber(value, 0)))
 
 /**
  * Brings any previously stored record up to the current schema.
@@ -249,6 +371,60 @@ export function migrate(raw: unknown, now = Date.now()): ProgressState {
       }))
     : []
 
+  const mistakes: Record<string, MistakeEntry> = {}
+  if (isRecord(raw.mistakes)) {
+    for (const [id, value] of Object.entries(raw.mistakes)) {
+      if (!isRecord(value) || typeof value.courseId !== 'string') continue
+      mistakes[id] = {
+        courseId: value.courseId,
+        source: value.source === 'exam' ? 'exam' : 'practice',
+        count: Math.max(1, asCount(value.count)),
+        firstWrongAt: asNumber(value.firstWrongAt, now),
+        lastWrongAt: asNumber(value.lastWrongAt, now),
+      }
+    }
+  }
+
+  const newCardsByDay: Record<string, number> = {}
+  if (isRecord(raw.newCardsByDay)) {
+    for (const [day, count] of Object.entries(raw.newCardsByDay)) {
+      if (ISO_DAY.test(day)) newCardsByDay[day] = asCount(count)
+    }
+  }
+
+  const settings = isRecord(raw.settings) ? raw.settings : {}
+  const goal = isRecord(settings.dailyGoal) ? settings.dailyGoal : {}
+  const examDates: Record<string, string> = {}
+  if (isRecord(settings.examDates)) {
+    for (const [courseId, date] of Object.entries(settings.examDates)) {
+      if (typeof date === 'string' && ISO_DAY.test(date)) examDates[courseId] = date
+    }
+  }
+
+  const challenges: Record<string, ChallengeProgress> = {}
+  if (isRecord(raw.challenges)) {
+    for (const [key, value] of Object.entries(raw.challenges)) {
+      if (!isRecord(value)) continue
+      challenges[key] = {
+        attempts: asCount(value.attempts),
+        failures: asCount(value.failures),
+        ...(typeof value.solvedAt === 'number' ? { solvedAt: value.solvedAt } : undefined),
+      }
+    }
+  }
+
+  const activity: Record<string, ActivityDay> = {}
+  if (isRecord(raw.activity)) {
+    for (const [day, value] of Object.entries(raw.activity)) {
+      if (!ISO_DAY.test(day) || !isRecord(value)) continue
+      activity[day] = {
+        questions: asCount(value.questions),
+        lessons: asCount(value.lessons),
+        minutes: Math.max(0, asNumber(value.minutes, 0)),
+      }
+    }
+  }
+
   return {
     schemaVersion: SCHEMA_VERSION,
     createdAt: asNumber(raw.createdAt, now),
@@ -264,6 +440,21 @@ export function migrate(raw: unknown, now = Date.now()): ProgressState {
     studyDays: Array.isArray(raw.studyDays)
       ? [...new Set(raw.studyDays.filter((day): day is string => typeof day === 'string'))].sort()
       : empty.studyDays,
+    // A record from before spaced repetition has no `srs` at all; one that
+    // has it - even empty - has already been seeded and must not be again.
+    srs: isRecord(raw.srs) ? migrateSrs(raw.srs, now) : seedSrsFromInterview(interview),
+    newCardsByDay,
+    mistakes,
+    settings: {
+      newCardsPerDay: Math.min(500, asCount(settings.newCardsPerDay ?? DEFAULT_NEW_CARDS_PER_DAY)),
+      dailyGoal: {
+        kind: goal.kind === 'minutes' ? 'minutes' : 'questions',
+        target: Math.max(1, Math.min(1000, asCount(goal.target ?? DEFAULT_DAILY_GOAL.target))),
+      },
+      examDates,
+    },
+    activity,
+    challenges,
   }
 }
 
@@ -445,6 +636,55 @@ export function mergeStates(current: ProgressState, incoming: ProgressState): Pr
     }
   }
 
+  // The most recently reviewed version of each card is the true one.
+  const srs: Record<string, SrsCard> = { ...current.srs }
+  for (const [id, card] of Object.entries(incoming.srs)) {
+    if (!srs[id] || card.lastReview > srs[id].lastReview) srs[id] = card
+  }
+
+  const mistakes: Record<string, MistakeEntry> = { ...current.mistakes }
+  for (const [id, entry] of Object.entries(incoming.mistakes)) {
+    const existing = mistakes[id]
+    if (!existing || entry.lastWrongAt > existing.lastWrongAt) mistakes[id] = entry
+  }
+
+  const newCardsByDay: Record<string, number> = { ...current.newCardsByDay }
+  for (const [day, count] of Object.entries(incoming.newCardsByDay)) {
+    newCardsByDay[day] = Math.max(newCardsByDay[day] ?? 0, count)
+  }
+
+  // The same day studied on two devices: keep the bigger of each count rather
+  // than adding, so importing the same file twice cannot double a day.
+  const activity: Record<string, ActivityDay> = { ...current.activity }
+  for (const [day, incomingDay] of Object.entries(incoming.activity)) {
+    const existing = activity[day]
+    activity[day] = existing
+      ? {
+          questions: Math.max(existing.questions, incomingDay.questions),
+          lessons: Math.max(existing.lessons, incomingDay.lessons),
+          minutes: Math.max(existing.minutes, incomingDay.minutes),
+        }
+      : incomingDay
+  }
+
+  // Solved anywhere is solved; the earliest solve date and the most attempts win.
+  const challenges: Record<string, ChallengeProgress> = { ...current.challenges }
+  for (const [key, entry] of Object.entries(incoming.challenges)) {
+    const existing = challenges[key]
+    if (!existing) {
+      challenges[key] = entry
+      continue
+    }
+    const solvedAt = [existing.solvedAt, entry.solvedAt].filter(
+      (value): value is number => value !== undefined,
+    )
+    challenges[key] = {
+      attempts: Math.max(existing.attempts, entry.attempts),
+      failures: Math.max(existing.failures, entry.failures),
+      ...(solvedAt.length > 0 ? { solvedAt: Math.min(...solvedAt) } : undefined),
+    }
+  }
+
   const examsById = new Map(current.exams.map((attempt) => [attempt.id, attempt]))
   for (const attempt of incoming.exams) examsById.set(attempt.id, attempt)
 
@@ -456,6 +696,15 @@ export function mergeStates(current: ProgressState, incoming: ProgressState): Pr
     exams: [...examsById.values()].sort((a, b) => b.submittedAt - a.submittedAt),
     studyDays: [...new Set([...current.studyDays, ...incoming.studyDays])].sort(),
     lastVisitedTopicId: current.lastVisitedTopicId ?? incoming.lastVisitedTopicId,
+    srs,
+    newCardsByDay,
+    mistakes,
+    activity,
+    challenges,
+    settings: {
+      ...current.settings,
+      examDates: { ...incoming.settings.examDates, ...current.settings.examDates },
+    },
     updatedAt: Date.now(),
   }
 }

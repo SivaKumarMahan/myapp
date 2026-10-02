@@ -11,7 +11,16 @@ export type Difficulty = 'beginner' | 'intermediate' | 'advanced'
 
 /** Language used for syntax highlighting of a code sample. */
 export type CodeLanguage =
-  'yaml' | 'bash' | 'json' | 'dockerfile' | 'hcl' | 'python' | 'powershell' | 'bicep' | 'text'
+  | 'yaml'
+  | 'bash'
+  | 'json'
+  | 'dockerfile'
+  | 'hcl'
+  | 'python'
+  | 'powershell'
+  | 'bicep'
+  | 'sql'
+  | 'text'
 
 export interface CodeSample {
   title: string
@@ -209,21 +218,21 @@ export interface Domain {
   title: string
   shortTitle: string
   /**
-   * Official CNCF exam weight as a percentage. `null` for supporting sections
-   * that the app adds (foundations, exam technique) which carry no official
-   * weight of their own.
+   * Official exam weight as a percentage, from Microsoft's study guide. `null`
+   * for supporting sections that the app adds (foundations, exam technique)
+   * which carry no official weight of their own.
    */
   examWeight: number | null
   /**
    * What to show instead of a percentage when `examWeight` is null.
    *
-   * HashiCorp publishes the Terraform objectives but no weighting, so those
-   * domains show "Objective 3" rather than a made-up percentage. CKAD's own
-   * supporting sections leave this unset and show "support".
+   * Used where the exam publishes objectives but no weighting, so a domain
+   * shows "Objective 3" rather than a made-up percentage. Supporting sections
+   * leave this unset and show "support".
    */
   weightLabel?: string
   description: string
-  /** Competencies as published by the CNCF/Linux Foundation curriculum. */
+  /** Skills measured, as published in Microsoft's study guide for the exam. */
   officialCompetencies: string[]
   /** CSS custom-property suffix used for the domain accent colour. */
   accent: 'blue' | 'violet' | 'amber' | 'emerald' | 'rose' | 'cyan' | 'slate'

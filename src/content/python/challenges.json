@@ -1,0 +1,807 @@
+{
+  "$comment": "Python playground challenges. Each test is a Python expression run after the fixtures and your code. Run `npm run py:expected` after editing to regenerate every `expected` from the reference solution.",
+  "challenges": [
+    {
+      "id": "count-status-codes",
+      "title": "Count HTTP status codes",
+      "difficulty": "easy",
+      "topic": "logs",
+      "functionName": "count_status_codes",
+      "description": "Web servers write one line per request in the combined log format. Write `count_status_codes(log_text)` that returns a dict mapping each status code (as an **int**) to how many requests got it. Skip blank lines and lines that are not log entries. `SAMPLE_LOG` holds an example.",
+      "starter": "def count_status_codes(log_text):\n    \"\"\"Return {status_code: count} for the requests in log_text.\"\"\"\n    counts = {}\n    # Each line looks like: IP - - [time] \"METHOD /path HTTP/1.1\" STATUS BYTES ...\n    return counts\n",
+      "fixtures": "SAMPLE_LOG = \"\"\"\\\n10.0.0.5 - - [01/Oct/2025:10:00:01 +0000] \"GET / HTTP/1.1\" 200 5120 \"-\" \"Mozilla/5.0\"\n10.0.0.7 - - [01/Oct/2025:10:00:02 +0000] \"GET /products HTTP/1.1\" 200 8812 \"-\" \"Mozilla/5.0\"\n10.0.0.5 - - [01/Oct/2025:10:00:04 +0000] \"POST /api/cart HTTP/1.1\" 201 312 \"-\" \"Mozilla/5.0\"\n10.0.0.9 - - [01/Oct/2025:10:00:05 +0000] \"GET /missing HTTP/1.1\" 404 153 \"-\" \"curl/8.5.0\"\n10.0.0.5 - - [01/Oct/2025:10:00:09 +0000] \"GET /api/search?q=dock HTTP/1.1\" 500 87 \"-\" \"Mozilla/5.0\"\n10.0.0.7 - - [01/Oct/2025:10:00:11 +0000] \"GET / HTTP/1.1\" 304 0 \"-\" \"Mozilla/5.0\"\n10.0.0.9 - - [01/Oct/2025:10:00:12 +0000] \"GET /admin HTTP/1.1\" 404 153 \"-\" \"curl/8.5.0\"\n10.0.0.9 - - [01/Oct/2025:10:00:12 +0000] \"GET /wp-login.php HTTP/1.1\" 404 153 \"-\" \"curl/8.5.0\"\n10.0.0.3 - - [01/Oct/2025:10:00:15 +0000] \"GET /products/42 HTTP/1.1\" 200 6021 \"-\" \"Mozilla/5.0\"\n10.0.0.5 - - [01/Oct/2025:10:00:20 +0000] \"POST /api/checkout HTTP/1.1\" 503 64 \"-\" \"Mozilla/5.0\"\n\"\"\"\nEMPTY_LOG = \"\"\nMESSY_LOG = \"\"\"\\\n10.0.0.1 - - [01/Oct/2025:10:00:01 +0000] \"GET / HTTP/1.1\" 200 10 \"-\" \"x\"\n\nthis line is not a log entry\n10.0.0.2 - - [01/Oct/2025:10:00:02 +0000] \"GET /x HTTP/1.1\" 404 0 \"-\" \"x\"\n\"\"\"",
+      "hints": [
+        "The status code is the first field after the quoted request: split on `\"` and look at the part after the second quote.",
+        "`collections.Counter` counts for you; convert the code with `int()`. Wrap the parsing in try/except to skip junk lines."
+      ],
+      "solution": "from collections import Counter\n\ndef count_status_codes(log_text):\n    counts = Counter()\n    for line in log_text.splitlines():\n        parts = line.split('\"')\n        if len(parts) < 3:\n            continue\n        fields = parts[2].split()\n        if fields and fields[0].isdigit():\n            counts[int(fields[0])] += 1\n    return dict(counts)\n",
+      "tests": [
+        {
+          "name": "counts the sample log",
+          "call": "count_status_codes(SAMPLE_LOG)",
+          "hidden": false,
+          "expected": {
+            "200": 3,
+            "201": 1,
+            "404": 3,
+            "500": 1,
+            "304": 1,
+            "503": 1
+          }
+        },
+        {
+          "name": "an empty log has no codes",
+          "call": "count_status_codes(EMPTY_LOG)",
+          "hidden": false,
+          "expected": {}
+        },
+        {
+          "name": "ignores blank and junk lines",
+          "call": "count_status_codes(MESSY_LOG)",
+          "hidden": true,
+          "expected": {
+            "200": 1,
+            "404": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "top-ips",
+      "title": "Busiest client IPs",
+      "difficulty": "easy",
+      "topic": "logs",
+      "functionName": "top_ips",
+      "description": "Write `top_ips(log_text, n)` returning the `n` IP addresses with the most requests, as a list of `[ip, count]` pairs, busiest first. Break ties by IP address (alphabetically) so the answer is stable.",
+      "starter": "def top_ips(log_text, n):\n    \"\"\"Return [[ip, count], ...] for the n busiest IPs.\"\"\"\n    return []\n",
+      "fixtures": "SAMPLE_LOG = \"\"\"\\\n10.0.0.5 - - [01/Oct/2025:10:00:01 +0000] \"GET / HTTP/1.1\" 200 5120 \"-\" \"Mozilla/5.0\"\n10.0.0.7 - - [01/Oct/2025:10:00:02 +0000] \"GET /products HTTP/1.1\" 200 8812 \"-\" \"Mozilla/5.0\"\n10.0.0.5 - - [01/Oct/2025:10:00:04 +0000] \"POST /api/cart HTTP/1.1\" 201 312 \"-\" \"Mozilla/5.0\"\n10.0.0.9 - - [01/Oct/2025:10:00:05 +0000] \"GET /missing HTTP/1.1\" 404 153 \"-\" \"curl/8.5.0\"\n10.0.0.5 - - [01/Oct/2025:10:00:09 +0000] \"GET /api/search?q=dock HTTP/1.1\" 500 87 \"-\" \"Mozilla/5.0\"\n10.0.0.7 - - [01/Oct/2025:10:00:11 +0000] \"GET / HTTP/1.1\" 304 0 \"-\" \"Mozilla/5.0\"\n10.0.0.9 - - [01/Oct/2025:10:00:12 +0000] \"GET /admin HTTP/1.1\" 404 153 \"-\" \"curl/8.5.0\"\n10.0.0.9 - - [01/Oct/2025:10:00:12 +0000] \"GET /wp-login.php HTTP/1.1\" 404 153 \"-\" \"curl/8.5.0\"\n10.0.0.3 - - [01/Oct/2025:10:00:15 +0000] \"GET /products/42 HTTP/1.1\" 200 6021 \"-\" \"Mozilla/5.0\"\n10.0.0.5 - - [01/Oct/2025:10:00:20 +0000] \"POST /api/checkout HTTP/1.1\" 503 64 \"-\" \"Mozilla/5.0\"\n\"\"\"\nEMPTY_LOG = \"\"\nMESSY_LOG = \"\"\"\\\n10.0.0.1 - - [01/Oct/2025:10:00:01 +0000] \"GET / HTTP/1.1\" 200 10 \"-\" \"x\"\n\nthis line is not a log entry\n10.0.0.2 - - [01/Oct/2025:10:00:02 +0000] \"GET /x HTTP/1.1\" 404 0 \"-\" \"x\"\n\"\"\"",
+      "hints": [
+        "The IP is the first whitespace-separated field of each line.",
+        "Sort with `key=lambda item: (-item[1], item[0])` to get \"most first, then by IP\"."
+      ],
+      "solution": "from collections import Counter\n\ndef top_ips(log_text, n):\n    counts = Counter(line.split()[0] for line in log_text.splitlines() if line.strip() and line[0].isdigit())\n    ranked = sorted(counts.items(), key=lambda item: (-item[1], item[0]))\n    return [[ip, count] for ip, count in ranked[:n]]\n",
+      "tests": [
+        {
+          "name": "top 2",
+          "call": "top_ips(SAMPLE_LOG, 2)",
+          "hidden": false,
+          "expected": [
+            ["10.0.0.5", 4],
+            ["10.0.0.9", 3]
+          ]
+        },
+        {
+          "name": "more than there are",
+          "call": "top_ips(SAMPLE_LOG, 10)",
+          "hidden": true,
+          "expected": [
+            ["10.0.0.5", 4],
+            ["10.0.0.9", 3],
+            ["10.0.0.7", 2],
+            ["10.0.0.3", 1]
+          ]
+        },
+        {
+          "name": "ties are broken by IP",
+          "call": "top_ips(MESSY_LOG, 2)",
+          "hidden": true,
+          "expected": [
+            ["10.0.0.1", 1],
+            ["10.0.0.2", 1]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "error-lines",
+      "title": "Pull out the errors",
+      "difficulty": "easy",
+      "topic": "logs",
+      "functionName": "extract_errors",
+      "description": "Write `extract_errors(log_text)` that returns a list of `{\"time\": ..., \"service\": ..., \"message\": ...}` dicts for every ERROR line (the level is case-insensitive), in the order they appear. `APP_LOG` is an example.",
+      "starter": "def extract_errors(log_text):\n    \"\"\"Return [{\"time\", \"service\", \"message\"}, ...] for each ERROR line.\"\"\"\n    return []\n",
+      "fixtures": "APP_LOG = \"\"\"\\\n2025-10-01T10:00:00Z INFO  api    Started on port 8080\n2025-10-01T10:00:05Z WARN  api    Slow query: 1.8s\n2025-10-01T10:01:12Z ERROR api    Payment gateway timeout after 30s\n2025-10-01T10:01:13Z INFO  worker Job 1182 finished\n2025-10-01T10:02:40Z ERROR worker Could not connect to Service Bus: AMQP 401\n2025-10-01T10:02:41Z error api    lower-case level still counts\n\"\"\"",
+      "hints": [
+        "`line.split(maxsplit=3)` gives exactly four parts: time, level, service and the rest.",
+        "Compare `level.upper() == \"ERROR\"`."
+      ],
+      "solution": "def extract_errors(log_text):\n    errors = []\n    for line in log_text.splitlines():\n        parts = line.split(maxsplit=3)\n        if len(parts) == 4 and parts[1].upper() == 'ERROR':\n            errors.append({'time': parts[0], 'service': parts[2], 'message': parts[3]})\n    return errors\n",
+      "tests": [
+        {
+          "name": "finds the errors",
+          "call": "extract_errors(APP_LOG)",
+          "hidden": false,
+          "expected": [
+            {
+              "time": "2025-10-01T10:01:12Z",
+              "service": "api",
+              "message": "Payment gateway timeout after 30s"
+            },
+            {
+              "time": "2025-10-01T10:02:40Z",
+              "service": "worker",
+              "message": "Could not connect to Service Bus: AMQP 401"
+            },
+            {
+              "time": "2025-10-01T10:02:41Z",
+              "service": "api",
+              "message": "lower-case level still counts"
+            }
+          ]
+        },
+        {
+          "name": "no errors",
+          "call": "extract_errors(\"2025-10-01T10:00:00Z INFO api ok\")",
+          "hidden": false,
+          "expected": []
+        },
+        {
+          "name": "message keeps its spaces",
+          "call": "extract_errors(\"t ERROR svc a   b  c\")[0][\"message\"]",
+          "hidden": true,
+          "expected": "a   b  c"
+        }
+      ]
+    },
+    {
+      "id": "parse-duration",
+      "title": "Durations like 1h30m",
+      "difficulty": "easy",
+      "topic": "logs",
+      "functionName": "parse_duration",
+      "description": "Timeouts and retention settings are often written like `1h30m`, `45s` or `2d`. Write `parse_duration(text)` returning the total number of **seconds** as an int. Units: `d`, `h`, `m`, `s`. Raise `ValueError` for anything else.",
+      "starter": "def parse_duration(text):\n    \"\"\"'1h30m' -> 5400\"\"\"\n    return 0\n",
+      "fixtures": "def __raises(func, *args):\n    try:\n        func(*args)\n    except Exception as error:\n        return type(error).__name__\n    return \"no error\"",
+      "hints": [
+        "`re.fullmatch(r\"(\\\\d+[dhms])+\", text)` checks the whole string; `re.findall(r\"(\\\\d+)([dhms])\", text)` pulls out each part.",
+        "Keep a dict like `{\"d\": 86400, \"h\": 3600, \"m\": 60, \"s\": 1}`."
+      ],
+      "solution": "import re\n\nUNITS = {'d': 86400, 'h': 3600, 'm': 60, 's': 1}\n\ndef parse_duration(text):\n    if not re.fullmatch(r'(\\d+[dhms])+', text or ''):\n        raise ValueError(f'not a duration: {text!r}')\n    return sum(int(number) * UNITS[unit] for number, unit in re.findall(r'(\\d+)([dhms])', text))\n",
+      "tests": [
+        {
+          "name": "1h30m",
+          "call": "parse_duration(\"1h30m\")",
+          "hidden": false,
+          "expected": 5400
+        },
+        {
+          "name": "seconds only",
+          "call": "parse_duration(\"45s\")",
+          "hidden": false,
+          "expected": 45
+        },
+        {
+          "name": "every unit",
+          "call": "parse_duration(\"2d3h4m5s\")",
+          "hidden": true,
+          "expected": 183845
+        },
+        {
+          "name": "rejects nonsense",
+          "call": "__raises(parse_duration, \"10 minutes\")",
+          "hidden": true,
+          "expected": "ValueError"
+        }
+      ]
+    },
+    {
+      "id": "stopped-vms",
+      "title": "VMs that are not running",
+      "difficulty": "easy",
+      "topic": "azure-cli",
+      "functionName": "stopped_vms",
+      "description": "`AZ_VM_LIST` is the JSON printed by `az vm list -d -o json` (trimmed). Write `stopped_vms(json_text)` returning the **sorted** names of VMs whose `powerState` is anything other than `\"VM running\"`.",
+      "starter": "import json\n\ndef stopped_vms(json_text):\n    \"\"\"Names of VMs that are not running, sorted.\"\"\"\n    vms = json.loads(json_text)\n    return []\n",
+      "fixtures": "import json\nAZ_VM_LIST = json.dumps([\n    {\"name\": \"vm-web-01\", \"resourceGroup\": \"rg-shop\", \"location\": \"uksouth\", \"powerState\": \"VM running\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_B2s\"}, \"tags\": {\"env\": \"prod\", \"owner\": \"web\"}},\n    {\"name\": \"vm-web-02\", \"resourceGroup\": \"rg-shop\", \"location\": \"uksouth\", \"powerState\": \"VM deallocated\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_B2s\"}, \"tags\": {\"env\": \"prod\"}},\n    {\"name\": \"vm-batch-01\", \"resourceGroup\": \"rg-batch\", \"location\": \"ukwest\", \"powerState\": \"VM stopped\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_D4s_v5\"}, \"tags\": None},\n    {\"name\": \"vm-build-01\", \"resourceGroup\": \"rg-devops\", \"location\": \"uksouth\", \"powerState\": \"VM running\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_D2s_v5\"}, \"tags\": {\"env\": \"dev\", \"owner\": \"platform\"}},\n    {\"name\": \"vm-jump-01\", \"resourceGroup\": \"rg-mgmt\", \"location\": \"northeurope\", \"powerState\": \"VM running\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_B1s\"}, \"tags\": {}}\n], indent=2)\nEMPTY_LIST = \"[]\"\n\ndef __raises(func, *args):\n    try:\n        func(*args)\n    except Exception as error:\n        return type(error).__name__\n    return \"no error\"",
+      "hints": [
+        "`json.loads` turns the text into a list of dicts.",
+        "A list comprehension with `if vm[\"powerState\"] != \"VM running\"`, then `sorted()`."
+      ],
+      "solution": "import json\n\ndef stopped_vms(json_text):\n    return sorted(vm['name'] for vm in json.loads(json_text) if vm.get('powerState') != 'VM running')\n",
+      "tests": [
+        {
+          "name": "from az vm list",
+          "call": "stopped_vms(AZ_VM_LIST)",
+          "hidden": false,
+          "expected": ["vm-batch-01", "vm-web-02"]
+        },
+        {
+          "name": "no VMs",
+          "call": "stopped_vms(EMPTY_LIST)",
+          "hidden": true,
+          "expected": []
+        }
+      ]
+    },
+    {
+      "id": "vms-missing-tags",
+      "title": "VMs missing a required tag",
+      "difficulty": "medium",
+      "topic": "azure-cli",
+      "functionName": "missing_tag",
+      "description": "Governance check: write `missing_tag(json_text, tag)` returning the sorted names of VMs from `az vm list` output that do not have `tag` set to a non-empty value. Watch out: `tags` can be `null` in Azure CLI output.",
+      "starter": "import json\n\ndef missing_tag(json_text, tag):\n    \"\"\"Names of VMs without a non-empty `tag`, sorted.\"\"\"\n    return []\n",
+      "fixtures": "import json\nAZ_VM_LIST = json.dumps([\n    {\"name\": \"vm-web-01\", \"resourceGroup\": \"rg-shop\", \"location\": \"uksouth\", \"powerState\": \"VM running\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_B2s\"}, \"tags\": {\"env\": \"prod\", \"owner\": \"web\"}},\n    {\"name\": \"vm-web-02\", \"resourceGroup\": \"rg-shop\", \"location\": \"uksouth\", \"powerState\": \"VM deallocated\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_B2s\"}, \"tags\": {\"env\": \"prod\"}},\n    {\"name\": \"vm-batch-01\", \"resourceGroup\": \"rg-batch\", \"location\": \"ukwest\", \"powerState\": \"VM stopped\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_D4s_v5\"}, \"tags\": None},\n    {\"name\": \"vm-build-01\", \"resourceGroup\": \"rg-devops\", \"location\": \"uksouth\", \"powerState\": \"VM running\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_D2s_v5\"}, \"tags\": {\"env\": \"dev\", \"owner\": \"platform\"}},\n    {\"name\": \"vm-jump-01\", \"resourceGroup\": \"rg-mgmt\", \"location\": \"northeurope\", \"powerState\": \"VM running\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_B1s\"}, \"tags\": {}}\n], indent=2)\nEMPTY_LIST = \"[]\"\n\ndef __raises(func, *args):\n    try:\n        func(*args)\n    except Exception as error:\n        return type(error).__name__\n    return \"no error\"",
+      "hints": [
+        "`(vm.get(\"tags\") or {})` turns a null tags field into an empty dict.",
+        "Then check `.get(tag)` is truthy."
+      ],
+      "solution": "import json\n\ndef missing_tag(json_text, tag):\n    return sorted(vm['name'] for vm in json.loads(json_text) if not (vm.get('tags') or {}).get(tag))\n",
+      "tests": [
+        {
+          "name": "missing owner",
+          "call": "missing_tag(AZ_VM_LIST, \"owner\")",
+          "hidden": false,
+          "expected": ["vm-batch-01", "vm-jump-01", "vm-web-02"]
+        },
+        {
+          "name": "missing env",
+          "call": "missing_tag(AZ_VM_LIST, \"env\")",
+          "hidden": false,
+          "expected": ["vm-batch-01", "vm-jump-01"]
+        },
+        {
+          "name": "a tag nobody has",
+          "call": "missing_tag(AZ_VM_LIST, \"costCentre\")",
+          "hidden": true,
+          "expected": ["vm-batch-01", "vm-build-01", "vm-jump-01", "vm-web-01", "vm-web-02"]
+        }
+      ]
+    },
+    {
+      "id": "vm-sizes-by-location",
+      "title": "Count VM sizes per region",
+      "difficulty": "medium",
+      "topic": "azure-cli",
+      "functionName": "sizes_by_location",
+      "description": "Capacity planning: from `az vm list` JSON, return a dict mapping each `location` to a dict of `{vmSize: count}`. The size is under `hardwareProfile.vmSize`.",
+      "starter": "import json\n\ndef sizes_by_location(json_text):\n    \"\"\"{location: {vmSize: count}}\"\"\"\n    return {}\n",
+      "fixtures": "import json\nAZ_VM_LIST = json.dumps([\n    {\"name\": \"vm-web-01\", \"resourceGroup\": \"rg-shop\", \"location\": \"uksouth\", \"powerState\": \"VM running\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_B2s\"}, \"tags\": {\"env\": \"prod\", \"owner\": \"web\"}},\n    {\"name\": \"vm-web-02\", \"resourceGroup\": \"rg-shop\", \"location\": \"uksouth\", \"powerState\": \"VM deallocated\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_B2s\"}, \"tags\": {\"env\": \"prod\"}},\n    {\"name\": \"vm-batch-01\", \"resourceGroup\": \"rg-batch\", \"location\": \"ukwest\", \"powerState\": \"VM stopped\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_D4s_v5\"}, \"tags\": None},\n    {\"name\": \"vm-build-01\", \"resourceGroup\": \"rg-devops\", \"location\": \"uksouth\", \"powerState\": \"VM running\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_D2s_v5\"}, \"tags\": {\"env\": \"dev\", \"owner\": \"platform\"}},\n    {\"name\": \"vm-jump-01\", \"resourceGroup\": \"rg-mgmt\", \"location\": \"northeurope\", \"powerState\": \"VM running\",\n     \"hardwareProfile\": {\"vmSize\": \"Standard_B1s\"}, \"tags\": {}}\n], indent=2)\nEMPTY_LIST = \"[]\"\n\ndef __raises(func, *args):\n    try:\n        func(*args)\n    except Exception as error:\n        return type(error).__name__\n    return \"no error\"",
+      "hints": [
+        "`collections.defaultdict(Counter)` builds the nested counts in one pass.",
+        "Convert back with `{loc: dict(counter) for loc, counter in result.items()}`."
+      ],
+      "solution": "import json\nfrom collections import Counter, defaultdict\n\ndef sizes_by_location(json_text):\n    result = defaultdict(Counter)\n    for vm in json.loads(json_text):\n        result[vm['location']][vm['hardwareProfile']['vmSize']] += 1\n    return {location: dict(sizes) for location, sizes in result.items()}\n",
+      "tests": [
+        {
+          "name": "the sample fleet",
+          "call": "sizes_by_location(AZ_VM_LIST)",
+          "hidden": false,
+          "expected": {
+            "uksouth": {
+              "Standard_B2s": 2,
+              "Standard_D2s_v5": 1
+            },
+            "ukwest": {
+              "Standard_D4s_v5": 1
+            },
+            "northeurope": {
+              "Standard_B1s": 1
+            }
+          }
+        },
+        {
+          "name": "nothing deployed",
+          "call": "sizes_by_location(EMPTY_LIST)",
+          "hidden": true,
+          "expected": {}
+        }
+      ]
+    },
+    {
+      "id": "storage-findings",
+      "title": "Insecure storage accounts",
+      "difficulty": "medium",
+      "topic": "azure-cli",
+      "functionName": "storage_findings",
+      "description": "Security review of `az storage account list` output. Write `storage_findings(json_text)` returning `{account_name: [findings]}` for accounts with at least one problem, where findings come from: `\"public blob access\"` (allowBlobPublicAccess is true), `\"old TLS\"` (minimumTlsVersion is TLS1_0 or TLS1_1) and `\"HTTP allowed\"` (enableHttpsTrafficOnly is false). Keep findings in that order. A `null` setting is not a finding.",
+      "starter": "import json\n\ndef storage_findings(json_text):\n    \"\"\"{name: [\"public blob access\", \"old TLS\", \"HTTP allowed\"]} for accounts with problems.\"\"\"\n    return {}\n",
+      "fixtures": "import json\nAZ_STORAGE_LIST = json.dumps([\n    {\"name\": \"stshopprod\", \"allowBlobPublicAccess\": False, \"minimumTlsVersion\": \"TLS1_2\", \"enableHttpsTrafficOnly\": True},\n    {\"name\": \"stlegacyexports\", \"allowBlobPublicAccess\": True, \"minimumTlsVersion\": \"TLS1_0\", \"enableHttpsTrafficOnly\": True},\n    {\"name\": \"stbuildcache\", \"allowBlobPublicAccess\": False, \"minimumTlsVersion\": \"TLS1_1\", \"enableHttpsTrafficOnly\": True},\n    {\"name\": \"stmarketing\", \"allowBlobPublicAccess\": True, \"minimumTlsVersion\": \"TLS1_2\", \"enableHttpsTrafficOnly\": False},\n    {\"name\": \"stlogs\", \"allowBlobPublicAccess\": None, \"minimumTlsVersion\": None, \"enableHttpsTrafficOnly\": True}\n])",
+      "hints": [
+        "Build a list of findings per account and only add the account if the list is not empty.",
+        "`is True` / `is False` checks treat `None` (null) as \"not a finding\"."
+      ],
+      "solution": "import json\n\ndef storage_findings(json_text):\n    report = {}\n    for account in json.loads(json_text):\n        findings = []\n        if account.get('allowBlobPublicAccess') is True:\n            findings.append('public blob access')\n        if account.get('minimumTlsVersion') in ('TLS1_0', 'TLS1_1'):\n            findings.append('old TLS')\n        if account.get('enableHttpsTrafficOnly') is False:\n            findings.append('HTTP allowed')\n        if findings:\n            report[account['name']] = findings\n    return report\n",
+      "tests": [
+        {
+          "name": "reviews the accounts",
+          "call": "storage_findings(AZ_STORAGE_LIST)",
+          "hidden": false,
+          "expected": {
+            "stlegacyexports": ["public blob access", "old TLS"],
+            "stbuildcache": ["old TLS"],
+            "stmarketing": ["public blob access", "HTTP allowed"]
+          }
+        },
+        {
+          "name": "a clean subscription",
+          "call": "storage_findings(\"[]\")",
+          "hidden": true,
+          "expected": {}
+        }
+      ]
+    },
+    {
+      "id": "config-diff",
+      "title": "Diff two configs",
+      "difficulty": "easy",
+      "topic": "config",
+      "functionName": "diff_config",
+      "description": "Before a deployment, show what changes. Write `diff_config(old, new)` for two flat dicts returning `{\"added\": [...], \"removed\": [...], \"changed\": {key: [old_value, new_value]}}`, with the added and removed keys sorted.",
+      "starter": "def diff_config(old, new):\n    return {\"added\": [], \"removed\": [], \"changed\": {}}\n",
+      "fixtures": "OLD_CONFIG = {\"replicas\": 2, \"image\": \"shop:1.4.0\", \"log_level\": \"info\", \"timeout_s\": 30, \"feature_x\": False}\nNEW_CONFIG = {\"replicas\": 3, \"image\": \"shop:1.5.0\", \"log_level\": \"info\", \"timeout_s\": 30, \"region\": \"uksouth\"}\nOLD_NESTED = {\"app\": {\"replicas\": 2, \"env\": {\"LOG_LEVEL\": \"info\", \"DB\": \"sql-1\"}}, \"ingress\": {\"tls\": True}}\nNEW_NESTED = {\"app\": {\"replicas\": 2, \"env\": {\"LOG_LEVEL\": \"debug\", \"CACHE\": \"redis\"}}, \"ingress\": {\"tls\": True, \"waf\": True}}",
+      "hints": [
+        "Set operations on `old.keys()` and `new.keys()` give added and removed.",
+        "A key is changed when it is in both and `old[key] != new[key]`."
+      ],
+      "solution": "def diff_config(old, new):\n    return {\n        'added': sorted(new.keys() - old.keys()),\n        'removed': sorted(old.keys() - new.keys()),\n        'changed': {key: [old[key], new[key]] for key in sorted(old.keys() & new.keys()) if old[key] != new[key]},\n    }\n",
+      "tests": [
+        {
+          "name": "a release",
+          "call": "diff_config(OLD_CONFIG, NEW_CONFIG)",
+          "hidden": false,
+          "expected": {
+            "added": ["region"],
+            "removed": ["feature_x"],
+            "changed": {
+              "image": ["shop:1.4.0", "shop:1.5.0"],
+              "replicas": [2, 3]
+            }
+          }
+        },
+        {
+          "name": "no change",
+          "call": "diff_config(OLD_CONFIG, dict(OLD_CONFIG))",
+          "hidden": false,
+          "expected": {
+            "added": [],
+            "removed": [],
+            "changed": {}
+          }
+        },
+        {
+          "name": "from nothing",
+          "call": "diff_config({}, {\"a\": 1})",
+          "hidden": true,
+          "expected": {
+            "added": ["a"],
+            "removed": [],
+            "changed": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "nested-diff",
+      "title": "Diff nested configs",
+      "difficulty": "hard",
+      "topic": "config",
+      "functionName": "changed_paths",
+      "description": "Real configs nest. Write `changed_paths(old, new)` returning the sorted list of dotted paths (`\"app.env.LOG_LEVEL\"`) that were added, removed or changed. Compare dicts key by key; any other value (including lists) is compared as a whole.",
+      "starter": "def changed_paths(old, new, prefix=\"\"):\n    \"\"\"Sorted dotted paths that differ between old and new.\"\"\"\n    return []\n",
+      "fixtures": "OLD_CONFIG = {\"replicas\": 2, \"image\": \"shop:1.4.0\", \"log_level\": \"info\", \"timeout_s\": 30, \"feature_x\": False}\nNEW_CONFIG = {\"replicas\": 3, \"image\": \"shop:1.5.0\", \"log_level\": \"info\", \"timeout_s\": 30, \"region\": \"uksouth\"}\nOLD_NESTED = {\"app\": {\"replicas\": 2, \"env\": {\"LOG_LEVEL\": \"info\", \"DB\": \"sql-1\"}}, \"ingress\": {\"tls\": True}}\nNEW_NESTED = {\"app\": {\"replicas\": 2, \"env\": {\"LOG_LEVEL\": \"debug\", \"CACHE\": \"redis\"}}, \"ingress\": {\"tls\": True, \"waf\": True}}",
+      "hints": [
+        "Recursion: when both values are dicts, recurse with `prefix + key + \".\"`.",
+        "Otherwise, if the key is missing on one side or the values differ, the path has changed."
+      ],
+      "solution": "def changed_paths(old, new, prefix=''):\n    paths = []\n    for key in old.keys() | new.keys():\n        path = f'{prefix}{key}'\n        a, b = old.get(key, None), new.get(key, None)\n        if isinstance(a, dict) and isinstance(b, dict):\n            paths.extend(changed_paths(a, b, path + '.'))\n        elif key not in old or key not in new or a != b:\n            paths.append(path)\n    return sorted(paths)\n",
+      "tests": [
+        {
+          "name": "nested release",
+          "call": "changed_paths(OLD_NESTED, NEW_NESTED)",
+          "hidden": false,
+          "expected": ["app.env.CACHE", "app.env.DB", "app.env.LOG_LEVEL", "ingress.waf"]
+        },
+        {
+          "name": "flat dicts work too",
+          "call": "changed_paths(OLD_CONFIG, NEW_CONFIG)",
+          "hidden": true,
+          "expected": ["feature_x", "image", "region", "replicas"]
+        },
+        {
+          "name": "identical",
+          "call": "changed_paths(OLD_NESTED, OLD_NESTED)",
+          "hidden": true,
+          "expected": []
+        }
+      ]
+    },
+    {
+      "id": "parse-env-file",
+      "title": "Read a .env file",
+      "difficulty": "medium",
+      "topic": "config",
+      "functionName": "parse_env",
+      "description": "Write `parse_env(text)` that turns the contents of a `.env` file into a dict. Ignore blank lines and `#` comments, allow an optional `export ` prefix, strip whitespace around keys and values, and remove one pair of matching surrounding quotes (`\"...\"` or `'...'`). `ENV_FILE` is an example.",
+      "starter": "def parse_env(text):\n    return {}\n",
+      "fixtures": "ENV_FILE = \"\"\"\\\n# app settings\nexport APP_ENV=production\nDB_HOST = sql-prod.database.windows.net\nDB_PASSWORD=\"p@ss=word#1\"\nGREETING='hello world'\n\nEMPTY=\n\"\"\"",
+      "hints": [
+        "`line.partition(\"=\")` splits on the FIRST `=` only, so values may contain `=`.",
+        "Check `value[0] == value[-1] and value[0] in \"\\\"'\"` before stripping quotes - and that the value is at least two characters long."
+      ],
+      "solution": "def parse_env(text):\n    result = {}\n    for raw in text.splitlines():\n        line = raw.strip()\n        if not line or line.startswith('#'):\n            continue\n        if line.startswith('export '):\n            line = line[len('export '):]\n        key, _, value = line.partition('=')\n        value = value.strip()\n        if len(value) >= 2 and value[0] == value[-1] and value[0] in '\"\\'':\n            value = value[1:-1]\n        result[key.strip()] = value\n    return result\n",
+      "tests": [
+        {
+          "name": "the sample file",
+          "call": "parse_env(ENV_FILE)",
+          "hidden": false,
+          "expected": {
+            "APP_ENV": "production",
+            "DB_HOST": "sql-prod.database.windows.net",
+            "DB_PASSWORD": "p@ss=word#1",
+            "GREETING": "hello world",
+            "EMPTY": ""
+          }
+        },
+        {
+          "name": "an equals sign in a value",
+          "call": "parse_env(\"URL=https://x?a=1\")",
+          "hidden": true,
+          "expected": {
+            "URL": "https://x?a=1"
+          }
+        },
+        {
+          "name": "comments only",
+          "call": "parse_env(\"# nothing\\n\")",
+          "hidden": true,
+          "expected": {}
+        }
+      ]
+    },
+    {
+      "id": "latest-version",
+      "title": "Pick the latest release",
+      "difficulty": "medium",
+      "topic": "config",
+      "functionName": "latest_version",
+      "description": "Image tags and releases use semantic versions. Write `latest_version(versions)` returning the highest version string from a list like `[\"1.2.10\", \"1.2.9\", \"v1.10.0\"]`. A leading `v` is allowed; compare numerically, so `1.10.0` beats `1.9.9`. Return `None` for an empty list.",
+      "starter": "def latest_version(versions):\n    return None\n",
+      "fixtures": "",
+      "hints": [
+        "Sorting the strings directly is the trap: \"1.10\" < \"1.9\" as text.",
+        "Use `max(versions, key=lambda v: tuple(int(part) for part in v.lstrip(\"v\").split(\".\")))`."
+      ],
+      "solution": "def latest_version(versions):\n    if not versions:\n        return None\n    return max(versions, key=lambda version: tuple(int(part) for part in version.lstrip('v').split('.')))\n",
+      "tests": [
+        {
+          "name": "numeric, not text",
+          "call": "latest_version([\"1.2.10\", \"1.2.9\", \"1.10.0\", \"1.9.9\"])",
+          "hidden": false,
+          "expected": "1.10.0"
+        },
+        {
+          "name": "with v prefixes",
+          "call": "latest_version([\"v2.0.0\", \"v2.0.1\", \"v1.99.0\"])",
+          "hidden": true,
+          "expected": "v2.0.1"
+        },
+        {
+          "name": "empty list",
+          "call": "latest_version([])",
+          "hidden": true,
+          "expected": null
+        }
+      ]
+    },
+    {
+      "id": "valid-cidr",
+      "title": "Validate a CIDR block",
+      "difficulty": "easy",
+      "topic": "networking",
+      "functionName": "is_valid_cidr",
+      "description": "Write `is_valid_cidr(text)` returning `True` only for a valid IPv4 network in CIDR form, like `10.0.0.0/16`. A host address with bits set past the prefix (`10.0.0.5/24`) is **not** a valid network. Use the `ipaddress` module.",
+      "starter": "import ipaddress\n\ndef is_valid_cidr(text):\n    return False\n",
+      "fixtures": "",
+      "hints": [
+        "`ipaddress.IPv4Network(text)` raises `ValueError` for anything that is not a network - including host bits set, because `strict=True` is the default.",
+        "Also require a `/` so that a bare address is not accepted as a /32."
+      ],
+      "solution": "import ipaddress\n\ndef is_valid_cidr(text):\n    if '/' not in text:\n        return False\n    try:\n        ipaddress.IPv4Network(text)\n        return True\n    except ValueError:\n        return False\n",
+      "tests": [
+        {
+          "name": "a VNet range",
+          "call": "is_valid_cidr(\"10.0.0.0/16\")",
+          "hidden": false,
+          "expected": true
+        },
+        {
+          "name": "host bits set",
+          "call": "is_valid_cidr(\"10.0.0.5/24\")",
+          "hidden": false,
+          "expected": false
+        },
+        {
+          "name": "not an address",
+          "call": "is_valid_cidr(\"10.0.300.0/24\")",
+          "hidden": true,
+          "expected": false
+        },
+        {
+          "name": "no prefix",
+          "call": "is_valid_cidr(\"10.0.0.0\")",
+          "hidden": true,
+          "expected": false
+        },
+        {
+          "name": "prefix too long",
+          "call": "is_valid_cidr(\"10.0.0.0/33\")",
+          "hidden": true,
+          "expected": false
+        }
+      ]
+    },
+    {
+      "id": "azure-usable-ips",
+      "title": "Usable IPs in an Azure subnet",
+      "difficulty": "easy",
+      "topic": "networking",
+      "functionName": "azure_usable_ips",
+      "description": "Azure reserves **five** addresses in every subnet (network, gateway, two for DNS, broadcast). Write `azure_usable_ips(cidr)` returning how many addresses you can assign. Azure's smallest subnet is a /29; return 0 for anything smaller.",
+      "starter": "import ipaddress\n\ndef azure_usable_ips(cidr):\n    return 0\n",
+      "fixtures": "",
+      "hints": [
+        "`ipaddress.ip_network(cidr).num_addresses` is the total.",
+        "Subtract 5, and return 0 when the prefix is longer than 29."
+      ],
+      "solution": "import ipaddress\n\ndef azure_usable_ips(cidr):\n    network = ipaddress.ip_network(cidr)\n    if network.prefixlen > 29:\n        return 0\n    return network.num_addresses - 5\n",
+      "tests": [
+        {
+          "name": "a /24",
+          "call": "azure_usable_ips(\"10.0.1.0/24\")",
+          "hidden": false,
+          "expected": 251
+        },
+        {
+          "name": "the smallest subnet",
+          "call": "azure_usable_ips(\"10.0.2.0/29\")",
+          "hidden": false,
+          "expected": 3
+        },
+        {
+          "name": "too small",
+          "call": "azure_usable_ips(\"10.0.3.0/30\")",
+          "hidden": true,
+          "expected": 0
+        },
+        {
+          "name": "a /16",
+          "call": "azure_usable_ips(\"10.1.0.0/16\")",
+          "hidden": true,
+          "expected": 65531
+        }
+      ]
+    },
+    {
+      "id": "overlapping-subnets",
+      "title": "Find overlapping subnets",
+      "difficulty": "medium",
+      "topic": "networking",
+      "functionName": "overlaps",
+      "description": "VNet peering fails if address spaces overlap. Write `overlaps(cidrs)` returning every overlapping pair as `[a, b]` lists, where `a` comes before `b` in the input, in input order.",
+      "starter": "import ipaddress\n\ndef overlaps(cidrs):\n    return []\n",
+      "fixtures": "SUBNETS = [\"10.0.0.0/16\", \"10.1.0.0/24\", \"10.0.4.0/22\", \"192.168.0.0/24\", \"10.1.0.128/25\", \"172.16.0.0/12\"]",
+      "hints": [
+        "`itertools.combinations(cidrs, 2)` yields each pair once, in order.",
+        "`ipaddress.ip_network(a).overlaps(ipaddress.ip_network(b))`."
+      ],
+      "solution": "import ipaddress\nfrom itertools import combinations\n\ndef overlaps(cidrs):\n    return [[a, b] for a, b in combinations(cidrs, 2) if ipaddress.ip_network(a).overlaps(ipaddress.ip_network(b))]\n",
+      "tests": [
+        {
+          "name": "the sample plan",
+          "call": "overlaps(SUBNETS)",
+          "hidden": false,
+          "expected": [
+            ["10.0.0.0/16", "10.0.4.0/22"],
+            ["10.1.0.0/24", "10.1.0.128/25"]
+          ]
+        },
+        {
+          "name": "no overlaps",
+          "call": "overlaps([\"10.0.0.0/24\", \"10.0.1.0/24\"])",
+          "hidden": true,
+          "expected": []
+        }
+      ]
+    },
+    {
+      "id": "which-subnet",
+      "title": "Which subnet is this IP in?",
+      "difficulty": "medium",
+      "topic": "networking",
+      "functionName": "find_subnet",
+      "description": "Write `find_subnet(ip, subnets)` returning the name of the subnet that contains `ip` from a dict of `{name: cidr}`. If more than one matches, return the most specific (longest prefix). Return `None` if none do.",
+      "starter": "import ipaddress\n\ndef find_subnet(ip, subnets):\n    return None\n",
+      "fixtures": "VNET_SUBNETS = {\"vnet\": \"10.0.0.0/16\", \"snet-web\": \"10.0.1.0/24\", \"snet-app\": \"10.0.2.0/24\", \"snet-app-pe\": \"10.0.2.128/26\", \"GatewaySubnet\": \"10.0.255.0/27\"}",
+      "hints": [
+        "`ipaddress.ip_address(ip) in ipaddress.ip_network(cidr)` tests membership.",
+        "Of the matches, pick the one with the largest `prefixlen`."
+      ],
+      "solution": "import ipaddress\n\ndef find_subnet(ip, subnets):\n    address = ipaddress.ip_address(ip)\n    matches = [(ipaddress.ip_network(cidr).prefixlen, name) for name, cidr in subnets.items() if address in ipaddress.ip_network(cidr)]\n    return max(matches)[1] if matches else None\n",
+      "tests": [
+        {
+          "name": "a web server",
+          "call": "find_subnet(\"10.0.1.10\", VNET_SUBNETS)",
+          "hidden": false,
+          "expected": "snet-web"
+        },
+        {
+          "name": "most specific wins",
+          "call": "find_subnet(\"10.0.2.130\", VNET_SUBNETS)",
+          "hidden": false,
+          "expected": "snet-app-pe"
+        },
+        {
+          "name": "only the VNet",
+          "call": "find_subnet(\"10.0.9.9\", VNET_SUBNETS)",
+          "hidden": true,
+          "expected": "vnet"
+        },
+        {
+          "name": "outside everything",
+          "call": "find_subnet(\"192.168.1.1\", VNET_SUBNETS)",
+          "hidden": true,
+          "expected": null
+        }
+      ]
+    },
+    {
+      "id": "retry-backoff",
+      "title": "Retry with exponential backoff",
+      "difficulty": "hard",
+      "topic": "resilience",
+      "functionName": "retry",
+      "description": "Transient failures (throttling, a dropped connection) deserve a retry. Write `retry(func, attempts=3, base_delay=1.0, sleep=time.sleep)` that calls `func()` and returns its result. If it raises, wait `base_delay`, then `2 x base_delay`, then `4 x base_delay`... between attempts, calling `sleep(seconds)` to wait. After `attempts` failed tries, re-raise the last exception. Only retry `ConnectionError` and `TimeoutError` - anything else is raised at once.",
+      "starter": "import time\n\ndef retry(func, attempts=3, base_delay=1.0, sleep=time.sleep):\n    return func()\n",
+      "fixtures": "class FakeSleep:\n    \"\"\"Stands in for time.sleep so the tests do not actually wait.\"\"\"\n    def __init__(self):\n        self.delays = []\n    def __call__(self, seconds):\n        self.delays.append(seconds)\n\ndef flaky(failures, error=ConnectionError):\n    \"\"\"A function that fails `failures` times, then returns \"ok\".\"\"\"\n    state = {\"calls\": 0}\n    def call():\n        state[\"calls\"] += 1\n        if state[\"calls\"] <= failures:\n            raise error(f\"attempt {state['calls']} failed\")\n        return \"ok\"\n    return call\n\ndef run_retry(failures, attempts, error=ConnectionError):\n    sleep = FakeSleep()\n    try:\n        result = retry(flaky(failures, error), attempts=attempts, base_delay=0.5, sleep=sleep)\n    except Exception as exc:\n        result = type(exc).__name__\n    return {\"result\": result, \"delays\": sleep.delays}",
+      "hints": [
+        "Loop `for attempt in range(attempts)`, `try: return func()`, and `except (ConnectionError, TimeoutError)`.",
+        "Sleep `base_delay * 2 ** attempt` - but not after the final attempt; re-raise with a bare `raise` there."
+      ],
+      "solution": "import time\n\ndef retry(func, attempts=3, base_delay=1.0, sleep=time.sleep):\n    for attempt in range(attempts):\n        try:\n            return func()\n        except (ConnectionError, TimeoutError):\n            if attempt == attempts - 1:\n                raise\n            sleep(base_delay * 2 ** attempt)\n",
+      "tests": [
+        {
+          "name": "works first time",
+          "call": "run_retry(0, 3)",
+          "hidden": false,
+          "expected": {
+            "result": "ok",
+            "delays": []
+          }
+        },
+        {
+          "name": "succeeds on the third try",
+          "call": "run_retry(2, 3)",
+          "hidden": false,
+          "expected": {
+            "result": "ok",
+            "delays": [0.5, 1.0]
+          }
+        },
+        {
+          "name": "gives up after the last attempt",
+          "call": "run_retry(5, 3)",
+          "hidden": false,
+          "expected": {
+            "result": "ConnectionError",
+            "delays": [0.5, 1.0]
+          }
+        },
+        {
+          "name": "does not retry other errors",
+          "call": "run_retry(1, 3, ValueError)",
+          "hidden": true,
+          "expected": {
+            "result": "ValueError",
+            "delays": []
+          }
+        },
+        {
+          "name": "more attempts",
+          "call": "run_retry(4, 5)",
+          "hidden": true,
+          "expected": {
+            "result": "ok",
+            "delays": [0.5, 1.0, 2.0, 4.0]
+          }
+        }
+      ]
+    },
+    {
+      "id": "unhealthy-pods",
+      "title": "Unhealthy pods from kubectl",
+      "difficulty": "medium",
+      "topic": "logs",
+      "functionName": "unhealthy_pods",
+      "description": "Parse the table printed by `kubectl get pods`. Write `unhealthy_pods(text)` returning `{name: status}` for pods that are not ready and not `Completed` - \"not ready\" means the two numbers in READY differ (`0/1`).",
+      "starter": "def unhealthy_pods(text):\n    return {}\n",
+      "fixtures": "KUBECTL_PODS = \"\"\"\\\nNAME                          READY   STATUS             RESTARTS      AGE\nshop-api-7d9f8c6b5-2xkqp      1/1     Running            0             2d\nshop-api-7d9f8c6b5-9wzlm      0/1     CrashLoopBackOff   14 (2m ago)   2d\nshop-web-5c7b9d8f4-lq8rt      1/1     Running            1 (5h ago)    5h\nshop-web-5c7b9d8f4-zt2mn      1/1     Running            0             5h\nredis-0                       1/1     Running            0             9d\nmigrate-job-x7k2p             0/1     Completed          0             1d\nworker-6f8d7c9b4-p4hx2        0/1     ImagePullBackOff   0             10m\n\"\"\"",
+      "hints": [
+        "Skip the header line, then `line.split()` - the first three fields are NAME, READY and STATUS.",
+        "`ready, total = fields[1].split(\"/\")`."
+      ],
+      "solution": "def unhealthy_pods(text):\n    result = {}\n    for line in text.splitlines()[1:]:\n        fields = line.split()\n        if len(fields) < 3:\n            continue\n        name, ready, status = fields[:3]\n        have, want = ready.split('/')\n        if have != want and status != 'Completed':\n            result[name] = status\n    return result\n",
+      "tests": [
+        {
+          "name": "the cluster",
+          "call": "unhealthy_pods(KUBECTL_PODS)",
+          "hidden": false,
+          "expected": {
+            "shop-api-7d9f8c6b5-9wzlm": "CrashLoopBackOff",
+            "worker-6f8d7c9b4-p4hx2": "ImagePullBackOff"
+          }
+        },
+        {
+          "name": "only a header",
+          "call": "unhealthy_pods(\"NAME READY STATUS RESTARTS AGE\\n\")",
+          "hidden": true,
+          "expected": {}
+        }
+      ]
+    },
+    {
+      "id": "cost-by-group",
+      "title": "Cost per resource group (pandas)",
+      "difficulty": "medium",
+      "topic": "data",
+      "functionName": "cost_by_group",
+      "description": "A cost-management export arrives as CSV. Using **pandas**, write `cost_by_group(csv_text)` returning `{resource_group: total_cost}` with each total rounded to 2 decimal places. (The first run downloads pandas - give it a moment.)",
+      "starter": "import io\nimport pandas as pd\n\ndef cost_by_group(csv_text):\n    df = pd.read_csv(io.StringIO(csv_text))\n    return {}\n",
+      "fixtures": "COSTS_CSV = \"\"\"\\\ndate,resource_group,service,cost\n2025-09-01,rg-shop-prod,Virtual Machines,41.20\n2025-09-01,rg-shop-prod,Azure SQL Database,18.75\n2025-09-01,rg-data-prod,Storage,6.10\n2025-09-02,rg-shop-prod,Virtual Machines,41.20\n2025-09-02,rg-devops,Container Registry,5.00\n2025-09-02,rg-data-prod,Storage,6.35\n2025-09-03,rg-shop-prod,Virtual Machines,88.90\n2025-09-03,rg-shop-prod,Azure SQL Database,18.75\n2025-09-03,rg-devops,Virtual Machines,12.40\n2025-09-03,rg-data-prod,Storage,6.40\n\"\"\"",
+      "hints": [
+        "`df.groupby(\"resource_group\")[\"cost\"].sum()` totals each group.",
+        "`.round(2).to_dict()` gives the dict."
+      ],
+      "solution": "import io\nimport pandas as pd\n\ndef cost_by_group(csv_text):\n    df = pd.read_csv(io.StringIO(csv_text))\n    return df.groupby('resource_group')['cost'].sum().round(2).to_dict()\n",
+      "tests": [
+        {
+          "name": "the export",
+          "call": "cost_by_group(COSTS_CSV)",
+          "hidden": false,
+          "expected": {
+            "rg-data-prod": 18.85,
+            "rg-devops": 17.4,
+            "rg-shop-prod": 208.8
+          }
+        },
+        {
+          "name": "one row",
+          "call": "cost_by_group(\"date,resource_group,service,cost\\n2025-09-01,rg-a,Storage,1.239\\n\")",
+          "hidden": true,
+          "expected": {
+            "rg-a": 1.24
+          }
+        }
+      ]
+    },
+    {
+      "id": "cost-spike",
+      "title": "Spot a cost spike (pandas)",
+      "difficulty": "hard",
+      "topic": "data",
+      "functionName": "cost_spikes",
+      "description": "Using **pandas**, write `cost_spikes(csv_text, factor)` returning the sorted list of `\"date service\"` strings where a service's total cost for that day is more than `factor` times its average daily cost.",
+      "starter": "import io\nimport pandas as pd\n\ndef cost_spikes(csv_text, factor):\n    df = pd.read_csv(io.StringIO(csv_text))\n    return []\n",
+      "fixtures": "COSTS_CSV = \"\"\"\\\ndate,resource_group,service,cost\n2025-09-01,rg-shop-prod,Virtual Machines,41.20\n2025-09-01,rg-shop-prod,Azure SQL Database,18.75\n2025-09-01,rg-data-prod,Storage,6.10\n2025-09-02,rg-shop-prod,Virtual Machines,41.20\n2025-09-02,rg-devops,Container Registry,5.00\n2025-09-02,rg-data-prod,Storage,6.35\n2025-09-03,rg-shop-prod,Virtual Machines,88.90\n2025-09-03,rg-shop-prod,Azure SQL Database,18.75\n2025-09-03,rg-devops,Virtual Machines,12.40\n2025-09-03,rg-data-prod,Storage,6.40\n\"\"\"",
+      "hints": [
+        "First total per day and service: `daily = df.groupby([\"date\", \"service\"], as_index=False)[\"cost\"].sum()`.",
+        "`daily.groupby(\"service\")[\"cost\"].transform(\"mean\")` gives each row its service's average - compare against that."
+      ],
+      "solution": "import io\nimport pandas as pd\n\ndef cost_spikes(csv_text, factor):\n    df = pd.read_csv(io.StringIO(csv_text))\n    daily = df.groupby(['date', 'service'], as_index=False)['cost'].sum()\n    average = daily.groupby('service')['cost'].transform('mean')\n    spikes = daily[daily['cost'] > factor * average]\n    return sorted(f'{row.date} {row.service}' for row in spikes.itertuples())\n",
+      "tests": [
+        {
+          "name": "a 1.3x spike",
+          "call": "cost_spikes(COSTS_CSV, 1.3)",
+          "hidden": false,
+          "expected": ["2025-09-03 Virtual Machines"]
+        },
+        {
+          "name": "nothing doubles",
+          "call": "cost_spikes(COSTS_CSV, 2)",
+          "hidden": true,
+          "expected": []
+        }
+      ]
+    }
+  ]
+}

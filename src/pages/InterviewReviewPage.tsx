@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { allInterviewQuestions, interviewTopics } from '../content/interview'
 import { useProgress } from '../lib/use-progress'
+import { interviewCardId } from '../lib/srs'
 import { countInterview } from '../lib/interview-stats'
 import { InterviewQuestionCard } from '../components/InterviewQuestionCard'
 import { EmptyState } from '../components/ui/StateBlock'
@@ -13,7 +14,7 @@ import { Badge } from '../components/ui/Badge'
  * built yourself of the things you could not say out loud.
  */
 export function InterviewReviewPage() {
-  const { state, setInterviewStatus } = useProgress()
+  const { state, setInterviewStatus, rateCard } = useProgress()
   const overall = countInterview(interviewTopics, state)
 
   const queue = allInterviewQuestions.filter(
@@ -65,6 +66,8 @@ export function InterviewReviewPage() {
                 index={index + 1}
                 status={state.interview[entry.question.id]?.status}
                 onStatusChange={(next) => setInterviewStatus(entry.question.id, next)}
+                srsCard={state.srs[interviewCardId(entry.question.id)]}
+                onRate={(rating) => rateCard(interviewCardId(entry.question.id), rating)}
               />
             </div>
           ))}

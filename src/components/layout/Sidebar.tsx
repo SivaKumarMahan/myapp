@@ -9,6 +9,7 @@ import { courseCompletion, domainStats } from '../../lib/stats'
 import { ProgressBar } from '../ui/ProgressBar'
 import { BrandMark } from './BrandMark'
 import { courseToolsFor, mainNav, utilityNav } from './navigation'
+import { mistakeCount, queueCounts } from '../../lib/review-deck'
 
 /**
  * Desktop navigation.
@@ -27,6 +28,8 @@ export function Sidebar() {
   const completion = courseCompletion(course, state)
   const domains = domainStats(course, state)
   const interviewCounts = countInterview(interviewTopics, state)
+  const queue = queueCounts(state)
+  const mistakes = mistakeCount(state)
   /* The Courses header summarises EVERY course, not just the active one. */
   const allLessons = courseIndexes.reduce(
     (sum, entry) => sum + courseCompletion(entry.course, state).total,
@@ -49,6 +52,33 @@ export function Sidebar() {
             {home.icon}
           </span>
           {home.label}
+        </NavLink>
+        <NavLink to="/review" className="sidebar__link">
+          <span className="sidebar__link-icon" aria-hidden="true">
+            🔁
+          </span>
+          <span className="nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
+            Due today
+          </span>
+          <span
+            className={`badge ${queue.due > 0 ? 'badge--warning' : ''}`}
+            aria-label={`${queue.due} due, ${queue.fresh} new`}
+          >
+            {queue.due} · {queue.fresh} new
+          </span>
+        </NavLink>
+        <NavLink to="/mistakes" className="sidebar__link">
+          <span className="sidebar__link-icon" aria-hidden="true">
+            📓
+          </span>
+          <span style={{ flex: '1 1 auto', minWidth: 0 }}>Mistake notebook</span>
+          {mistakes > 0 && <span className="badge badge--danger">{mistakes}</span>}
+        </NavLink>
+        <NavLink to="/stats" className="sidebar__link">
+          <span className="sidebar__link-icon" aria-hidden="true">
+            📈
+          </span>
+          My stats
         </NavLink>
       </div>
 

@@ -4,6 +4,7 @@ import dockerfile from 'highlight.js/lib/languages/dockerfile'
 import json from 'highlight.js/lib/languages/json'
 import powershell from 'highlight.js/lib/languages/powershell'
 import python from 'highlight.js/lib/languages/python'
+import sql from 'highlight.js/lib/languages/sql'
 import yaml from 'highlight.js/lib/languages/yaml'
 import { bicep } from './bicep-language'
 import { hcl } from './hcl-language'
@@ -20,6 +21,7 @@ hljs.registerLanguage('bash', bash)
 hljs.registerLanguage('json', json)
 hljs.registerLanguage('dockerfile', dockerfile)
 hljs.registerLanguage('python', python)
+hljs.registerLanguage('sql', sql)
 hljs.registerLanguage('hcl', hcl)
 hljs.registerLanguage('powershell', powershell)
 hljs.registerLanguage('bicep', bicep)

@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { interviewTopicById, interviewTopics } from '../content/interview'
 import type { InterviewLevel, InterviewQuestionKind } from '../content/types'
 import { useProgress } from '../lib/use-progress'
+import { interviewCardId } from '../lib/srs'
 import { countInterview, levelLabel } from '../lib/interview-stats'
 import { InterviewQuestionCard } from '../components/InterviewQuestionCard'
 import { Collapsible } from '../components/ui/Collapsible'
@@ -39,7 +40,7 @@ const statusFilters: { id: StatusFilter; label: string }[] = [
 
 export function InterviewTopicPage() {
   const { topicId } = useParams<{ topicId: string }>()
-  const { state, setInterviewStatus } = useProgress()
+  const { state, setInterviewStatus, rateCard } = useProgress()
   const topic = topicId ? interviewTopicById.get(topicId) : undefined
 
   const [level, setLevel] = useState<LevelFilter>('all')
@@ -174,6 +175,8 @@ export function InterviewTopicPage() {
                 index={index + 1}
                 status={state.interview[question.id]?.status}
                 onStatusChange={(next) => setInterviewStatus(question.id, next)}
+                srsCard={state.srs[interviewCardId(question.id)]}
+                onRate={(rating) => rateCard(interviewCardId(question.id), rating)}
               />
             ))}
           </div>

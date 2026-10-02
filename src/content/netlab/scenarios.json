@@ -1,0 +1,997 @@
+{
+  "$comment": "Networking lab scenarios. cidr: requirements are JMESPath over {vnet, subnets[{name, cidr, prefix, usable}], errors, warnings}. nsg: every packet must get its expected verdict. peering: answers are checked against the reachability engine in the tests.",
+  "cidr": [
+    {
+      "id": "hub-vnet",
+      "title": "Plan a hub VNet",
+      "exam": "AZ-104",
+      "brief": "You are building the hub of a hub-and-spoke network in **10.0.0.0/22**. It needs a VPN gateway, Azure Firewall, Azure Bastion and a management subnet with room for at least 50 VMs. Give each service the subnet it needs - right name, big enough - with no overlaps.",
+      "start": {
+        "vnet": "10.0.0.0/22",
+        "subnets": [
+          {
+            "name": "GatewaySubnet",
+            "cidr": "10.0.0.0/28"
+          }
+        ]
+      },
+      "solution": {
+        "vnet": "10.0.0.0/22",
+        "subnets": [
+          {
+            "name": "GatewaySubnet",
+            "cidr": "10.0.0.0/27"
+          },
+          {
+            "name": "AzureFirewallSubnet",
+            "cidr": "10.0.1.0/26"
+          },
+          {
+            "name": "AzureBastionSubnet",
+            "cidr": "10.0.1.64/26"
+          },
+          {
+            "name": "snet-management",
+            "cidr": "10.0.2.0/25"
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "description": "No errors or warnings",
+          "query": "errors == `0` && warnings == `0`"
+        },
+        {
+          "description": "GatewaySubnet is there",
+          "query": "length(subnets[?name=='GatewaySubnet']) == `1`"
+        },
+        {
+          "description": "AzureFirewallSubnet is there",
+          "query": "length(subnets[?name=='AzureFirewallSubnet']) == `1`"
+        },
+        {
+          "description": "AzureBastionSubnet is there",
+          "query": "length(subnets[?name=='AzureBastionSubnet']) == `1`"
+        },
+        {
+          "description": "A management subnet has at least 50 usable addresses",
+          "query": "length(subnets[?contains(name, 'management') && usable >= `50`]) >= `1`"
+        }
+      ]
+    },
+    {
+      "id": "fix-plan",
+      "title": "Fix a broken subnet plan",
+      "exam": "AZ-104",
+      "brief": "A colleague's plan for **10.20.0.0/16** will not deploy. Find and fix every problem, keeping the web, app and data subnets and adding Azure Bastion.",
+      "start": {
+        "vnet": "10.20.0.0/16",
+        "subnets": [
+          {
+            "name": "snet-web",
+            "cidr": "10.20.1.0/24"
+          },
+          {
+            "name": "snet-app",
+            "cidr": "10.20.1.128/25"
+          },
+          {
+            "name": "snet-data",
+            "cidr": "10.21.0.0/24"
+          },
+          {
+            "name": "BastionSubnet",
+            "cidr": "10.20.10.0/27"
+          },
+          {
+            "name": "snet-tiny",
+            "cidr": "10.20.20.0/30"
+          }
+        ]
+      },
+      "solution": {
+        "vnet": "10.20.0.0/16",
+        "subnets": [
+          {
+            "name": "snet-web",
+            "cidr": "10.20.1.0/24"
+          },
+          {
+            "name": "snet-app",
+            "cidr": "10.20.2.0/24"
+          },
+          {
+            "name": "snet-data",
+            "cidr": "10.20.3.0/24"
+          },
+          {
+            "name": "AzureBastionSubnet",
+            "cidr": "10.20.10.0/26"
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "description": "No errors or warnings",
+          "query": "errors == `0` && warnings == `0`"
+        },
+        {
+          "description": "snet-web, snet-app and snet-data are still there",
+          "query": "length(subnets[?name=='snet-web' || name=='snet-app' || name=='snet-data']) == `3`"
+        },
+        {
+          "description": "Azure Bastion has its subnet",
+          "query": "length(subnets[?name=='AzureBastionSubnet']) == `1`"
+        }
+      ]
+    },
+    {
+      "id": "size-for-aks",
+      "title": "Size a subnet for AKS",
+      "exam": "AZ-104",
+      "brief": "An AKS cluster using Azure CNI needs **500** addresses in its subnet today, and the VNet is **10.1.0.0/20**. Add `snet-aks` big enough, and `snet-ingress` with at least 20 usable addresses. Remember Azure keeps 5 addresses in every subnet.",
+      "start": {
+        "vnet": "10.1.0.0/20",
+        "subnets": [
+          {
+            "name": "snet-aks",
+            "cidr": "10.1.0.0/24"
+          }
+        ]
+      },
+      "solution": {
+        "vnet": "10.1.0.0/20",
+        "subnets": [
+          {
+            "name": "snet-aks",
+            "cidr": "10.1.0.0/23"
+          },
+          {
+            "name": "snet-ingress",
+            "cidr": "10.1.2.0/27"
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "description": "No errors",
+          "query": "errors == `0`"
+        },
+        {
+          "description": "snet-aks has at least 500 usable addresses",
+          "query": "length(subnets[?name=='snet-aks' && usable >= `500`]) == `1`"
+        },
+        {
+          "description": "snet-ingress has at least 20 usable addresses",
+          "query": "length(subnets[?name=='snet-ingress' && usable >= `20`]) == `1`"
+        }
+      ]
+    },
+    {
+      "id": "smallest-vnet",
+      "title": "The smallest VNet that fits",
+      "exam": "AZ-104",
+      "brief": "Plan four subnets, each with at least **25** usable addresses, in the **smallest** VNet address space that holds them all. Start from 192.168.10.0.",
+      "start": {
+        "vnet": "192.168.10.0/24",
+        "subnets": [
+          {
+            "name": "snet-a",
+            "cidr": "192.168.10.0/26"
+          }
+        ]
+      },
+      "solution": {
+        "vnet": "192.168.10.0/25",
+        "subnets": [
+          {
+            "name": "snet-a",
+            "cidr": "192.168.10.0/27"
+          },
+          {
+            "name": "snet-b",
+            "cidr": "192.168.10.32/27"
+          },
+          {
+            "name": "snet-c",
+            "cidr": "192.168.10.64/27"
+          },
+          {
+            "name": "snet-d",
+            "cidr": "192.168.10.96/27"
+          }
+        ]
+      },
+      "requirements": [
+        {
+          "description": "No errors",
+          "query": "errors == `0`"
+        },
+        {
+          "description": "Four subnets, each with at least 25 usable addresses",
+          "query": "length(subnets[?usable >= `25`]) == `4` && length(subnets) == `4`"
+        },
+        {
+          "description": "The VNet is as small as it can be (a /25)",
+          "query": "vnet.prefix == `25`"
+        }
+      ]
+    }
+  ],
+  "nsg": [
+    {
+      "id": "open-web",
+      "title": "Open a web server - safely",
+      "exam": "AZ-104",
+      "brief": "The web VM (10.0.1.4) must accept **HTTPS from anywhere** and **SSH only from the office (203.0.113.10)**. Nothing else from the Internet. Add the rules to the subnet NSG.",
+      "vnet": ["10.0.0.0/16"],
+      "subnetNsg": {
+        "name": "nsg-snet-web",
+        "attached": true,
+        "rules": []
+      },
+      "nicNsg": {
+        "name": "nsg-vm-web",
+        "attached": false,
+        "rules": []
+      },
+      "packets": [
+        {
+          "label": "HTTPS from a customer",
+          "packet": {
+            "direction": "Inbound",
+            "protocol": "TCP",
+            "sourceIp": "198.51.100.7",
+            "sourcePort": 51000,
+            "destinationIp": "10.0.1.4",
+            "destinationPort": 443
+          },
+          "expect": "Allow"
+        },
+        {
+          "label": "HTTP from a customer",
+          "packet": {
+            "direction": "Inbound",
+            "protocol": "TCP",
+            "sourceIp": "198.51.100.7",
+            "sourcePort": 51000,
+            "destinationIp": "10.0.1.4",
+            "destinationPort": 80
+          },
+          "expect": "Deny"
+        },
+        {
+          "label": "SSH from the office",
+          "packet": {
+            "direction": "Inbound",
+            "protocol": "TCP",
+            "sourceIp": "203.0.113.10",
+            "sourcePort": 52000,
+            "destinationIp": "10.0.1.4",
+            "destinationPort": 22
+          },
+          "expect": "Allow"
+        },
+        {
+          "label": "SSH from anywhere else",
+          "packet": {
+            "direction": "Inbound",
+            "protocol": "TCP",
+            "sourceIp": "198.51.100.7",
+            "sourcePort": 52000,
+            "destinationIp": "10.0.1.4",
+            "destinationPort": 22
+          },
+          "expect": "Deny"
+        }
+      ],
+      "solution": {
+        "subnetNsg": [
+          {
+            "name": "allow-https",
+            "priority": 100,
+            "direction": "Inbound",
+            "access": "Allow",
+            "protocol": "TCP",
+            "source": "Internet",
+            "sourcePorts": "*",
+            "destination": "*",
+            "destinationPorts": "443"
+          },
+          {
+            "name": "allow-ssh-office",
+            "priority": 110,
+            "direction": "Inbound",
+            "access": "Allow",
+            "protocol": "TCP",
+            "source": "203.0.113.10",
+            "sourcePorts": "*",
+            "destination": "*",
+            "destinationPorts": "22"
+          }
+        ],
+        "nicNsg": []
+      }
+    },
+    {
+      "id": "two-layers",
+      "title": "Two NSGs, one packet",
+      "exam": "AZ-104",
+      "brief": "HTTPS to the web VM is allowed on the subnet, yet customers get timeouts. Inbound traffic must pass the **subnet NSG first, then the NIC NSG**. Find what blocks it and fix it, without opening anything else.",
+      "vnet": ["10.0.0.0/16"],
+      "subnetNsg": {
+        "name": "nsg-snet-web",
+        "attached": true,
+        "rules": [
+          {
+            "name": "allow-https",
+            "priority": 100,
+            "direction": "Inbound",
+            "access": "Allow",
+            "protocol": "TCP",
+            "source": "Internet",
+            "sourcePorts": "*",
+            "destination": "*",
+            "destinationPorts": "443"
+          }
+        ]
+      },
+      "nicNsg": {
+        "name": "nsg-vm-web",
+        "attached": true,
+        "rules": [
+          {
+            "name": "deny-web-ports",
+            "priority": 100,
+            "direction": "Inbound",
+            "access": "Deny",
+            "protocol": "TCP",
+            "source": "Any",
+            "sourcePorts": "*",
+            "destination": "*",
+            "destinationPorts": "80-443"
+          }
+        ]
+      },
+      "packets": [
+        {
+          "label": "HTTPS from a customer",
+          "packet": {
+            "direction": "Inbound",
+            "protocol": "TCP",
+            "sourceIp": "198.51.100.7",
+            "sourcePort": 51000,
+            "destinationIp": "10.0.1.4",
+            "destinationPort": 443
+          },
+          "expect": "Allow"
+        },
+        {
+          "label": "HTTP from a customer",
+          "packet": {
+            "direction": "Inbound",
+            "protocol": "TCP",
+            "sourceIp": "198.51.100.7",
+            "sourcePort": 51000,
+            "destinationIp": "10.0.1.4",
+            "destinationPort": 80
+          },
+          "expect": "Deny"
+        },
+        {
+          "label": "App server calling the web VM",
+          "packet": {
+            "direction": "Inbound",
+            "protocol": "TCP",
+            "sourceIp": "10.0.2.4",
+            "sourcePort": 40000,
+            "destinationIp": "10.0.1.4",
+            "destinationPort": 8080
+          },
+          "expect": "Allow"
+        }
+      ],
+      "solution": {
+        "subnetNsg": [
+          {
+            "name": "allow-https",
+            "priority": 100,
+            "direction": "Inbound",
+            "access": "Allow",
+            "protocol": "TCP",
+            "source": "Internet",
+            "sourcePorts": "*",
+            "destination": "*",
+            "destinationPorts": "443"
+          }
+        ],
+        "nicNsg": [
+          {
+            "name": "allow-https",
+            "priority": 100,
+            "direction": "Inbound",
+            "access": "Allow",
+            "protocol": "TCP",
+            "source": "Internet",
+            "sourcePorts": "*",
+            "destination": "*",
+            "destinationPorts": "443"
+          },
+          {
+            "name": "deny-web-ports",
+            "priority": 110,
+            "direction": "Inbound",
+            "access": "Deny",
+            "protocol": "TCP",
+            "source": "Any",
+            "sourcePorts": "*",
+            "destination": "*",
+            "destinationPorts": "80-443"
+          }
+        ]
+      }
+    },
+    {
+      "id": "priority-trap",
+      "title": "The priority trap",
+      "exam": "AZ-104",
+      "brief": "Someone added a \"deny everything\" rule to be safe. Now HTTPS fails, the VMs cannot talk to each other and the load balancer marks every VM unhealthy. Fix the rules: HTTPS from the Internet, VNet traffic and load-balancer probes must work; HTTP must not.",
+      "vnet": ["10.0.0.0/16"],
+      "subnetNsg": {
+        "name": "nsg-snet-web",
+        "attached": true,
+        "rules": [
+          {
+            "name": "deny-all",
+            "priority": 100,
+            "direction": "Inbound",
+            "access": "Deny",
+            "protocol": "Any",
+            "source": "Any",
+            "sourcePorts": "*",
+            "destination": "*",
+            "destinationPorts": "*"
+          },
+          {
+            "name": "allow-https",
+            "priority": 200,
+            "direction": "Inbound",
+            "access": "Allow",
+            "protocol": "TCP",
+            "source": "Internet",
+            "sourcePorts": "*",
+            "destination": "*",
+            "destinationPorts": "443"
+          }
+        ]
+      },
+      "nicNsg": {
+        "name": "nsg-vm-web",
+        "attached": false,
+        "rules": []
+      },
+      "packets": [
+        {
+          "label": "HTTPS from a customer",
+          "packet": {
+            "direction": "Inbound",
+            "protocol": "TCP",
+            "sourceIp": "198.51.100.7",
+            "sourcePort": 51000,
+            "destinationIp": "10.0.1.4",
+            "destinationPort": 443
+          },
+          "expect": "Allow"
+        },
+        {
+          "label": "Load balancer health probe",
+          "packet": {
+            "direction": "Inbound",
+            "protocol": "TCP",
+            "sourceIp": "168.63.129.16",
+            "sourcePort": 60000,
+            "destinationIp": "10.0.1.4",
+            "destinationPort": 443
+          },
+          "expect": "Allow"
+        },
+        {
+          "label": "Another VM in the VNet",
+          "packet": {
+            "direction": "Inbound",
+            "protocol": "TCP",
+            "sourceIp": "10.0.1.5",
+            "sourcePort": 40000,
+            "destinationIp": "10.0.1.4",
+            "destinationPort": 8080
+          },
+          "expect": "Allow"
+        },
+        {
+          "label": "HTTP from a customer",
+          "packet": {
+            "direction": "Inbound",
+            "protocol": "TCP",
+            "sourceIp": "198.51.100.7",
+            "sourcePort": 51000,
+            "destinationIp": "10.0.1.4",
+            "destinationPort": 80
+          },
+          "expect": "Deny"
+        }
+      ],
+      "solution": {
+        "subnetNsg": [
+          {
+            "name": "allow-https",
+            "priority": 100,
+            "direction": "Inbound",
+            "access": "Allow",
+            "protocol": "TCP",
+            "source": "Internet",
+            "sourcePorts": "*",
+            "destination": "*",
+            "destinationPorts": "443"
+          }
+        ],
+        "nicNsg": []
+      }
+    },
+    {
+      "id": "outbound",
+      "title": "Lock down outbound traffic",
+      "exam": "AZ-104",
+      "brief": "Compliance says the VMs may only reach the Internet on **HTTPS (443)**. They must still reach each other. By default NSGs allow all outbound Internet traffic - change that.",
+      "vnet": ["10.0.0.0/16"],
+      "subnetNsg": {
+        "name": "nsg-snet-app",
+        "attached": true,
+        "rules": []
+      },
+      "nicNsg": {
+        "name": "nsg-vm-app",
+        "attached": false,
+        "rules": []
+      },
+      "packets": [
+        {
+          "label": "Calling an HTTPS API",
+          "packet": {
+            "direction": "Outbound",
+            "protocol": "TCP",
+            "sourceIp": "10.0.1.4",
+            "sourcePort": 50000,
+            "destinationIp": "20.50.2.10",
+            "destinationPort": 443
+          },
+          "expect": "Allow"
+        },
+        {
+          "label": "Downloading over HTTP",
+          "packet": {
+            "direction": "Outbound",
+            "protocol": "TCP",
+            "sourceIp": "10.0.1.4",
+            "sourcePort": 50000,
+            "destinationIp": "20.50.2.10",
+            "destinationPort": 80
+          },
+          "expect": "Deny"
+        },
+        {
+          "label": "DNS to a public resolver",
+          "packet": {
+            "direction": "Outbound",
+            "protocol": "UDP",
+            "sourceIp": "10.0.1.4",
+            "sourcePort": 50000,
+            "destinationIp": "8.8.8.8",
+            "destinationPort": 53
+          },
+          "expect": "Deny"
+        },
+        {
+          "label": "Talking to the database VM",
+          "packet": {
+            "direction": "Outbound",
+            "protocol": "TCP",
+            "sourceIp": "10.0.1.4",
+            "sourcePort": 50000,
+            "destinationIp": "10.0.3.4",
+            "destinationPort": 1433
+          },
+          "expect": "Allow"
+        }
+      ],
+      "solution": {
+        "subnetNsg": [
+          {
+            "name": "allow-https-out",
+            "priority": 100,
+            "direction": "Outbound",
+            "access": "Allow",
+            "protocol": "TCP",
+            "source": "*",
+            "sourcePorts": "*",
+            "destination": "Internet",
+            "destinationPorts": "443"
+          },
+          {
+            "name": "deny-internet-out",
+            "priority": 200,
+            "direction": "Outbound",
+            "access": "Deny",
+            "protocol": "Any",
+            "source": "*",
+            "sourcePorts": "*",
+            "destination": "Internet",
+            "destinationPorts": "*"
+          }
+        ],
+        "nicNsg": []
+      }
+    }
+  ],
+  "peering": [
+    {
+      "id": "non-transitive",
+      "title": "Hub and spokes",
+      "exam": "AZ-104",
+      "brief": "Both spokes are peered with the hub, in both directions. There is no firewall in the hub.",
+      "topology": {
+        "vnets": [
+          {
+            "name": "vnet-hub",
+            "addressSpace": "10.0.0.0/16",
+            "firewall": false
+          },
+          {
+            "name": "vnet-spoke1",
+            "addressSpace": "10.1.0.0/16",
+            "firewall": false
+          },
+          {
+            "name": "vnet-spoke2",
+            "addressSpace": "10.2.0.0/16",
+            "firewall": false
+          }
+        ],
+        "links": [
+          {
+            "from": "vnet-hub",
+            "to": "vnet-spoke1",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-spoke1",
+            "to": "vnet-hub",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-hub",
+            "to": "vnet-spoke2",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-spoke2",
+            "to": "vnet-hub",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          }
+        ]
+      },
+      "questions": [
+        {
+          "from": "vnet-spoke1",
+          "to": "vnet-hub",
+          "answer": true
+        },
+        {
+          "from": "vnet-spoke1",
+          "to": "vnet-spoke2",
+          "answer": false
+        }
+      ]
+    },
+    {
+      "id": "one-sided",
+      "title": "Half a peering",
+      "exam": "AZ-104",
+      "brief": "Someone created the hub → spoke2 peering from the hub, and stopped there.",
+      "topology": {
+        "vnets": [
+          {
+            "name": "vnet-hub",
+            "addressSpace": "10.0.0.0/16",
+            "firewall": false
+          },
+          {
+            "name": "vnet-spoke1",
+            "addressSpace": "10.1.0.0/16",
+            "firewall": false
+          },
+          {
+            "name": "vnet-spoke2",
+            "addressSpace": "10.2.0.0/16",
+            "firewall": false
+          }
+        ],
+        "links": [
+          {
+            "from": "vnet-hub",
+            "to": "vnet-spoke1",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-spoke1",
+            "to": "vnet-hub",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-hub",
+            "to": "vnet-spoke2",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          }
+        ]
+      },
+      "questions": [
+        {
+          "from": "vnet-hub",
+          "to": "vnet-spoke2",
+          "answer": false
+        },
+        {
+          "from": "vnet-spoke1",
+          "to": "vnet-hub",
+          "answer": true
+        }
+      ]
+    },
+    {
+      "id": "firewall-hub",
+      "title": "A hub with Azure Firewall",
+      "exam": "AZ-104",
+      "brief": "The hub runs Azure Firewall and the spokes route each other's ranges to it. Spoke 1 and spoke 2 allow forwarded traffic on their peerings; spoke 3 was peered with the defaults.",
+      "topology": {
+        "vnets": [
+          {
+            "name": "vnet-hub",
+            "addressSpace": "10.0.0.0/16",
+            "firewall": true
+          },
+          {
+            "name": "vnet-spoke1",
+            "addressSpace": "10.1.0.0/16",
+            "firewall": false
+          },
+          {
+            "name": "vnet-spoke2",
+            "addressSpace": "10.2.0.0/16",
+            "firewall": false
+          },
+          {
+            "name": "vnet-spoke3",
+            "addressSpace": "10.3.0.0/16",
+            "firewall": false
+          }
+        ],
+        "links": [
+          {
+            "from": "vnet-spoke1",
+            "to": "vnet-hub",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": true
+          },
+          {
+            "from": "vnet-hub",
+            "to": "vnet-spoke1",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-spoke2",
+            "to": "vnet-hub",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": true
+          },
+          {
+            "from": "vnet-hub",
+            "to": "vnet-spoke2",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-spoke3",
+            "to": "vnet-hub",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-hub",
+            "to": "vnet-spoke3",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          }
+        ]
+      },
+      "questions": [
+        {
+          "from": "vnet-spoke1",
+          "to": "vnet-spoke2",
+          "answer": true
+        },
+        {
+          "from": "vnet-spoke1",
+          "to": "vnet-spoke3",
+          "answer": false
+        },
+        {
+          "from": "vnet-spoke3",
+          "to": "vnet-hub",
+          "answer": true
+        }
+      ]
+    },
+    {
+      "id": "overlap",
+      "title": "Overlapping address spaces",
+      "exam": "AZ-104",
+      "brief": "Two teams built VNets independently and now want to peer them.",
+      "topology": {
+        "vnets": [
+          {
+            "name": "vnet-a",
+            "addressSpace": "10.0.0.0/16",
+            "firewall": false
+          },
+          {
+            "name": "vnet-b",
+            "addressSpace": "10.0.128.0/17",
+            "firewall": false
+          }
+        ],
+        "links": [
+          {
+            "from": "vnet-a",
+            "to": "vnet-b",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-b",
+            "to": "vnet-a",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          }
+        ]
+      },
+      "questions": [
+        {
+          "from": "vnet-a",
+          "to": "vnet-b",
+          "answer": false
+        }
+      ]
+    }
+  ],
+  "build": [
+    {
+      "id": "connect-spokes",
+      "title": "Connect the spokes",
+      "exam": "AZ-104",
+      "brief": "Make a VM in spoke 1 able to reach a VM in spoke 2. Either peer them directly, or turn the hub into a routing hub (firewall plus forwarded traffic).",
+      "topology": {
+        "vnets": [
+          {
+            "name": "vnet-hub",
+            "addressSpace": "10.0.0.0/16",
+            "firewall": false
+          },
+          {
+            "name": "vnet-spoke1",
+            "addressSpace": "10.1.0.0/16",
+            "firewall": false
+          },
+          {
+            "name": "vnet-spoke2",
+            "addressSpace": "10.2.0.0/16",
+            "firewall": false
+          }
+        ],
+        "links": [
+          {
+            "from": "vnet-hub",
+            "to": "vnet-spoke1",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-spoke1",
+            "to": "vnet-hub",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-hub",
+            "to": "vnet-spoke2",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-spoke2",
+            "to": "vnet-hub",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          }
+        ]
+      },
+      "goal": {
+        "from": "vnet-spoke1",
+        "to": "vnet-spoke2"
+      },
+      "solution": {
+        "vnets": [
+          {
+            "name": "vnet-hub",
+            "addressSpace": "10.0.0.0/16",
+            "firewall": false
+          },
+          {
+            "name": "vnet-spoke1",
+            "addressSpace": "10.1.0.0/16",
+            "firewall": false
+          },
+          {
+            "name": "vnet-spoke2",
+            "addressSpace": "10.2.0.0/16",
+            "firewall": false
+          }
+        ],
+        "links": [
+          {
+            "from": "vnet-hub",
+            "to": "vnet-spoke1",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-spoke1",
+            "to": "vnet-hub",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-hub",
+            "to": "vnet-spoke2",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-spoke2",
+            "to": "vnet-hub",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-spoke1",
+            "to": "vnet-spoke2",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          },
+          {
+            "from": "vnet-spoke2",
+            "to": "vnet-spoke1",
+            "allowVirtualNetworkAccess": true,
+            "allowForwardedTraffic": false
+          }
+        ]
+      }
+    }
+  ]
+}

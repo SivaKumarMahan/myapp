@@ -34,6 +34,11 @@ describe('navigation', () => {
     expect(screen.getByRole('heading', { level: 1, name: /azure learning hub/i })).toBeVisible()
     expect(screen.getByText(/independent learning tool/i)).toBeVisible()
     expect(screen.getByText(/not affiliated with, endorsed by/i)).toBeVisible()
+    // This is an Azure app: the disclaimer names Microsoft, not the template's old bodies.
+    const disclaimer = screen.getByText(/not affiliated with, endorsed by/i)
+    expect(disclaimer).toHaveTextContent(/sponsored by Microsoft/)
+    expect(disclaimer).toHaveTextContent(/AZ-900, AZ-104, AZ-400 .*trademarks/)
+    expect(disclaimer).not.toHaveTextContent(/Cloud Native|Linux Foundation|HashiCorp/)
   })
 
   it('shows the AZ-104 course card with its progress at zero', () => {

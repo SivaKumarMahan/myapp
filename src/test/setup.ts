@@ -16,10 +16,37 @@ vi.mock('../access/allowed-emails', () => ({
 
 // jsdom does not implement scrollTo, and the app shell calls it on every route
 // change. Stub it so route-change effects do not throw during tests.
-window.scrollTo = (() => {}) as typeof window.scrollTo
+// The runner tests under server/ use the node environment, which has no window.
+if (typeof window !== 'undefined') window.scrollTo = (() => {}) as typeof window.scrollTo
+
+// Nor scrollIntoView, which in-page anchors (#domain-...) use.
+if (typeof window !== 'undefined' && !Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {}
+}
+
+// CodeMirror measures text with Range rects, which jsdom leaves out.
+if (typeof window !== 'undefined' && !Range.prototype.getClientRects) {
+  const empty = () => ({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    toJSON: () => ({}),
+  })
+  Range.prototype.getBoundingClientRect = empty as () => DOMRect
+  Range.prototype.getClientRects = (() => ({
+    length: 0,
+    item: () => null,
+    [Symbol.iterator]: [][Symbol.iterator],
+  })) as unknown as () => DOMRectList
+}
 
 // Nor does it implement matchMedia, which the theme handling touches indirectly.
-if (!window.matchMedia) {
+if (typeof window !== 'undefined' && !window.matchMedia) {
   window.matchMedia = ((query: string) => ({
     matches: false,
     media: query,

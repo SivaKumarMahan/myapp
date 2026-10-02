@@ -1,3 +1,5 @@
+import { lazy, Suspense } from 'react'
+import type { ReactNode } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AccessProvider } from './lib/access-provider'
 import { useAccess } from './lib/use-access'
@@ -21,6 +23,56 @@ import { InterviewHubPage } from './pages/InterviewHubPage'
 import { InterviewTopicPage } from './pages/InterviewTopicPage'
 import { InterviewReviewPage } from './pages/InterviewReviewPage'
 import { SignInPage } from './pages/SignInPage'
+import { PlaygroundPage } from './pages/PlaygroundPage'
+import { ReviewPage } from './pages/ReviewPage'
+import { MistakesPage } from './pages/MistakesPage'
+import { CourseStatsPage, StatsPage } from './pages/StatsPage'
+
+/*
+ * The SQL playground pulls in SQLite (WebAssembly) and CodeMirror, so it is
+ * loaded only when one of its pages is opened. The service worker still
+ * precaches the files, so it works offline once the app is installed.
+ */
+const sqlPages = () => import('./pages/SqlPages')
+const SqlPlaygroundPage = lazy(() => sqlPages().then((m) => ({ default: m.SqlPlaygroundPage })))
+const SqlChallengesPage = lazy(() => sqlPages().then((m) => ({ default: m.SqlChallengesPage })))
+const SqlChallengePage = lazy(() => sqlPages().then((m) => ({ default: m.SqlChallengePage })))
+
+const kqlPages = () => import('./pages/KqlPages')
+const KqlPlaygroundPage = lazy(() => kqlPages().then((m) => ({ default: m.KqlPlaygroundPage })))
+const KqlChallengesPage = lazy(() => kqlPages().then((m) => ({ default: m.KqlChallengesPage })))
+const KqlChallengePage = lazy(() => kqlPages().then((m) => ({ default: m.KqlChallengePage })))
+
+const pythonPages = () => import('./pages/PythonPages')
+const PythonPlaygroundPage = lazy(() =>
+  pythonPages().then((m) => ({ default: m.PythonPlaygroundPage })),
+)
+const PythonChallengesPage = lazy(() =>
+  pythonPages().then((m) => ({ default: m.PythonChallengesPage })),
+)
+const PythonChallengePage = lazy(() =>
+  pythonPages().then((m) => ({ default: m.PythonChallengePage })),
+)
+
+const ConfigLabPage = lazy(() =>
+  import('./pages/ConfigLabPage').then((m) => ({ default: m.ConfigLabPage })),
+)
+const NetworkLabPage = lazy(() =>
+  import('./pages/NetworkLabPage').then((m) => ({ default: m.NetworkLabPage })),
+)
+const CliPage = lazy(() => import('./pages/CliPage').then((m) => ({ default: m.CliPage })))
+
+const Loading = ({ children }: { children: ReactNode }) => (
+  <Suspense
+    fallback={
+      <div className="page">
+        <p className="subtle">Loading…</p>
+      </div>
+    }
+  >
+    {children}
+  </Suspense>
+)
 
 /**
  * The route table.
@@ -43,6 +95,106 @@ function Routed() {
           <Route element={<AppShell />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/progress" element={<ProgressPage />} />
+            <Route path="/playground" element={<PlaygroundPage />} />
+            <Route path="/review" element={<ReviewPage />} />
+            <Route path="/mistakes" element={<MistakesPage />} />
+            <Route path="/stats" element={<StatsPage />} />
+            <Route
+              path="/sql"
+              element={
+                <Loading>
+                  <SqlPlaygroundPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/sql/challenges"
+              element={
+                <Loading>
+                  <SqlChallengesPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/sql/challenges/:challengeId"
+              element={
+                <Loading>
+                  <SqlChallengePage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/network"
+              element={
+                <Loading>
+                  <NetworkLabPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/lab"
+              element={
+                <Loading>
+                  <ConfigLabPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/cli"
+              element={
+                <Loading>
+                  <CliPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/python"
+              element={
+                <Loading>
+                  <PythonPlaygroundPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/python/challenges"
+              element={
+                <Loading>
+                  <PythonChallengesPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/python/challenges/:challengeId"
+              element={
+                <Loading>
+                  <PythonChallengePage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/kql"
+              element={
+                <Loading>
+                  <KqlPlaygroundPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/kql/challenges"
+              element={
+                <Loading>
+                  <KqlChallengesPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/kql/challenges/:challengeId"
+              element={
+                <Loading>
+                  <KqlChallengePage />
+                </Loading>
+              }
+            />
             <Route path="/interview" element={<InterviewHubPage />} />
             {/* Static, so it is ranked above /interview/:topicId. */}
             <Route path="/interview/review" element={<InterviewReviewPage />} />
@@ -56,6 +208,7 @@ function Routed() {
             <Route path="/:courseId/exams/run" element={<ExamRunnerPage />} />
             <Route path="/:courseId/exams/attempts/:attemptId" element={<ExamReviewPage />} />
             <Route path="/:courseId/commands" element={<CommandsPage />} />
+            <Route path="/:courseId/stats" element={<CourseStatsPage />} />
             {/* Convenience redirect for anyone who bookmarks the old path. */}
             <Route path="/:courseId/dashboard" element={<CourseDashboardRedirect />} />
             <Route path="*" element={<NotFoundPage />} />

@@ -1,0 +1,276 @@
+{
+  "$comment": "KQL simulator challenges. Each solution is run through the simulator to produce the expected answer, so no expected results are stored. ordered: true when the question asks for a sort order.",
+  "challenges": [
+    {
+      "id": "failed-request-count",
+      "title": "How many requests failed?",
+      "difficulty": "easy",
+      "exam": "AZ-400",
+      "scenario": "Application Insights",
+      "description": "Count the requests in `requests` that did not succeed. Return a single `Count` column.",
+      "ordered": false,
+      "hints": [
+        "`success` is a boolean: compare it with `false`.",
+        "The `count` operator returns one row with a `Count` column."
+      ],
+      "solution": "requests\n| where success == false\n| count"
+    },
+    {
+      "id": "failed-requests-per-hour",
+      "title": "Failed requests per hour",
+      "difficulty": "easy",
+      "exam": "AZ-400",
+      "scenario": "Application Insights",
+      "description": "Show how many requests failed in each hour. Return `timestamp` (the start of the hour) and `count_`. Add `| render timechart` to see it as a chart.",
+      "ordered": false,
+      "hints": [
+        "`bin(timestamp, 1h)` rounds each timestamp down to the hour.",
+        "`summarize count() by bin(timestamp, 1h)` - the bin column keeps the name `timestamp`."
+      ],
+      "solution": "requests\n| where success == false\n| summarize count() by bin(timestamp, 1h)\n| render timechart"
+    },
+    {
+      "id": "top-slow-operations",
+      "title": "Top 5 slowest operations",
+      "difficulty": "medium",
+      "exam": "AZ-400",
+      "scenario": "Application Insights",
+      "description": "Which five operations (`name`) have the highest average `duration`? Return `name` and `avg_duration`, slowest first.",
+      "ordered": true,
+      "hints": [
+        "`summarize avg(duration) by name` names the result `avg_duration`.",
+        "`top 5 by avg_duration` sorts descending and keeps five rows."
+      ],
+      "solution": "requests\n| summarize avg(duration) by name\n| top 5 by avg_duration"
+    },
+    {
+      "id": "result-codes",
+      "title": "Requests by result code",
+      "difficulty": "easy",
+      "exam": "AZ-400",
+      "scenario": "Application Insights",
+      "description": "Count requests by `resultCode`. Return `resultCode` and `count_`.",
+      "ordered": false,
+      "hints": [
+        "`resultCode` is a string in Application Insights, not a number.",
+        "`summarize count() by resultCode`."
+      ],
+      "solution": "requests\n| summarize count() by resultCode"
+    },
+    {
+      "id": "failure-rate-by-role",
+      "title": "Failure rate per role",
+      "difficulty": "medium",
+      "exam": "AZ-400",
+      "scenario": "Application Insights",
+      "description": "For each `cloud_RoleName`, return the number of requests (`Total`), how many failed (`Failed`) and the failure percentage rounded to one decimal place (`FailurePct`).",
+      "ordered": false,
+      "hints": [
+        "`countif(success == false)` counts only the failures.",
+        "Then `extend FailurePct = round(100.0 * Failed / Total, 1)` - the 100.0 avoids integer division."
+      ],
+      "solution": "requests\n| summarize Total = count(), Failed = countif(success == false) by cloud_RoleName\n| extend FailurePct = round(100.0 * Failed / Total, 1)"
+    },
+    {
+      "id": "slow-band",
+      "title": "Requests between 1 and 3 seconds",
+      "difficulty": "easy",
+      "exam": "AZ-400",
+      "scenario": "Application Insights",
+      "description": "Count the requests whose `duration` (milliseconds) is between 1,000 and 3,000 inclusive, per operation `name`. Return `name` and `count_`.",
+      "ordered": false,
+      "hints": [
+        "`duration between (1000 .. 3000)` is inclusive at both ends.",
+        "Then `summarize count() by name`."
+      ],
+      "solution": "requests\n| where duration between (1000 .. 3000)\n| summarize count() by name"
+    },
+    {
+      "id": "top-exception-types",
+      "title": "Most common exceptions",
+      "difficulty": "easy",
+      "exam": "AZ-400",
+      "scenario": "Application Insights",
+      "description": "Which three exception `type`s occur most often? Return `type` and `count_`, most first.",
+      "ordered": true,
+      "hints": ["`summarize count() by type`.", "`top 3 by count_`."],
+      "solution": "exceptions\n| summarize count() by type\n| top 3 by count_"
+    },
+    {
+      "id": "failures-with-exceptions",
+      "title": "Which exceptions break which operations",
+      "difficulty": "hard",
+      "exam": "AZ-400",
+      "scenario": "Application Insights",
+      "description": "Join failed requests to `exceptions` on `operation_Id` and count the matches by request `name` and exception `type`. Return `name`, `type` and `count_`.",
+      "ordered": false,
+      "hints": [
+        "`join kind=inner (exceptions) on operation_Id` keeps only failed requests that logged an exception.",
+        "Then `summarize count() by name, type`."
+      ],
+      "solution": "requests\n| where success == false\n| join kind=inner (exceptions) on operation_Id\n| summarize count() by name, type"
+    },
+    {
+      "id": "silent-failures",
+      "title": "Failures that left no exception",
+      "difficulty": "hard",
+      "exam": "AZ-400",
+      "scenario": "Application Insights",
+      "description": "Some failed requests logged no exception at all - worth knowing, because they will not show up on an exceptions dashboard. Count failed requests with no matching exception. Return a single `Count` column.",
+      "ordered": false,
+      "hints": [
+        "A left outer join keeps every failed request; where there is no exception the right-hand columns are empty.",
+        "`join kind=leftouter (exceptions | project operation_Id, type) on operation_Id | where isempty(type) | count`."
+      ],
+      "solution": "requests\n| where success == false\n| join kind=leftouter (exceptions | project operation_Id, type) on operation_Id\n| where isempty(type)\n| count"
+    },
+    {
+      "id": "last-heartbeat",
+      "title": "When did each VM last check in?",
+      "difficulty": "easy",
+      "exam": "AZ-104",
+      "scenario": "Azure Monitor - VMs",
+      "description": "Return each `Computer` with the time of its most recent heartbeat, as `LastHeartbeat`.",
+      "ordered": false,
+      "hints": ["`summarize LastHeartbeat = max(TimeGenerated) by Computer`."],
+      "solution": "Heartbeat\n| summarize LastHeartbeat = max(TimeGenerated) by Computer"
+    },
+    {
+      "id": "no-heartbeat-15m",
+      "title": "VMs with no heartbeat in 15 minutes",
+      "difficulty": "medium",
+      "exam": "AZ-104",
+      "scenario": "Azure Monitor - VMs",
+      "description": "The classic \"is the agent down?\" alert query: find computers whose last heartbeat is older than 15 minutes. Return `Computer` and `LastHeartbeat`.",
+      "ordered": false,
+      "hints": [
+        "First find each computer's last heartbeat with `max(TimeGenerated)`.",
+        "Then keep the ones where `LastHeartbeat < ago(15m)`. Filtering before summarize would give the wrong answer - why?"
+      ],
+      "solution": "Heartbeat\n| summarize LastHeartbeat = max(TimeGenerated) by Computer\n| where LastHeartbeat < ago(15m)"
+    },
+    {
+      "id": "cpu-last-hour",
+      "title": "Average CPU in the last hour",
+      "difficulty": "medium",
+      "exam": "AZ-104",
+      "scenario": "Azure Monitor - VMs",
+      "description": "Average `% Processor Time` per `Computer` over the last hour, rounded to one decimal place. Return `Computer` and `AvgCpu`, busiest first.",
+      "ordered": true,
+      "hints": [
+        "Filter on `CounterName == \"% Processor Time\"` and `TimeGenerated > ago(1h)`.",
+        "`summarize AvgCpu = round(avg(CounterValue), 1) by Computer | order by AvgCpu desc`."
+      ],
+      "solution": "Perf\n| where CounterName == \"% Processor Time\" and TimeGenerated > ago(1h)\n| summarize AvgCpu = round(avg(CounterValue), 1) by Computer\n| order by AvgCpu desc"
+    },
+    {
+      "id": "hot-vms",
+      "title": "VMs running hot",
+      "difficulty": "medium",
+      "exam": "AZ-104",
+      "scenario": "Azure Monitor - VMs",
+      "description": "Which computers averaged more than 80% CPU over the whole six hours? Return `Computer` and `avg_CounterValue`.",
+      "ordered": false,
+      "hints": [
+        "Aggregate first with `summarize avg(CounterValue) by Computer`.",
+        "Then `where avg_CounterValue > 80`."
+      ],
+      "solution": "Perf\n| where ObjectName == \"Processor\" and CounterName == \"% Processor Time\"\n| summarize avg(CounterValue) by Computer\n| where avg_CounterValue > 80"
+    },
+    {
+      "id": "low-disk",
+      "title": "Disks running out of space",
+      "difficulty": "medium",
+      "exam": "AZ-104",
+      "scenario": "Azure Monitor - VMs",
+      "description": "Find computers whose `% Free Space` dropped below 15% at any point. Return `Computer` and `MinFreePct` (the lowest value seen).",
+      "ordered": false,
+      "hints": [
+        "`summarize MinFreePct = min(CounterValue) by Computer`.",
+        "Then filter on `MinFreePct < 15`."
+      ],
+      "solution": "Perf\n| where CounterName == \"% Free Space\"\n| summarize MinFreePct = min(CounterValue) by Computer\n| where MinFreePct < 15"
+    },
+    {
+      "id": "failed-signins-per-user",
+      "title": "Failed sign-ins per user",
+      "difficulty": "easy",
+      "exam": "AZ-104",
+      "scenario": "Microsoft Entra ID",
+      "description": "Count failed sign-ins (any `ResultType` other than `\"0\"`) per `UserPrincipalName`. Return `UserPrincipalName` and `Failures`, most first.",
+      "ordered": true,
+      "hints": [
+        "`ResultType` is a string - compare with `\"0\"`, in quotes.",
+        "`summarize Failures = count() by UserPrincipalName | order by Failures desc`."
+      ],
+      "solution": "SigninLogs\n| where ResultType != \"0\"\n| summarize Failures = count() by UserPrincipalName\n| order by Failures desc, UserPrincipalName asc"
+    },
+    {
+      "id": "password-spray",
+      "title": "Spot a password spray",
+      "difficulty": "medium",
+      "exam": "AZ-104",
+      "scenario": "Microsoft Entra ID",
+      "description": "A password spray tries many accounts from one place. Find IP addresses with more than 10 failed sign-ins, and how many different accounts they tried. Return `IPAddress`, `Failures` and `Accounts`.",
+      "ordered": false,
+      "hints": [
+        "`summarize Failures = count(), Accounts = dcount(UserPrincipalName) by IPAddress` over failed sign-ins.",
+        "Then `where Failures > 10`."
+      ],
+      "solution": "SigninLogs\n| where ResultType != \"0\"\n| summarize Failures = count(), Accounts = dcount(UserPrincipalName) by IPAddress\n| where Failures > 10"
+    },
+    {
+      "id": "unusual-locations",
+      "title": "Users signing in from several places",
+      "difficulty": "medium",
+      "exam": "AZ-104",
+      "scenario": "Microsoft Entra ID",
+      "description": "Which users had successful sign-ins from more than one `Location`? Return `UserPrincipalName` and `Locations` (the number of distinct locations).",
+      "ordered": false,
+      "hints": [
+        "Successful sign-ins have `ResultType == \"0\"`.",
+        "`dcount(Location)` counts distinct locations; then keep `Locations > 1`."
+      ],
+      "solution": "SigninLogs\n| where ResultType == \"0\"\n| summarize Locations = dcount(Location) by UserPrincipalName\n| where Locations > 1"
+    },
+    {
+      "id": "who-deleted-what",
+      "title": "Who deleted what?",
+      "difficulty": "easy",
+      "exam": "AZ-104",
+      "scenario": "Activity log",
+      "description": "List every successful delete operation: `TimeGenerated`, `Caller`, `OperationNameValue` and `_ResourceId`, newest first.",
+      "ordered": true,
+      "hints": [
+        "Delete operations end in `/DELETE`: use `endswith`.",
+        "Keep `ActivityStatusValue == \"Success\"`, then `project` the columns and `order by TimeGenerated desc`."
+      ],
+      "solution": "AzureActivity\n| where OperationNameValue endswith \"/DELETE\" and ActivityStatusValue == \"Success\"\n| project TimeGenerated, Caller, OperationNameValue, _ResourceId\n| order by TimeGenerated desc"
+    },
+    {
+      "id": "failed-operations-by-caller",
+      "title": "Failed operations per caller",
+      "difficulty": "easy",
+      "exam": "AZ-104",
+      "scenario": "Activity log",
+      "description": "Count failed operations (`ActivityStatusValue == \"Failure\"`) per `Caller`. Return `Caller` and `count_`.",
+      "ordered": false,
+      "hints": ["`where ActivityStatusValue == \"Failure\"`.", "`summarize count() by Caller`."],
+      "solution": "AzureActivity\n| where ActivityStatusValue == \"Failure\"\n| summarize count() by Caller"
+    },
+    {
+      "id": "nsg-changes",
+      "title": "Who changed network security groups?",
+      "difficulty": "medium",
+      "exam": "AZ-104",
+      "scenario": "Activity log",
+      "description": "Return the distinct `Caller`s who changed or deleted NSG rules - operations whose name contains `networksecuritygroups/securityrules` - in the last 12 hours.",
+      "ordered": false,
+      "hints": [
+        "`contains` is case-insensitive, so the lower-case text matches the upper-case operation names.",
+        "`TimeGenerated > ago(12h)`, then `distinct Caller`."
+      ],
+      "solution": "AzureActivity\n| where TimeGenerated > ago(12h) and OperationNameValue contains \"networksecuritygroups/securityrules\"\n| distinct Caller"
+    }
+  ]
+}

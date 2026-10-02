@@ -16,6 +16,14 @@ import { Badge } from '../components/ui/Badge'
 import { RichText } from '../components/ui/RichText'
 import type { BadgeTone } from '../components/ui/Badge'
 import type { ReadinessLevel } from '../lib/stats'
+import { mistakeCount, queueCounts } from '../lib/review-deck'
+import { examReadiness } from '../lib/analytics'
+import { sqlChallengeKey, sqlChallenges } from '../content/sql'
+import { kqlChallengeKey, kqlChallenges } from '../content/kql'
+import { pythonChallengeKey, pythonChallenges } from '../content/python'
+import { missionKey, missions } from '../content/azcli'
+import { labExerciseKey, labExercises } from '../content/configlab'
+import { allNetKeys } from '../content/netlab'
 
 const readinessTone: Record<ReadinessLevel, BadgeTone> = {
   'just-starting': 'neutral',
@@ -56,8 +64,27 @@ export function HomePage() {
 
   const interview = countInterview(interviewTopics, state)
   const readiness = readinessFor(activeCourse, state)
+  const readinessScore = examReadiness(activeCourse, state).score
   const suggestion = dailySuggestion(activeCourse, state)
   const streak = studyStreak(state)
+  const queue = queueCounts(state)
+  const sqlSolved = sqlChallenges.filter(
+    (challenge) => state.challenges[sqlChallengeKey(challenge.id)]?.solvedAt,
+  ).length
+  const kqlSolved = kqlChallenges.filter(
+    (challenge) => state.challenges[kqlChallengeKey(challenge.id)]?.solvedAt,
+  ).length
+  const pySolved = pythonChallenges.filter(
+    (challenge) => state.challenges[pythonChallengeKey(challenge.id)]?.solvedAt,
+  ).length
+  const missionsDone = missions.filter(
+    (mission) => state.challenges[missionKey(mission.id)]?.solvedAt,
+  ).length
+  const labDone = labExercises.filter(
+    (exercise) => state.challenges[labExerciseKey(exercise.id)]?.solvedAt,
+  ).length
+  const netDone = allNetKeys.filter((key) => state.challenges[key]?.solvedAt).length
+  const mistakes = mistakeCount(state)
   const bestScore = state.exams.reduce((best, attempt) => Math.max(best, attempt.scorePercent), 0)
 
   const continueTo = state.lastVisitedTopicId
@@ -89,6 +116,31 @@ export function HomePage() {
           {courseIndexes.map((entry) => entry.course.examCode).join(', ')}).
         </p>
       </header>
+
+      <section aria-labelledby="due-today" className="card stack-sm srs-home">
+        <div className="row" style={{ justifyContent: 'space-between' }}>
+          <h2 id="due-today" className="card__title" style={{ margin: 0 }}>
+            <span aria-hidden="true">🔁 </span>Due today
+          </h2>
+          <div className="row" style={{ gap: '0.4rem' }}>
+            <Badge tone={queue.due > 0 ? 'warning' : 'success'}>{queue.due} due</Badge>
+            <Badge tone="info">{queue.fresh} new</Badge>
+          </div>
+        </div>
+        <p className="muted" style={{ margin: 0 }}>
+          {queue.total > 0
+            ? `${queue.total} ${queue.total === 1 ? 'card' : 'cards'} waiting: reviews scheduled for today plus your daily new cards.`
+            : 'All caught up. New cards unlock again tomorrow.'}
+        </p>
+        <div className="row">
+          <Link className="btn" to="/review">
+            {queue.total > 0 ? 'Start reviewing' : 'See the forecast'}
+          </Link>
+          <Link className="btn btn--secondary" to="/mistakes">
+            Mistake notebook{mistakes > 0 ? ` (${mistakes})` : ''}
+          </Link>
+        </div>
+      </section>
 
       {/*
        * One card covering BOTH sections, because the app has two of them and a
@@ -125,6 +177,23 @@ export function HomePage() {
             <div className="stat__label">Best mock exam</div>
           </div>
           <div className="stat">
+            <div className="stat__value">
+              {sqlSolved + kqlSolved + pySolved + missionsDone + labDone + netDone}/
+              {sqlChallenges.length +
+                kqlChallenges.length +
+                pythonChallenges.length +
+                missions.length +
+                labExercises.length +
+                allNetKeys.length}
+            </div>
+            <div className="stat__label">
+              Challenges solved · SQL {sqlSolved}/{sqlChallenges.length} · KQL {kqlSolved}/
+              {kqlChallenges.length} · Python {pySolved}/{pythonChallenges.length} · CLI missions{' '}
+              {missionsDone}/{missions.length} · Config lab {labDone}/{labExercises.length} ·
+              Networking {netDone}/{allNetKeys.length}
+            </div>
+          </div>
+          <div className="stat">
             <div className="stat__value">{streak}</div>
             <div className="stat__label">Day study streak</div>
           </div>
@@ -138,6 +207,9 @@ export function HomePage() {
           </Link>
           <Link className="btn btn--secondary" to={activeCourse.route}>
             {activeCourse.examCode} dashboard
+          </Link>
+          <Link className="btn btn--secondary" to="/stats">
+            My stats
           </Link>
         </div>
       </section>
@@ -222,8 +294,8 @@ export function HomePage() {
           {readiness.headline}
         </p>
         <ProgressBar
-          value={readiness.score}
-          label="Readiness indicator"
+          value={readinessScore}
+          label="Exam readiness score"
           showValue
           tone={readiness.level === 'exam-ready' ? 'success' : 'primary'}
         />
@@ -236,6 +308,9 @@ export function HomePage() {
             </li>
           ))}
         </ul>
+        <Link className="subtle" to={`${activeCourse.route}/stats`}>
+          How this is calculated, and your weak areas →
+        </Link>
         <p className="subtle" style={{ marginBottom: 0 }}>
           <strong>Next:</strong> {readiness.nextAction}
         </p>
@@ -297,11 +372,11 @@ export function HomePage() {
         </h2>
         <p className="disclaimer">
           <strong>Independent learning tool.</strong> This app is not affiliated with, endorsed by
-          or sponsored by any certification body, including the Cloud Native Computing Foundation,
-          the Linux Foundation and HashiCorp. The certifications are theirs; this is a study aid
-          built around their publicly published curricula. All practice questions, labs and mock
-          exams here are original material written for this app - none are actual exam questions.
-          Always check the official curriculum before your exam:{' '}
+          or sponsored by Microsoft. Microsoft, Azure, AZ-900, AZ-104, AZ-400 and related names and
+          certifications are trademarks of the Microsoft group of companies; this is a study aid
+          built around Microsoft&rsquo;s publicly published study guides. All practice questions,
+          labs and mock exams here are original material written for this app - none are actual exam
+          questions. Always check the official curriculum before your exam:{' '}
           {courseIndexes
             .flatMap((entry) =>
               entry.course.sources.slice(0, 2).map((source) => ({

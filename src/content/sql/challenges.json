@@ -1,0 +1,739 @@
+{
+  "$comment": "SQL playground challenges. Edit freely, then run `npm run sql:expected` to regenerate each `expected` from its `solution`.",
+  "challenges": [
+    {
+      "id": "employee-departments",
+      "title": "Employees and their departments",
+      "difficulty": "easy",
+      "topic": "joins",
+      "description": "List every employee who belongs to a department, with the department name. Return `name` and `department`.",
+      "setup": "",
+      "ordered": false,
+      "hints": [
+        "Join `employees` to `departments` on `employees.department_id = departments.id`.",
+        "An INNER JOIN drops the employee with no department - that is what is wanted here."
+      ],
+      "solution": "SELECT e.name, d.name AS department\nFROM employees e\nJOIN departments d ON d.id = e.department_id",
+      "expected": {
+        "columns": ["name", "department"],
+        "rows": [
+          ["Asha Rao", "Engineering"],
+          ["Ben Carter", "Engineering"],
+          ["Chen Wei", "Engineering"],
+          ["Divya Nair", "Engineering"],
+          ["Ethan Brooks", "Engineering"],
+          ["Farah Khan", "Engineering"],
+          ["Gopal Iyer", "Engineering"],
+          ["Hannah Lee", "Sales"],
+          ["Ivan Petrov", "Sales"],
+          ["Julia Santos", "Sales"],
+          ["Kenji Mori", "Sales"],
+          ["Lina Haddad", "Marketing"],
+          ["Marco Rossi", "Marketing"],
+          ["Nadia Ali", "Marketing"],
+          ["Omar Farouk", "Finance"],
+          ["Priya Shah", "Finance"],
+          ["Quinn Murphy", "Finance"],
+          ["Rosa Diaz", "HR"],
+          ["Sam Okafor", "HR"]
+        ]
+      }
+    },
+    {
+      "id": "empty-departments",
+      "title": "Departments with nobody in them",
+      "difficulty": "easy",
+      "topic": "joins",
+      "description": "Find the departments that have no employees. Return `name`.",
+      "setup": "",
+      "ordered": false,
+      "hints": [
+        "Start from `departments` and LEFT JOIN `employees`.",
+        "Rows with no match have NULL employee columns - filter on that. NOT EXISTS works too."
+      ],
+      "solution": "SELECT d.name\nFROM departments d\nLEFT JOIN employees e ON e.department_id = d.id\nWHERE e.id IS NULL",
+      "expected": {
+        "columns": ["name"],
+        "rows": [["Support"]]
+      }
+    },
+    {
+      "id": "employee-managers",
+      "title": "Who reports to whom",
+      "difficulty": "easy",
+      "topic": "joins",
+      "description": "List each employee with their manager's name. The CEO has no manager and should still appear, with a NULL manager. Return `employee` and `manager`.",
+      "setup": "",
+      "ordered": false,
+      "hints": [
+        "This is a self join: `employees` joined to `employees` again under another alias.",
+        "Use a LEFT JOIN so the person with no manager is kept."
+      ],
+      "solution": "SELECT e.name AS employee, m.name AS manager\nFROM employees e\nLEFT JOIN employees m ON m.id = e.manager_id",
+      "expected": {
+        "columns": ["employee", "manager"],
+        "rows": [
+          ["Asha Rao", null],
+          ["Ben Carter", "Asha Rao"],
+          ["Chen Wei", "Ben Carter"],
+          ["Divya Nair", "Chen Wei"],
+          ["Ethan Brooks", "Chen Wei"],
+          ["Farah Khan", "Chen Wei"],
+          ["Gopal Iyer", "Chen Wei"],
+          ["Hannah Lee", "Asha Rao"],
+          ["Ivan Petrov", "Hannah Lee"],
+          ["Julia Santos", "Hannah Lee"],
+          ["Kenji Mori", "Hannah Lee"],
+          ["Lina Haddad", "Asha Rao"],
+          ["Marco Rossi", "Lina Haddad"],
+          ["Nadia Ali", "Lina Haddad"],
+          ["Omar Farouk", "Asha Rao"],
+          ["Priya Shah", "Omar Farouk"],
+          ["Quinn Murphy", "Omar Farouk"],
+          ["Rosa Diaz", "Asha Rao"],
+          ["Sam Okafor", "Rosa Diaz"],
+          ["Tara Singh", "Asha Rao"]
+        ]
+      }
+    },
+    {
+      "id": "customers-without-orders",
+      "title": "Customers who never ordered",
+      "difficulty": "easy",
+      "topic": "joins",
+      "description": "Find customers who have never placed an order. Return `name`.",
+      "setup": "",
+      "ordered": false,
+      "hints": [
+        "An anti-join: LEFT JOIN `orders` and keep rows where the order is NULL.",
+        "Or: `WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id)`."
+      ],
+      "solution": "SELECT c.name\nFROM customers c\nWHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id)",
+      "expected": {
+        "columns": ["name"],
+        "rows": [["Juniper AI"], ["Kite Travel"]]
+      }
+    },
+    {
+      "id": "order-line-totals",
+      "title": "Value of each delivered order",
+      "difficulty": "medium",
+      "topic": "joins",
+      "description": "For every **delivered** order, return the order `id`, the customer `name` and the order `total` (sum of quantity x unit_price over its lines), largest total first (ties by order id).",
+      "setup": "",
+      "ordered": true,
+      "hints": [
+        "Three tables: `orders`, `customers` and `order_items`.",
+        "GROUP BY the order, then ORDER BY the total descending."
+      ],
+      "solution": "SELECT o.id, c.name, SUM(i.quantity * i.unit_price) AS total\nFROM orders o\nJOIN customers c ON c.id = o.customer_id\nJOIN order_items i ON i.order_id = o.id\nWHERE o.status = 'delivered'\nGROUP BY o.id, c.name\nORDER BY total DESC, o.id",
+      "expected": {
+        "columns": ["id", "name", "total"],
+        "rows": [
+          [15, "Blue Fin", 8500],
+          [7, "Echo Media", 6600],
+          [5, "Delta Retail", 6200],
+          [10, "Acme Ltd", 5600],
+          [14, "Helix Bio", 5280],
+          [1, "Acme Ltd", 4040],
+          [24, "Acme Limited", 2850],
+          [21, "Granite Co", 2235],
+          [3, "Acme Ltd", 2100],
+          [11, "Granite Co", 2100],
+          [25, "Fjord Foods", 1340],
+          [9, "Fjord Foods", 1320],
+          [12, "Cobalt Labs", 1300],
+          [19, "Cobalt Labs", 1250],
+          [2, "Blue Fin", 1200],
+          [17, "Acme Ltd", 1188],
+          [22, "Blue Fin", 960],
+          [13, "Delta Retail", 900],
+          [18, "Iris Studio", 670],
+          [6, "Acme Ltd", 650]
+        ]
+      }
+    },
+    {
+      "id": "headcount",
+      "title": "Headcount per department",
+      "difficulty": "easy",
+      "topic": "aggregation",
+      "description": "How many employees does each department have? Include departments with nobody (count 0). Return `department` and `headcount`, biggest first, then by name.",
+      "setup": "",
+      "ordered": true,
+      "hints": [
+        "LEFT JOIN from `departments` so empty ones survive.",
+        "COUNT(e.id) counts only matched employees; COUNT(*) would count 1 for an empty department."
+      ],
+      "solution": "SELECT d.name AS department, COUNT(e.id) AS headcount\nFROM departments d\nLEFT JOIN employees e ON e.department_id = d.id\nGROUP BY d.id, d.name\nORDER BY headcount DESC, department",
+      "expected": {
+        "columns": ["department", "headcount"],
+        "rows": [
+          ["Engineering", 7],
+          ["Sales", 4],
+          ["Finance", 3],
+          ["Marketing", 3],
+          ["HR", 2],
+          ["Support", 0]
+        ]
+      }
+    },
+    {
+      "id": "high-paying-departments",
+      "title": "Departments with a high average salary",
+      "difficulty": "medium",
+      "topic": "aggregation",
+      "description": "Which departments have an average salary above 100,000? Return `department` and `avg_salary` rounded to the nearest whole number.",
+      "setup": "",
+      "ordered": false,
+      "hints": [
+        "Filtering on an aggregate needs HAVING, not WHERE.",
+        "ROUND(AVG(salary)) gives a whole number."
+      ],
+      "solution": "SELECT d.name AS department, ROUND(AVG(e.salary)) AS avg_salary\nFROM employees e\nJOIN departments d ON d.id = e.department_id\nGROUP BY d.name\nHAVING AVG(e.salary) > 100000",
+      "expected": {
+        "columns": ["department", "avg_salary"],
+        "rows": [
+          ["Engineering", 159000],
+          ["Finance", 114667],
+          ["Sales", 119750]
+        ]
+      }
+    },
+    {
+      "id": "revenue-by-category",
+      "title": "Revenue by product category",
+      "difficulty": "medium",
+      "topic": "aggregation",
+      "description": "Total revenue per product category from orders that were **not cancelled**. Return `category` and `revenue`.",
+      "setup": "",
+      "ordered": false,
+      "hints": [
+        "Revenue is quantity x unit_price from `order_items` (the price actually charged), not `products.price`.",
+        "Join `order_items` to `orders` to exclude cancelled ones, and to `products` for the category."
+      ],
+      "solution": "SELECT p.category, SUM(i.quantity * i.unit_price) AS revenue\nFROM order_items i\nJOIN orders o ON o.id = i.order_id\nJOIN products p ON p.id = i.product_id\nWHERE o.status <> 'cancelled'\nGROUP BY p.category",
+      "expected": {
+        "columns": ["category", "revenue"],
+        "rows": [
+          ["Hardware", 34170],
+          ["Services", 5750],
+          ["Software", 26968]
+        ]
+      }
+    },
+    {
+      "id": "frequent-customers",
+      "title": "Customers with more than three orders",
+      "difficulty": "easy",
+      "topic": "aggregation",
+      "description": "Which customers have placed more than three orders (any status)? Return `name` and `orders`.",
+      "setup": "",
+      "ordered": false,
+      "hints": ["GROUP BY customer and COUNT the orders.", "HAVING COUNT(*) > 3."],
+      "solution": "SELECT c.name, COUNT(*) AS orders\nFROM orders o\nJOIN customers c ON c.id = o.customer_id\nGROUP BY c.id, c.name\nHAVING COUNT(*) > 3",
+      "expected": {
+        "columns": ["name", "orders"],
+        "rows": [
+          ["Acme Ltd", 6],
+          ["Blue Fin", 4],
+          ["Cobalt Labs", 4]
+        ]
+      }
+    },
+    {
+      "id": "status-codes",
+      "title": "HTTP status code counts",
+      "difficulty": "easy",
+      "topic": "aggregation",
+      "description": "Count the requests in `web_logs` by HTTP status code. Return `status` and `requests`, most common first (ties by status).",
+      "setup": "",
+      "ordered": true,
+      "hints": [
+        "GROUP BY status.",
+        "ORDER BY the count descending - and break ties by status so the order is stable."
+      ],
+      "solution": "SELECT status, COUNT(*) AS requests\nFROM web_logs\nGROUP BY status\nORDER BY requests DESC, status",
+      "expected": {
+        "columns": ["status", "requests"],
+        "rows": [
+          [200, 307],
+          [500, 23],
+          [404, 22],
+          [301, 18],
+          [503, 15],
+          [403, 9],
+          [401, 6]
+        ]
+      }
+    },
+    {
+      "id": "slow-endpoints",
+      "title": "Slow endpoints",
+      "difficulty": "medium",
+      "topic": "aggregation",
+      "description": "Find paths whose average `response_ms` is over 300 ms, counting only paths with at least 20 requests. Return `path`, `requests` and `avg_ms` (rounded to a whole number), slowest first.",
+      "setup": "",
+      "ordered": true,
+      "hints": [
+        "Both conditions are on aggregates, so both go in HAVING.",
+        "ROUND(AVG(response_ms))."
+      ],
+      "solution": "SELECT path, COUNT(*) AS requests, ROUND(AVG(response_ms)) AS avg_ms\nFROM web_logs\nGROUP BY path\nHAVING COUNT(*) >= 20 AND AVG(response_ms) > 300\nORDER BY avg_ms DESC",
+      "expected": {
+        "columns": ["path", "requests", "avg_ms"],
+        "rows": [
+          ["/checkout", 27, 669],
+          ["/api/search", 47, 451]
+        ]
+      }
+    },
+    {
+      "id": "salary-rank",
+      "title": "Salary rank within each department",
+      "difficulty": "medium",
+      "topic": "window",
+      "description": "Rank employees by salary within their department, highest first, using RANK() so ties share a rank. Skip employees with no department. Return `department`, `name`, `salary` and `salary_rank`, ordered by department, then rank, then name.",
+      "setup": "",
+      "ordered": true,
+      "hints": [
+        "`RANK() OVER (PARTITION BY ... ORDER BY salary DESC)`.",
+        "Two Senior Engineers earn the same - RANK gives both the same number and skips the next."
+      ],
+      "solution": "SELECT d.name AS department, e.name, e.salary,\n       RANK() OVER (PARTITION BY e.department_id ORDER BY e.salary DESC) AS salary_rank\nFROM employees e\nJOIN departments d ON d.id = e.department_id\nORDER BY department, salary_rank, e.name",
+      "expected": {
+        "columns": ["department", "name", "salary", "salary_rank"],
+        "rows": [
+          ["Engineering", "Asha Rao", 250000, 1],
+          ["Engineering", "Ben Carter", 190000, 2],
+          ["Engineering", "Gopal Iyer", 155000, 3],
+          ["Engineering", "Chen Wei", 150000, 4],
+          ["Engineering", "Divya Nair", 135000, 5],
+          ["Engineering", "Ethan Brooks", 135000, 5],
+          ["Engineering", "Farah Khan", 98000, 7],
+          ["Finance", "Omar Farouk", 180000, 1],
+          ["Finance", "Priya Shah", 88000, 2],
+          ["Finance", "Quinn Murphy", 76000, 3],
+          ["HR", "Rosa Diaz", 95000, 1],
+          ["HR", "Sam Okafor", 64000, 2],
+          ["Marketing", "Lina Haddad", 140000, 1],
+          ["Marketing", "Marco Rossi", 82000, 2],
+          ["Marketing", "Nadia Ali", 78000, 3],
+          ["Sales", "Hannah Lee", 170000, 1],
+          ["Sales", "Kenji Mori", 120000, 2],
+          ["Sales", "Julia Santos", 97000, 3],
+          ["Sales", "Ivan Petrov", 92000, 4]
+        ]
+      }
+    },
+    {
+      "id": "top-earner-per-department",
+      "title": "Top earner in each department",
+      "difficulty": "medium",
+      "topic": "window",
+      "description": "Return the single highest-paid employee in each department (if two tie, the one hired first). Return `department`, `name` and `salary`.",
+      "setup": "",
+      "ordered": false,
+      "hints": [
+        "ROW_NUMBER() OVER (PARTITION BY department_id ORDER BY salary DESC, hire_date) numbers each department's rows from 1.",
+        "Window functions cannot go in WHERE: compute them in a CTE or subquery, then filter `= 1` outside."
+      ],
+      "solution": "WITH ranked AS (\n  SELECT e.*, ROW_NUMBER() OVER (PARTITION BY department_id ORDER BY salary DESC, hire_date) AS rn\n  FROM employees e\n  WHERE department_id IS NOT NULL\n)\nSELECT d.name AS department, r.name, r.salary\nFROM ranked r\nJOIN departments d ON d.id = r.department_id\nWHERE r.rn = 1",
+      "expected": {
+        "columns": ["department", "name", "salary"],
+        "rows": [
+          ["Engineering", "Asha Rao", 250000],
+          ["Sales", "Hannah Lee", 170000],
+          ["Marketing", "Lina Haddad", 140000],
+          ["Finance", "Omar Farouk", 180000],
+          ["HR", "Rosa Diaz", 95000]
+        ]
+      }
+    },
+    {
+      "id": "days-between-orders",
+      "title": "Days between a customer's orders",
+      "difficulty": "hard",
+      "topic": "window",
+      "description": "For each order, show how many days have passed since the same customer's previous order (NULL for their first). Return `customer_id`, `order_date` and `days_since_previous`, ordered by customer then date.",
+      "setup": "",
+      "ordered": true,
+      "hints": [
+        "LAG(order_date) OVER (PARTITION BY customer_id ORDER BY order_date) gives the previous order's date.",
+        "SQLite stores dates as text: `julianday(a) - julianday(b)` gives the difference in days."
+      ],
+      "solution": "SELECT customer_id, order_date,\n       CAST(julianday(order_date) - julianday(LAG(order_date) OVER (PARTITION BY customer_id ORDER BY order_date)) AS INTEGER) AS days_since_previous\nFROM orders\nORDER BY customer_id, order_date",
+      "expected": {
+        "columns": ["customer_id", "order_date", "days_since_previous"],
+        "rows": [
+          [1, "2025-07-01", null],
+          [1, "2025-07-03", 2],
+          [1, "2025-07-09", 6],
+          [1, "2025-07-22", 13],
+          [1, "2025-08-21", 30],
+          [1, "2025-09-29", 39],
+          [2, "2025-07-01", null],
+          [2, "2025-07-15", 14],
+          [2, "2025-08-14", 30],
+          [2, "2025-09-12", 29],
+          [3, "2025-07-04", null],
+          [3, "2025-08-05", 32],
+          [3, "2025-09-02", 28],
+          [3, "2025-09-25", 23],
+          [4, "2025-07-06", null],
+          [4, "2025-08-05", 30],
+          [4, "2025-09-03", 29],
+          [5, "2025-07-10", null],
+          [5, "2025-08-20", 41],
+          [5, "2025-09-30", 41],
+          [6, "2025-07-18", null],
+          [6, "2025-09-22", 66],
+          [7, "2025-08-02", null],
+          [7, "2025-09-09", 38],
+          [8, "2025-08-11", null],
+          [8, "2025-09-15", 35],
+          [9, "2025-08-28", null],
+          [11, "2025-09-18", null]
+        ]
+      }
+    },
+    {
+      "id": "running-revenue",
+      "title": "Running total of revenue",
+      "difficulty": "medium",
+      "topic": "window",
+      "description": "For each day with non-cancelled orders, show that day's revenue and the running total so far. Return `order_date`, `revenue` and `running_total`, in date order.",
+      "setup": "",
+      "ordered": true,
+      "hints": [
+        "First aggregate revenue per day (a CTE helps).",
+        "Then `SUM(revenue) OVER (ORDER BY order_date)` accumulates it."
+      ],
+      "solution": "WITH daily AS (\n  SELECT o.order_date, SUM(i.quantity * i.unit_price) AS revenue\n  FROM orders o\n  JOIN order_items i ON i.order_id = o.id\n  WHERE o.status <> 'cancelled'\n  GROUP BY o.order_date\n)\nSELECT order_date, revenue, SUM(revenue) OVER (ORDER BY order_date) AS running_total\nFROM daily\nORDER BY order_date",
+      "expected": {
+        "columns": ["order_date", "revenue", "running_total"],
+        "rows": [
+          ["2025-07-01", 5240, 5240],
+          ["2025-07-03", 2100, 7340],
+          ["2025-07-06", 6200, 13540],
+          ["2025-07-09", 650, 14190],
+          ["2025-07-10", 6600, 20790],
+          ["2025-07-15", 1095, 21885],
+          ["2025-07-18", 1320, 23205],
+          ["2025-07-22", 5600, 28805],
+          ["2025-08-02", 2100, 30905],
+          ["2025-08-05", 2200, 33105],
+          ["2025-08-11", 5280, 38385],
+          ["2025-08-14", 8500, 46885],
+          ["2025-08-21", 1188, 48073],
+          ["2025-08-28", 670, 48743],
+          ["2025-09-02", 1250, 49993],
+          ["2025-09-03", 3600, 53593],
+          ["2025-09-09", 2235, 55828],
+          ["2025-09-12", 960, 56788],
+          ["2025-09-15", 1800, 58588],
+          ["2025-09-18", 2850, 61438],
+          ["2025-09-22", 1340, 62778],
+          ["2025-09-25", 360, 63138],
+          ["2025-09-29", 1950, 65088],
+          ["2025-09-30", 1800, 66888]
+        ]
+      }
+    },
+    {
+      "id": "salary-vs-average",
+      "title": "Salary against the department average",
+      "difficulty": "medium",
+      "topic": "window",
+      "description": "Show each employee who has a department, their salary, their department's average salary (rounded) and the difference (salary minus that rounded average). Return `name`, `salary`, `dept_avg` and `difference`.",
+      "setup": "",
+      "ordered": false,
+      "hints": [
+        "`AVG(salary) OVER (PARTITION BY department_id)` keeps every row, unlike GROUP BY.",
+        "Compute the rounded average once in a subquery or CTE, then subtract."
+      ],
+      "solution": "WITH withavg AS (\n  SELECT name, salary, ROUND(AVG(salary) OVER (PARTITION BY department_id)) AS dept_avg\n  FROM employees\n  WHERE department_id IS NOT NULL\n)\nSELECT name, salary, dept_avg, salary - dept_avg AS difference\nFROM withavg",
+      "expected": {
+        "columns": ["name", "salary", "dept_avg", "difference"],
+        "rows": [
+          ["Asha Rao", 250000, 159000, 91000],
+          ["Ben Carter", 190000, 159000, 31000],
+          ["Chen Wei", 150000, 159000, -9000],
+          ["Divya Nair", 135000, 159000, -24000],
+          ["Ethan Brooks", 135000, 159000, -24000],
+          ["Farah Khan", 98000, 159000, -61000],
+          ["Gopal Iyer", 155000, 159000, -4000],
+          ["Hannah Lee", 170000, 119750, 50250],
+          ["Ivan Petrov", 92000, 119750, -27750],
+          ["Julia Santos", 97000, 119750, -22750],
+          ["Kenji Mori", 120000, 119750, 250],
+          ["Lina Haddad", 140000, 100000, 40000],
+          ["Marco Rossi", 82000, 100000, -18000],
+          ["Nadia Ali", 78000, 100000, -22000],
+          ["Omar Farouk", 180000, 114667, 65333],
+          ["Priya Shah", 88000, 114667, -26667],
+          ["Quinn Murphy", 76000, 114667, -38667],
+          ["Rosa Diaz", 95000, 79500, 15500],
+          ["Sam Okafor", 64000, 79500, -15500]
+        ]
+      }
+    },
+    {
+      "id": "above-average-spenders",
+      "title": "Customers who spend more than average",
+      "difficulty": "medium",
+      "topic": "cte",
+      "description": "Considering only non-cancelled orders, find customers whose total spend is above the average total spend per customer (among customers who bought something). Return `name` and `spend`.",
+      "setup": "",
+      "ordered": false,
+      "hints": [
+        "CTE 1: total spend per customer.",
+        "Then compare each total with `(SELECT AVG(spend) FROM that_cte)`."
+      ],
+      "solution": "WITH spend AS (\n  SELECT o.customer_id, SUM(i.quantity * i.unit_price) AS spend\n  FROM orders o\n  JOIN order_items i ON i.order_id = o.id\n  WHERE o.status <> 'cancelled'\n  GROUP BY o.customer_id\n)\nSELECT c.name, s.spend\nFROM spend s\nJOIN customers c ON c.id = s.customer_id\nWHERE s.spend > (SELECT AVG(spend) FROM spend)",
+      "expected": {
+        "columns": ["name", "spend"],
+        "rows": [
+          ["Acme Ltd", 15528],
+          ["Blue Fin", 11755],
+          ["Delta Retail", 10700],
+          ["Echo Media", 8400],
+          ["Helix Bio", 7080]
+        ]
+      }
+    },
+    {
+      "id": "month-over-month",
+      "title": "Month-over-month revenue change",
+      "difficulty": "hard",
+      "topic": "cte",
+      "description": "Revenue per month (non-cancelled orders) with the change from the previous month. Return `month` (YYYY-MM), `revenue` and `change` (NULL for the first month), in month order.",
+      "setup": "",
+      "ordered": true,
+      "hints": [
+        "`strftime('%Y-%m', order_date)` gives the month.",
+        "Aggregate by month in a CTE, then `revenue - LAG(revenue) OVER (ORDER BY month)`."
+      ],
+      "solution": "WITH monthly AS (\n  SELECT strftime('%Y-%m', o.order_date) AS month, SUM(i.quantity * i.unit_price) AS revenue\n  FROM orders o\n  JOIN order_items i ON i.order_id = o.id\n  WHERE o.status <> 'cancelled'\n  GROUP BY month\n)\nSELECT month, revenue, revenue - LAG(revenue) OVER (ORDER BY month) AS change\nFROM monthly\nORDER BY month",
+      "expected": {
+        "columns": ["month", "revenue", "change"],
+        "rows": [
+          ["2025-07", 28805, null],
+          ["2025-08", 19938, -8867],
+          ["2025-09", 18145, -1793]
+        ]
+      }
+    },
+    {
+      "id": "org-chart-depth",
+      "title": "Org chart levels",
+      "difficulty": "hard",
+      "topic": "cte",
+      "description": "Using a recursive CTE, give every employee their level in the org chart: the CEO is level 1, their direct reports level 2, and so on. Return `name` and `level`, ordered by level then name.",
+      "setup": "",
+      "ordered": true,
+      "hints": [
+        "Anchor: the employee whose `manager_id IS NULL`, at level 1.",
+        "Recursive step: join `employees` to the CTE on `employees.manager_id = cte.id`, with `level + 1`."
+      ],
+      "solution": "WITH RECURSIVE chart(id, name, level) AS (\n  SELECT id, name, 1 FROM employees WHERE manager_id IS NULL\n  UNION ALL\n  SELECT e.id, e.name, c.level + 1\n  FROM employees e\n  JOIN chart c ON e.manager_id = c.id\n)\nSELECT name, level\nFROM chart\nORDER BY level, name",
+      "expected": {
+        "columns": ["name", "level"],
+        "rows": [
+          ["Asha Rao", 1],
+          ["Ben Carter", 2],
+          ["Hannah Lee", 2],
+          ["Lina Haddad", 2],
+          ["Omar Farouk", 2],
+          ["Rosa Diaz", 2],
+          ["Tara Singh", 2],
+          ["Chen Wei", 3],
+          ["Ivan Petrov", 3],
+          ["Julia Santos", 3],
+          ["Kenji Mori", 3],
+          ["Marco Rossi", 3],
+          ["Nadia Ali", 3],
+          ["Priya Shah", 3],
+          ["Quinn Murphy", 3],
+          ["Sam Okafor", 3],
+          ["Divya Nair", 4],
+          ["Ethan Brooks", 4],
+          ["Farah Khan", 4],
+          ["Gopal Iyer", 4]
+        ]
+      }
+    },
+    {
+      "id": "orders-every-day",
+      "title": "Orders on every day of a week",
+      "difficulty": "hard",
+      "topic": "cte",
+      "description": "For each day from 2025-07-01 to 2025-07-07, show how many orders were placed - including days with none. Return `day` and `orders`, in date order.",
+      "setup": "",
+      "ordered": true,
+      "hints": [
+        "There is no calendar table: generate the seven dates with a recursive CTE using `date(day, '+1 day')`.",
+        "LEFT JOIN `orders` to the dates and COUNT(o.id)."
+      ],
+      "solution": "WITH RECURSIVE days(day) AS (\n  SELECT '2025-07-01'\n  UNION ALL\n  SELECT date(day, '+1 day') FROM days WHERE day < '2025-07-07'\n)\nSELECT d.day, COUNT(o.id) AS orders\nFROM days d\nLEFT JOIN orders o ON o.order_date = d.day\nGROUP BY d.day\nORDER BY d.day",
+      "expected": {
+        "columns": ["day", "orders"],
+        "rows": [
+          ["2025-07-01", 2],
+          ["2025-07-02", 0],
+          ["2025-07-03", 1],
+          ["2025-07-04", 1],
+          ["2025-07-05", 0],
+          ["2025-07-06", 1],
+          ["2025-07-07", 0]
+        ]
+      }
+    },
+    {
+      "id": "second-highest-salary",
+      "title": "Second highest salary",
+      "difficulty": "easy",
+      "topic": "interview",
+      "description": "The classic: return the second highest **distinct** salary in the company, as a single column `salary`.",
+      "setup": "",
+      "ordered": false,
+      "hints": [
+        "Distinct matters: two people tied for a salary still count as one value.",
+        "`SELECT DISTINCT salary ... ORDER BY salary DESC LIMIT 1 OFFSET 1`, or `MAX(salary) WHERE salary < (SELECT MAX(salary) ...)`."
+      ],
+      "solution": "SELECT MAX(salary) AS salary\nFROM employees\nWHERE salary < (SELECT MAX(salary) FROM employees)",
+      "expected": {
+        "columns": ["salary"],
+        "rows": [[190000]]
+      }
+    },
+    {
+      "id": "duplicate-emails",
+      "title": "Duplicate email addresses",
+      "difficulty": "easy",
+      "topic": "interview",
+      "description": "Find email addresses used by more than one customer. Return `email` and `uses`.",
+      "setup": "",
+      "ordered": false,
+      "hints": ["GROUP BY email.", "HAVING COUNT(*) > 1."],
+      "solution": "SELECT email, COUNT(*) AS uses\nFROM customers\nGROUP BY email\nHAVING COUNT(*) > 1",
+      "expected": {
+        "columns": ["email", "uses"],
+        "rows": [["buyer@acme.example", 2]]
+      }
+    },
+    {
+      "id": "earn-more-than-manager",
+      "title": "Employees who earn more than their manager",
+      "difficulty": "medium",
+      "topic": "interview",
+      "description": "Find employees whose salary is higher than their own manager's. Return `employee`, `salary`, `manager` and `manager_salary`.",
+      "setup": "",
+      "ordered": false,
+      "hints": [
+        "Self join `employees` as e and m on `e.manager_id = m.id`.",
+        "Then `WHERE e.salary > m.salary`."
+      ],
+      "solution": "SELECT e.name AS employee, e.salary, m.name AS manager, m.salary AS manager_salary\nFROM employees e\nJOIN employees m ON m.id = e.manager_id\nWHERE e.salary > m.salary",
+      "expected": {
+        "columns": ["employee", "salary", "manager", "manager_salary"],
+        "rows": [["Gopal Iyer", 155000, "Chen Wei", 150000]]
+      }
+    },
+    {
+      "id": "keep-first-signup",
+      "title": "De-duplicate customers",
+      "difficulty": "medium",
+      "topic": "interview",
+      "description": "Customers sharing an email are duplicates. Return the `id` and `name` of the customers to **keep**: for each email, only the one who signed up first.",
+      "setup": "",
+      "ordered": false,
+      "hints": [
+        "ROW_NUMBER() OVER (PARTITION BY email ORDER BY signup_date) is 1 for the earliest signup of each email.",
+        "Keep the rows where it is 1. In a real clean-up you would DELETE the others."
+      ],
+      "solution": "WITH numbered AS (\n  SELECT id, name, ROW_NUMBER() OVER (PARTITION BY email ORDER BY signup_date, id) AS rn\n  FROM customers\n)\nSELECT id, name FROM numbered WHERE rn = 1",
+      "expected": {
+        "columns": ["id", "name"],
+        "rows": [
+          [7, "Granite Co"],
+          [6, "Fjord Foods"],
+          [1, "Acme Ltd"],
+          [3, "Cobalt Labs"],
+          [8, "Helix Bio"],
+          [5, "Echo Media"],
+          [2, "Blue Fin"],
+          [4, "Delta Retail"],
+          [9, "Iris Studio"],
+          [10, "Juniper AI"],
+          [12, "Kite Travel"]
+        ]
+      }
+    },
+    {
+      "id": "noisy-clients",
+      "title": "Top clients by error responses",
+      "difficulty": "medium",
+      "topic": "interview",
+      "description": "Which three IP addresses received the most error responses (status 400 and above)? Return `ip` and `errors`, most first (ties by ip).",
+      "setup": "",
+      "ordered": true,
+      "hints": [
+        "Filter rows with WHERE status >= 400 before grouping.",
+        "ORDER BY errors DESC LIMIT 3."
+      ],
+      "solution": "SELECT ip, COUNT(*) AS errors\nFROM web_logs\nWHERE status >= 400\nGROUP BY ip\nORDER BY errors DESC, ip\nLIMIT 3",
+      "expected": {
+        "columns": ["ip", "errors"],
+        "rows": [
+          ["10.0.9.99", 28],
+          ["10.0.1.16", 6],
+          ["10.0.1.17", 6]
+        ]
+      }
+    },
+    {
+      "id": "hourly-error-rate",
+      "title": "Hourly error rate",
+      "difficulty": "hard",
+      "topic": "interview",
+      "description": "For each hour of the day (00-23, across all three days), return the number of requests and the percentage that were server errors (status 500+), rounded to one decimal place. Return `hour`, `requests` and `error_pct`, in hour order.",
+      "setup": "",
+      "ordered": true,
+      "hints": [
+        "`strftime('%H', ts)` extracts the hour.",
+        "`SUM(CASE WHEN status >= 500 THEN 1 ELSE 0 END)` counts errors; multiply by 100.0 before dividing so the division is not integer division."
+      ],
+      "solution": "SELECT strftime('%H', ts) AS hour,\n       COUNT(*) AS requests,\n       ROUND(100.0 * SUM(CASE WHEN status >= 500 THEN 1 ELSE 0 END) / COUNT(*), 1) AS error_pct\nFROM web_logs\nGROUP BY hour\nORDER BY hour",
+      "expected": {
+        "columns": ["hour", "requests", "error_pct"],
+        "rows": [
+          ["00", 13, 23.1],
+          ["01", 17, 0],
+          ["02", 25, 8],
+          ["03", 22, 9.1],
+          ["04", 7, 28.6],
+          ["05", 20, 0],
+          ["06", 9, 11.1],
+          ["07", 19, 5.3],
+          ["08", 22, 9.1],
+          ["09", 15, 26.7],
+          ["10", 18, 11.1],
+          ["11", 27, 7.4],
+          ["12", 19, 10.5],
+          ["13", 20, 15],
+          ["14", 12, 0],
+          ["15", 13, 7.7],
+          ["16", 21, 4.8],
+          ["17", 13, 15.4],
+          ["18", 28, 14.3],
+          ["19", 6, 0],
+          ["20", 13, 7.7],
+          ["21", 14, 7.1],
+          ["22", 15, 6.7],
+          ["23", 12, 8.3]
+        ]
+      }
+    }
+  ]
+}

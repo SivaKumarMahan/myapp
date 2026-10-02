@@ -7,6 +7,8 @@ import type { BadgeTone } from './ui/Badge'
 import { CodeBlock } from './ui/CodeBlock'
 import { DiagramList } from './ui/Diagram'
 import { RichAnswer, RichList, RichText } from './ui/RichText'
+import { NextReview, RatingButtons } from './SrsControls'
+import type { Rating, SrsCard } from '../lib/srs'
 
 const levelTone: Record<InterviewQuestion['level'], BadgeTone> = {
   basic: 'success',
@@ -34,15 +36,24 @@ export function InterviewQuestionCard({
   index,
   status,
   onStatusChange,
+  srsCard,
+  onRate,
+  hideStatus = false,
 }: {
   question: InterviewQuestion
   index: number
   status: InterviewStatus | undefined
   onStatusChange: (status: InterviewStatus | null) => void
+  /** Spaced-repetition state. With `onRate`, ratings appear after the reveal. */
+  srsCard?: SrsCard
+  onRate?: (rating: Rating) => void
+  /** Drops the known / needs-review footer, where ratings already say it. */
+  hideStatus?: boolean
 }) {
   const isChoice = question.kind === 'mcq' || question.kind === 'multi'
   const [selected, setSelected] = useState<string[]>([])
   const [revealed, setRevealed] = useState(false)
+  const [rated, setRated] = useState(false)
 
   const correct = question.correct ?? []
   const graded = revealed && isChoice
@@ -208,30 +219,51 @@ export function InterviewQuestionCard({
               <RichList items={question.followUps} />
             </>
           ) : null}
+
+          {onRate && (
+            <div className="srs-panel">
+              <span className="srs-panel__label">
+                {rated ? 'Rated.' : 'How well did you recall it?'}
+              </span>
+              {rated ? (
+                <NextReview card={srsCard} />
+              ) : (
+                <RatingButtons
+                  card={srsCard}
+                  onRate={(rating) => {
+                    setRated(true)
+                    onRate(rating)
+                  }}
+                />
+              )}
+            </div>
+          )}
         </div>
       )}
 
-      <footer className="itv-card__foot">
-        <span className="subtle">Could you answer this out loud?</span>
-        <div className="button-row">
-          <button
-            type="button"
-            className={`btn btn--sm ${status === 'known' ? 'btn--success' : 'btn--secondary'}`}
-            onClick={() => onStatusChange(status === 'known' ? null : 'known')}
-            aria-pressed={status === 'known'}
-          >
-            ✓ I know this
-          </button>
-          <button
-            type="button"
-            className={`btn btn--sm ${status === 'review' ? 'btn--warning' : 'btn--secondary'}`}
-            onClick={() => onStatusChange(status === 'review' ? null : 'review')}
-            aria-pressed={status === 'review'}
-          >
-            ↻ Needs review
-          </button>
-        </div>
-      </footer>
+      {!hideStatus && (
+        <footer className="itv-card__foot">
+          <span className="subtle">Could you answer this out loud?</span>
+          <div className="button-row">
+            <button
+              type="button"
+              className={`btn btn--sm ${status === 'known' ? 'btn--success' : 'btn--secondary'}`}
+              onClick={() => onStatusChange(status === 'known' ? null : 'known')}
+              aria-pressed={status === 'known'}
+            >
+              ✓ I know this
+            </button>
+            <button
+              type="button"
+              className={`btn btn--sm ${status === 'review' ? 'btn--warning' : 'btn--secondary'}`}
+              onClick={() => onStatusChange(status === 'review' ? null : 'review')}
+              aria-pressed={status === 'review'}
+            >
+              ↻ Needs review
+            </button>
+          </div>
+        </footer>
+      )}
     </article>
   )
 }

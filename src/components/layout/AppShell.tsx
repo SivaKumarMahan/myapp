@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
+import { useStudyTimer } from '../../lib/use-study-timer'
 
 /**
  * Sidebar on desktop, tab bar on mobile, with a single scrolling main region.
@@ -12,6 +13,7 @@ import { TopBar } from './TopBar'
  */
 export function AppShell() {
   const { pathname, hash } = useLocation()
+  useStudyTimer()
 
   useEffect(() => {
     if (hash) {

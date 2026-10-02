@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { playgroundRunner } from './server/playground-runner'
 
 /**
  * The app is designed to be hosted from a repository sub-path on GitHub Pages
@@ -16,6 +17,8 @@ export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? basePath : '/',
   plugins: [
     react(),
+    // Runs the code playground's scripts on this machine. Dev and preview only.
+    playgroundRunner(),
     VitePWA({
       // "prompt" gives us an explicit "New version available - Update" banner instead
       // of silently swapping content while somebody is mid-lesson.
@@ -49,13 +52,31 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // wasm: SQLite for the SQL playground, so it works offline too.
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2,wasm}'],
         // Old revisions are deleted on activation so a new deployment can never leave
         // somebody stranded on stale cached content.
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         navigateFallback: `${basePath}index.html`,
         navigateFallbackDenylist: [/^\/api\//],
+        /*
+         * Python (Pyodide) is ~10 MB, and pandas another ~20 MB - too big to
+         * precache for everyone. It is fetched the first time the Python
+         * playground is used and kept here cache-first, so it then works
+         * offline. The version is in the URL, so an upgrade is a new entry.
+         */
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/pyodide\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'pyodide',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 120, maxAgeSeconds: 365 * 24 * 60 * 60 },
+            },
+          },
+        ],
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
       },
       devOptions: {
@@ -63,6 +84,11 @@ export default defineConfig(({ mode }) => ({
       },
     }),
   ],
+  // The SQL worker loads each database's data on demand (dynamic import),
+  // which needs ES-module workers. Every browser the app supports has them.
+  worker: {
+    format: 'es',
+  },
   build: {
     target: 'es2022',
     sourcemap: false,
@@ -82,6 +108,27 @@ export default defineConfig(({ mode }) => ({
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (id.includes('highlight.js')) return 'vendor-highlight'
+            // Only the SQL playground uses these, so they must not ride in
+            // the shared vendor chunk that every page loads.
+            if (
+              id.includes('@codemirror') ||
+              id.includes('@lezer') ||
+              id.includes('crelt') ||
+              id.includes('style-mod') ||
+              id.includes('w3c-keyname')
+            ) {
+              return 'vendor-codemirror'
+            }
+            if (id.includes('/sql.js/')) return 'vendor-sqljs'
+            // The CLI simulator and the Config lab: loaded only on those pages.
+            if (id.includes('/jmespath/')) return 'vendor-jmespath'
+            if (
+              /\/node_modules\/(yaml|ajv|fast-uri|fast-deep-equal|json-schema-traverse|require-from-string)\//.test(
+                id,
+              )
+            ) {
+              return 'vendor-configlab'
+            }
             if (
               id.includes('react-router') ||
               id.includes('/react/') ||
@@ -121,7 +168,7 @@ export default defineConfig(({ mode }) => ({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ['src/**/*.test.{ts,tsx}', 'server/**/*.test.ts'],
     restoreMocks: true,
     // Page tests render the whole app in jsdom, which is several times slower
     // on a shared CI runner than on a laptop. 5s (the default) was not enough.

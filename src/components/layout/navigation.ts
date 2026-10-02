@@ -54,11 +54,27 @@ export function courseToolsFor(course: Course): NavItem[] {
       shortLabel: 'Commands',
       icon: '⌨️',
     },
+    { to: `${course.route}/stats`, label: 'My stats', shortLabel: 'Stats', icon: '📊' },
   ]
 }
 
 export function utilityNav(): NavItem[] {
-  return [{ to: '/progress', label: 'Progress & data', shortLabel: 'Progress', icon: '💾' }]
+  return [
+    { to: '/playground', label: 'Code playground', shortLabel: 'Playground', icon: '🧪' },
+    { to: '/cli', label: 'Azure CLI simulator', shortLabel: 'CLI', icon: '💻' },
+    { to: '/lab', label: 'Config lab', shortLabel: 'Lab', icon: '🧰' },
+    { to: '/network', label: 'Networking lab', shortLabel: 'Network', icon: '🌐' },
+    { to: '/sql', label: 'SQL playground', shortLabel: 'SQL', icon: '🗃️', matchPrefix: true },
+    { to: '/kql', label: 'KQL simulator', shortLabel: 'KQL', icon: '📈', matchPrefix: true },
+    {
+      to: '/python',
+      label: 'Python playground',
+      shortLabel: 'Python',
+      icon: '🐍',
+      matchPrefix: true,
+    },
+    { to: '/progress', label: 'Progress & data', shortLabel: 'Progress', icon: '💾' },
+  ]
 }
 
 /**

@@ -107,7 +107,7 @@ function DomainCard({ entry, route }: { entry: DomainStats; route: string }) {
         <details className="reveal">
           <summary className="reveal__summary">
             <span aria-hidden="true">📋</span>
-            Official CNCF competencies for this domain
+            Skills measured in this domain (Microsoft study guide)
           </summary>
           <div className="reveal__body">
             <ul style={{ marginBottom: 0 }}>

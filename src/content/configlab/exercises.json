@@ -1,0 +1,225 @@
+{
+  "$comment": "Config lab exercises. An exercise is solved when the file has no errors or warnings (tips are fine) and every requirement - a JMESPath query over the analyser's facts - is true. `solution` is a reference answer; the tests check that it is clean.",
+  "exercises": [
+    {
+      "id": "azp-stages",
+      "tab": "pipeline",
+      "title": "Fix a broken release pipeline",
+      "exam": "AZ-400",
+      "description": "This Azure Pipelines file never gets past validation. Fix every error and warning, keeping the Build, Test and Deploy stages in that order.",
+      "file": "trigger:\n  - main\n\nstages:\n  - stage: Build\n    jobs:\n      - job: Compile\n        steps:\n          - task: UseDotNet\n            inputs:\n              version: 8.x\n          - script: dotnet build -c Release\n            displayName: Build\n\n  - stage: Test\n    dependson: Biuld\n    jobs:\n      - job: Unit\n        pool:\n          vmImage: ubuntu-latest\n        steps:\n          - script: dotnet test\n\n  - stage: Deploy\n    dependsOn: Tset\n    jobs:\n      - job: Release\n        pool:\n          vmImage: ubuntu-latest\n        steps:\n          - script: echo deploying\n",
+      "solution": "trigger:\n  - main\n\npool:\n  vmImage: ubuntu-latest\n\nstages:\n  - stage: Build\n    jobs:\n      - job: Compile\n        steps:\n          - task: UseDotNet@2\n            inputs:\n              version: 8.x\n          - script: dotnet build -c Release\n            displayName: Build\n\n  - stage: Test\n    dependsOn: Build\n    jobs:\n      - job: Unit\n        steps:\n          - script: dotnet test\n\n  - stage: Deploy\n    dependsOn: Test\n    jobs:\n      - job: Release\n        steps:\n          - script: echo deploying\n",
+      "requirements": [
+        {
+          "description": "The Build, Test and Deploy stages are still there, in that order",
+          "query": "stages == ['Build', 'Test', 'Deploy']"
+        },
+        {
+          "description": "Test depends on Build, and Deploy on Test",
+          "query": "graph[?id=='Test'] | [0].dependsOn == ['Build'] && graph[?id=='Deploy'] | [0].dependsOn == ['Test']"
+        }
+      ]
+    },
+    {
+      "id": "azp-deployment",
+      "tab": "pipeline",
+      "title": "A proper deployment job",
+      "exam": "AZ-400",
+      "description": "The Deploy stage uses a plain job and keeps the database password in the YAML. Turn it into a deployment job targeting the `production` environment (with a runOnce strategy), and get the password out of the file.",
+      "file": "trigger:\n  branches:\n    include: [main]\n\npool:\n  vmImage: ubuntu-latest\n\nvariables:\n  appName: shop-api\n  dbPassword: S3cr3t-Pa55!\n\nstages:\n  - stage: Build\n    jobs:\n      - job: Build\n        steps:\n          - script: dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)\n          - task: PublishPipelineArtifact@1\n            inputs:\n              artifact: drop\n\n  - stage: Deploy\n    jobs:\n      - job: Deploy\n        steps:\n          - task: AzureWebApp@1\n            inputs:\n              appName: $(appName)\n",
+      "solution": "trigger:\n  branches:\n    include: [main]\n\npool:\n  vmImage: ubuntu-latest\n\nvariables:\n  - group: shop-secrets\n  - name: appName\n    value: shop-api\n\nstages:\n  - stage: Build\n    jobs:\n      - job: Build\n        steps:\n          - script: dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)\n          - task: PublishPipelineArtifact@1\n            inputs:\n              targetPath: $(Build.ArtifactStagingDirectory)\n              artifact: drop\n\n  - stage: Deploy\n    jobs:\n      - deployment: Deploy\n        environment: production\n        strategy:\n          runOnce:\n            deploy:\n              steps:\n                - task: AzureWebApp@1\n                  inputs:\n                    azureSubscription: shop-prod-connection\n                    appName: $(appName)\n",
+      "requirements": [
+        {
+          "description": "Build and Deploy stages are still there",
+          "query": "stages == ['Build', 'Deploy']"
+        },
+        {
+          "description": "The Deploy stage still deploys a web app",
+          "query": "steps >= `3`"
+        }
+      ]
+    },
+    {
+      "id": "gha-broken",
+      "tab": "pipeline",
+      "title": "A workflow that never runs",
+      "exam": "AZ-400",
+      "description": "This GitHub Actions workflow has a typo in its trigger, a job without a runner, a step that tries to be two things and a `needs` that points nowhere. Make it valid, keeping the build, test and deploy jobs.",
+      "file": "name: CI\n\nonn:\n  push:\n    branches: [main]\n\npermissions:\n  contents: read\n\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - name: Install and build\n        uses: actions/setup-node@v4\n        run: npm ci && npm run build\n\n  test:\n    needs: biuld\n    steps:\n      - uses: actions/checkout@v4\n      - run: npm test\n\n  deploy:\n    needs: [build, test]\n    runs-on: ubuntu-latest\n    steps:\n      - run: ./deploy.sh\n",
+      "solution": "name: CI\n\non:\n  push:\n    branches: [main]\n\npermissions:\n  contents: read\n\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: 20\n      - name: Install and build\n        run: npm ci && npm run build\n\n  test:\n    needs: build\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: npm test\n\n  deploy:\n    needs: [build, test]\n    runs-on: ubuntu-latest\n    steps:\n      - run: ./deploy.sh\n",
+      "requirements": [
+        {
+          "description": "build, test and deploy jobs are still there",
+          "query": "jobs == ['build', 'test', 'deploy']"
+        },
+        {
+          "description": "deploy still waits for build and test",
+          "query": "graph[?id=='deploy'] | [0].dependsOn == ['build', 'test']"
+        }
+      ]
+    },
+    {
+      "id": "gha-harden",
+      "tab": "pipeline",
+      "title": "Harden a release workflow",
+      "exam": "AZ-400",
+      "description": "This release workflow works - and leaks. It pins an action to a branch, runs with the default token permissions, prints a secret and uses the retired `::set-output`. Fix the errors and warnings without losing the release job.",
+      "file": "name: Release\n\non:\n  workflow_dispatch:\n\njobs:\n  release:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@master\n      - name: Version\n        id: version\n        run: echo \"::set-output name=tag::v1.$GITHUB_RUN_NUMBER\"\n      - name: Publish\n        run: |\n          echo \"Token is ${{ secrets.PUBLISH_TOKEN }}\"\n          ./publish.sh\n",
+      "solution": "name: Release\n\non:\n  workflow_dispatch:\n\npermissions:\n  contents: write\n\njobs:\n  release:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - name: Version\n        id: version\n        run: echo \"tag=v1.$GITHUB_RUN_NUMBER\" >> \"$GITHUB_OUTPUT\"\n      - name: Publish\n        run: ./publish.sh\n        env:\n          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}\n",
+      "requirements": [
+        {
+          "description": "The release job is still there",
+          "query": "jobs == ['release']"
+        },
+        {
+          "description": "It still has its three steps",
+          "query": "steps == `3`"
+        }
+      ]
+    },
+    {
+      "id": "df-node",
+      "tab": "dockerfile",
+      "title": "Slim down a Node.js image",
+      "exam": "AZ-400",
+      "description": "This image works, but it is huge, runs as root, rebuilds every dependency on every change and uses whatever node:latest is today. Fix every error and warning.",
+      "file": "FROM node:latest\n\nRUN apt-get update\nRUN apt-get install -y curl\n\nWORKDIR /app\nCOPY . .\nRUN npm install\nRUN npm run build\n\nEXPOSE 8080\nCMD npm start\n",
+      "solution": "FROM node:20 AS build\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\nCOPY . .\nRUN npm run build\n\nFROM node:20-alpine\nRUN apk add --no-cache curl\nWORKDIR /app\nCOPY --from=build /app/dist ./dist\nCOPY --from=build /app/node_modules ./node_modules\nUSER node\nEXPOSE 8080\nHEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://localhost:8080/health || exit 1\nCMD [\"node\", \"dist/server.js\"]\n",
+      "requirements": [
+        {
+          "description": "It still starts the app with CMD or ENTRYPOINT",
+          "query": "hasCmd"
+        },
+        {
+          "description": "It still exposes port 8080",
+          "query": "contains(exposes, '8080')"
+        }
+      ]
+    },
+    {
+      "id": "df-dotnet",
+      "tab": "dockerfile",
+      "title": "Secrets in a .NET image",
+      "exam": "AZ-400",
+      "description": "Someone baked the database connection string into this .NET API image, and the image ships the full SDK. Get the secret out, build in a separate stage, and fix the rest.",
+      "file": "FROM mcr.microsoft.com/dotnet/sdk:8.0\nENV ConnectionStrings__Default=\"Server=sql-prod;User=app;Password=Pa55word!\"\nARG NUGET_TOKEN\nWORKDIR /src\nADD . .\nRUN dotnet restore\nRUN dotnet publish -c Release -o /app\nWORKDIR /app\nEXPOSE 8080\nENTRYPOINT dotnet Shop.Api.dll\n",
+      "solution": "FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build\nWORKDIR /src\nCOPY *.csproj ./\nRUN --mount=type=secret,id=nuget_token dotnet restore\nCOPY . .\nRUN dotnet publish -c Release -o /app\n\nFROM mcr.microsoft.com/dotnet/aspnet:8.0\nWORKDIR /app\nCOPY --from=build /app .\nUSER $APP_UID\nEXPOSE 8080\nHEALTHCHECK CMD curl -f http://localhost:8080/health || exit 1\nENTRYPOINT [\"dotnet\", \"Shop.Api.dll\"]\n",
+      "requirements": [
+        {
+          "description": "It still runs Shop.Api with an ENTRYPOINT",
+          "query": "hasCmd"
+        },
+        {
+          "description": "It still exposes port 8080",
+          "query": "contains(exposes, '8080')"
+        }
+      ]
+    },
+    {
+      "id": "df-python",
+      "tab": "dockerfile",
+      "title": "A Python worker done right",
+      "exam": "AZ-400",
+      "description": "This worker image pipes an installer script into a shell, uses sudo, keeps the pip cache and runs as root. Fix every error and warning.",
+      "file": "FROM python:3.12-slim\nRUN apt-get update && apt-get install -y sudo curl\nRUN curl -sSL https://install.example.com/agent.sh | sh\nWORKDIR /app\nCOPY requirements.txt .\nRUN sudo pip install -r requirements.txt\nCOPY . .\nCMD [\"python\", \"worker.py\"]\n",
+      "solution": "FROM python:3.12-slim\nRUN apt-get update \\\n && apt-get install -y --no-install-recommends curl \\\n && rm -rf /var/lib/apt/lists/*\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nRUN useradd --create-home --uid 10001 worker\nUSER worker\nHEALTHCHECK CMD python -c \"import worker; worker.health()\" || exit 1\nCMD [\"python\", \"worker.py\"]\n",
+      "requirements": [
+        {
+          "description": "It still runs worker.py",
+          "query": "hasCmd"
+        },
+        {
+          "description": "It is still based on python:3.12-slim",
+          "query": "stages[-1].image == 'python' && stages[-1].tag == '3.12-slim'"
+        }
+      ]
+    },
+    {
+      "id": "df-go",
+      "tab": "dockerfile",
+      "title": "A tiny Go image",
+      "exam": "AZ-400",
+      "description": "Build this Go service in one stage and ship only the binary, on a distroless base, as a non-root user.",
+      "file": "FROM golang\nWORKDIR /src\nCOPY . .\nRUN go mod download\nRUN go build -o /bin/api ./cmd/api\nEXPOSE 8080\nENTRYPOINT [\"/bin/api\"]\n",
+      "solution": "FROM golang:1.23 AS build\nWORKDIR /src\nCOPY go.* ./\nRUN go mod download\nCOPY . .\nRUN CGO_ENABLED=0 go build -o /bin/api ./cmd/api\n\nFROM gcr.io/distroless/static-debian12:nonroot\nCOPY --from=build /bin/api /bin/api\nEXPOSE 8080\nHEALTHCHECK NONE\nENTRYPOINT [\"/bin/api\"]\n",
+      "requirements": [
+        {
+          "description": "It still runs /bin/api",
+          "query": "hasCmd"
+        },
+        {
+          "description": "It now has a separate build stage",
+          "query": "length(stages) >= `2`"
+        }
+      ]
+    },
+    {
+      "id": "k8s-deployment",
+      "tab": "kubernetes",
+      "title": "A production-ready Deployment",
+      "exam": "AZ-104",
+      "description": "This Deployment would be rejected - its selector does not match its pods - and even then it would run one copy of :latest with no limits and no probes. Fix every error and warning.",
+      "file": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: shop-api\nspec:\n  replicas: 1\n  selector:\n    matchLabels:\n      app: shop-api\n  template:\n    metadata:\n      labels:\n        app: shop\n    spec:\n      containers:\n        - name: api\n          image: myregistry.azurecr.io/shop-api:latest\n          ports:\n            - containerPort: 8080\n",
+      "solution": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: shop-api\n  namespace: shop\n  labels:\n    app.kubernetes.io/name: shop-api\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: shop-api\n  template:\n    metadata:\n      labels:\n        app.kubernetes.io/name: shop-api\n    spec:\n      securityContext:\n        runAsNonRoot: true\n      containers:\n        - name: api\n          image: myregistry.azurecr.io/shop-api:1.4.2\n          ports:\n            - containerPort: 8080\n          resources:\n            requests:\n              cpu: 100m\n              memory: 128Mi\n            limits:\n              memory: 256Mi\n          readinessProbe:\n            httpGet:\n              path: /health/ready\n              port: 8080\n          livenessProbe:\n            httpGet:\n              path: /health/live\n              port: 8080\n          securityContext:\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities:\n              drop: [\"ALL\"]\n",
+      "requirements": [
+        {
+          "description": "It is still the shop-api Deployment",
+          "query": "length(resources[?kind=='Deployment' && name=='shop-api']) == `1`"
+        },
+        {
+          "description": "It still runs the shop-api image",
+          "query": "contains(resources[?name=='shop-api'] | [0].containers[0].image, 'shop-api')"
+        }
+      ]
+    },
+    {
+      "id": "k8s-lockdown",
+      "tab": "kubernetes",
+      "title": "Lock down a node agent",
+      "exam": "AZ-104",
+      "description": "This log collector was given far too much power: privileged, on the host network, as root, with the whole of /var mounted from the node. Make it pass - it only needs to read /var/log.",
+      "file": "apiVersion: apps/v1\nkind: DaemonSet\nmetadata:\n  name: log-agent\n  namespace: monitoring\n  labels:\n    app.kubernetes.io/name: log-agent\nspec:\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: log-agent\n  template:\n    metadata:\n      labels:\n        app.kubernetes.io/name: log-agent\n    spec:\n      hostNetwork: true\n      containers:\n        - name: agent\n          image: fluent/fluent-bit:3.1\n          securityContext:\n            privileged: true\n            runAsUser: 0\n          resources:\n            requests: { cpu: 50m, memory: 64Mi }\n            limits: { memory: 128Mi }\n          readinessProbe: { httpGet: { path: /api/v1/health, port: 2020 } }\n          livenessProbe: { httpGet: { path: /api/v1/health, port: 2020 } }\n          volumeMounts:\n            - name: var\n              mountPath: /var\n      volumes:\n        - name: var\n          hostPath:\n            path: /var\n",
+      "solution": "apiVersion: apps/v1\nkind: DaemonSet\nmetadata:\n  name: log-agent\n  namespace: monitoring\n  labels:\n    app.kubernetes.io/name: log-agent\nspec:\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: log-agent\n  template:\n    metadata:\n      labels:\n        app.kubernetes.io/name: log-agent\n    spec:\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 10001\n      containers:\n        - name: agent\n          image: fluent/fluent-bit:3.1\n          securityContext:\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities: { drop: [\"ALL\"] }\n          resources:\n            requests: { cpu: 50m, memory: 64Mi }\n            limits: { memory: 128Mi }\n          readinessProbe: { httpGet: { path: /api/v1/health, port: 2020 } }\n          livenessProbe: { httpGet: { path: /api/v1/health, port: 2020 } }\n          volumeMounts:\n            - name: logs\n              mountPath: /var/log\n              readOnly: true\n      volumes:\n        - name: logs\n          persistentVolumeClaim:\n            claimName: node-logs\n",
+      "requirements": [
+        {
+          "description": "It is still the log-agent DaemonSet",
+          "query": "length(resources[?kind=='DaemonSet' && name=='log-agent']) == `1`"
+        }
+      ]
+    },
+    {
+      "id": "k8s-legacy",
+      "tab": "kubernetes",
+      "title": "Upgrade an old manifest",
+      "exam": "AZ-104",
+      "description": "Written for a Kubernetes version long gone: the API version no longer exists and the Service points at the wrong labels. Make the Deployment and its Service work on a current AKS cluster, and production-ready.",
+      "file": "apiVersion: extensions/v1beta1\nkind: Deployment\nmetadata:\n  name: web\n  namespace: shop\n  labels:\n    app: web\nspec:\n  replicas: 2\n  selector:\n    matchLabels:\n      app: web\n  template:\n    metadata:\n      labels:\n        app: web\n    spec:\n      containers:\n        - name: web\n          image: nginx:1.27\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: web\n  namespace: shop\nspec:\n  selector:\n    app: frontend\n  ports:\n    - port: 80\n      targetPort: 80\n",
+      "solution": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: web\n  namespace: shop\n  labels:\n    app: web\nspec:\n  replicas: 2\n  selector:\n    matchLabels:\n      app: web\n  template:\n    metadata:\n      labels:\n        app: web\n    spec:\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 101\n      containers:\n        - name: web\n          image: nginxinc/nginx-unprivileged:1.27\n          resources:\n            requests: { cpu: 50m, memory: 64Mi }\n            limits: { memory: 128Mi }\n          readinessProbe: { httpGet: { path: /, port: 8080 } }\n          livenessProbe: { httpGet: { path: /, port: 8080 } }\n          securityContext:\n            allowPrivilegeEscalation: false\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: web\n  namespace: shop\nspec:\n  selector:\n    app: web\n  ports:\n    - port: 80\n      targetPort: 8080\n",
+      "requirements": [
+        {
+          "description": "The web Deployment is still there",
+          "query": "length(resources[?kind=='Deployment' && name=='web']) == `1`"
+        },
+        {
+          "description": "The web Service is still there",
+          "query": "length(resources[?kind=='Service' && name=='web']) == `1`"
+        }
+      ]
+    },
+    {
+      "id": "k8s-cronjob",
+      "tab": "kubernetes",
+      "title": "A safe nightly job",
+      "exam": "AZ-104",
+      "description": "A nightly CronJob that exports orders. It uses :latest, has no resource limits and runs as root. Fix every error and warning (batch jobs do not need probes).",
+      "file": "apiVersion: batch/v1\nkind: CronJob\nmetadata:\n  name: export-orders\n  namespace: shop\n  labels:\n    app.kubernetes.io/name: export-orders\nspec:\n  schedule: \"0 2 * * *\"\n  jobTemplate:\n    spec:\n      template:\n        metadata:\n          labels:\n            app.kubernetes.io/name: export-orders\n        spec:\n          restartPolicy: OnFailure\n          containers:\n            - name: export\n              image: myregistry.azurecr.io/exporter\n              args: [\"--since\", \"24h\"]\n",
+      "solution": "apiVersion: batch/v1\nkind: CronJob\nmetadata:\n  name: export-orders\n  namespace: shop\n  labels:\n    app.kubernetes.io/name: export-orders\nspec:\n  schedule: \"0 2 * * *\"\n  jobTemplate:\n    spec:\n      template:\n        metadata:\n          labels:\n            app.kubernetes.io/name: export-orders\n        spec:\n          restartPolicy: OnFailure\n          securityContext:\n            runAsNonRoot: true\n          containers:\n            - name: export\n              image: myregistry.azurecr.io/exporter:2.0.1\n              args: [\"--since\", \"24h\"]\n              resources:\n                requests: { cpu: 250m, memory: 256Mi }\n                limits: { memory: 512Mi }\n              securityContext:\n                allowPrivilegeEscalation: false\n",
+      "requirements": [
+        {
+          "description": "It is still the export-orders CronJob",
+          "query": "length(resources[?kind=='CronJob' && name=='export-orders']) == `1`"
+        }
+      ]
+    }
+  ]
+}

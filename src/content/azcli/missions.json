@@ -1,0 +1,281 @@
+{
+  "$comment": "CLI simulator missions. setup: az commands run first (silently). checks: JMESPath queries over the simulated cloud (resourceGroups, vnets, nsgs, vms, storageAccounts, locks, history = successful commands, attempts = every command tried) that must be true.",
+  "missions": [
+    {
+      "id": "first-resource-group",
+      "title": "Your first resource group",
+      "level": "beginner",
+      "exam": "AZ-900",
+      "goal": "Create a resource group called `rg-learn` in UK South, then list your resource groups as a table.",
+      "steps": [
+        "Resource groups are the container every Azure resource lives in. Create one with `az group create`.",
+        "List them with `az group list`, and add `-o table` for a readable view."
+      ],
+      "hints": ["`az group create --name rg-learn --location uksouth`", "`az group list -o table`"],
+      "setup": [],
+      "checks": [
+        {
+          "description": "rg-learn exists",
+          "query": "length(resourceGroups[?name==`rg-learn`]) == `1`"
+        },
+        {
+          "description": "rg-learn is in uksouth",
+          "query": "resourceGroups[?name==`rg-learn`] | [0].location == `uksouth`"
+        },
+        {
+          "description": "You listed the groups as a table",
+          "query": "length(history[?contains(@, 'group list') && (contains(@, '-o table') || contains(@, '--output table'))]) > `0`"
+        }
+      ]
+    },
+    {
+      "id": "network-foundation",
+      "title": "Network foundation",
+      "level": "intermediate",
+      "exam": "AZ-104",
+      "goal": "Build the network for a web app: resource group `rg-web` in UK South, VNet `vnet-web` (10.0.0.0/16) with subnets `snet-web` (10.0.1.0/24) and `snet-app` (10.0.2.0/24), and an NSG `nsg-web` that allows inbound HTTPS (TCP 443), associated with `snet-web`.",
+      "steps": [
+        "Create the resource group.",
+        "Create the VNet with its first subnet in one command: `--address-prefixes` plus `--subnet-name` and `--subnet-prefixes`.",
+        "Add the second subnet with `az network vnet subnet create`.",
+        "Create the NSG, then a rule with `az network nsg rule create` (priority, protocol Tcp, destination port 443).",
+        "Associate it: `az network vnet subnet update ... --network-security-group nsg-web`."
+      ],
+      "hints": [
+        "`az network vnet create -g rg-web -n vnet-web --address-prefixes 10.0.0.0/16 --subnet-name snet-web --subnet-prefixes 10.0.1.0/24`",
+        "`az network nsg rule create -g rg-web --nsg-name nsg-web -n allow-https --priority 100 --protocol Tcp --destination-port-ranges 443`"
+      ],
+      "setup": [],
+      "checks": [
+        {
+          "description": "rg-web exists in uksouth",
+          "query": "resourceGroups[?name==`rg-web`] | [0].location == `uksouth`"
+        },
+        {
+          "description": "vnet-web has the 10.0.0.0/16 address space",
+          "query": "contains(vnets[?name==`vnet-web` && resourceGroup==`rg-web`] | [0].addressPrefixes || `[]`, '10.0.0.0/16')"
+        },
+        {
+          "description": "snet-web is 10.0.1.0/24",
+          "query": "vnets[?name==`vnet-web`] | [0].subnets[?name==`snet-web`] | [0].addressPrefix == '10.0.1.0/24'"
+        },
+        {
+          "description": "snet-app is 10.0.2.0/24",
+          "query": "vnets[?name==`vnet-web`] | [0].subnets[?name==`snet-app`] | [0].addressPrefix == '10.0.2.0/24'"
+        },
+        {
+          "description": "nsg-web allows inbound TCP 443",
+          "query": "length(nsgs[?name==`nsg-web`] | [0].rules[?direction==`Inbound` && access==`Allow` && (protocol==`Tcp` || protocol==`*`) && contains(destinationPortRanges, '443')] || `[]`) > `0`"
+        },
+        {
+          "description": "nsg-web is associated with snet-web",
+          "query": "vnets[?name==`vnet-web`] | [0].subnets[?name==`snet-web`] | [0].nsg == 'nsg-web'"
+        }
+      ]
+    },
+    {
+      "id": "secure-storage",
+      "title": "Fix an insecure storage account",
+      "level": "intermediate",
+      "exam": "AZ-104",
+      "goal": "A legacy account `stlegacyexports` in `rg-data` allows public blob access and TLS 1.0. Lock it down: no public blob access and a minimum of TLS 1.2. Then create a new account `stsecure` + any 4 digits (for example `stsecure1234`) in the same group: zone-redundant (Standard_ZRS) StorageV2.",
+      "steps": [
+        "See what is wrong first: `az storage account show -n stlegacyexports -g rg-data --query \"{tls: minimumTlsVersion, public: allowBlobPublicAccess}\"`.",
+        "Fix it with `az storage account update`.",
+        "Create the new account with `--sku Standard_ZRS --kind StorageV2`."
+      ],
+      "hints": [
+        "`az storage account update -n stlegacyexports -g rg-data --allow-blob-public-access false --min-tls-version TLS1_2`",
+        "Storage account names are 3-24 lower-case letters and numbers, and must be unique."
+      ],
+      "setup": [
+        "az group create -n rg-data -l uksouth",
+        "az storage account create -n stlegacyexports -g rg-data --sku Standard_LRS --allow-blob-public-access true --min-tls-version TLS1_0"
+      ],
+      "checks": [
+        {
+          "description": "stlegacyexports no longer allows public blob access",
+          "query": "storageAccounts[?name==`stlegacyexports`] | [0].allowBlobPublicAccess == `false`"
+        },
+        {
+          "description": "stlegacyexports requires TLS 1.2",
+          "query": "storageAccounts[?name==`stlegacyexports`] | [0].minimumTlsVersion == `TLS1_2`"
+        },
+        {
+          "description": "A new zone-redundant StorageV2 account exists in rg-data",
+          "query": "length(storageAccounts[?starts_with(name, 'stsecure') && resourceGroup==`rg-data` && sku==`Standard_ZRS` && kind==`StorageV2`]) > `0`"
+        }
+      ]
+    },
+    {
+      "id": "vm-lifecycle",
+      "title": "A VM, start to stop",
+      "level": "intermediate",
+      "exam": "AZ-104",
+      "goal": "Create a Linux VM `vm-api-01` (Ubuntu2204, size Standard_B2s) in a new group `rg-compute` in West Europe. Look at what else `az vm create` made for you. Then stop it in the way that stops the compute bill.",
+      "steps": [
+        "`az vm create` needs a name, a group and an image. For Linux, `--generate-ssh-keys`.",
+        "`az resource list -g rg-compute -o table` shows the VNet, NSG and public IP it created.",
+        "There are two ways to stop a VM. Only one releases the compute (and the charge)."
+      ],
+      "hints": [
+        "`az vm create -g rg-compute -n vm-api-01 --image Ubuntu2204 --size Standard_B2s --generate-ssh-keys`",
+        "`az vm stop` powers off but you still pay for the compute; `az vm deallocate` releases it."
+      ],
+      "setup": [],
+      "checks": [
+        {
+          "description": "rg-compute exists in westeurope",
+          "query": "resourceGroups[?name==`rg-compute`] | [0].location == `westeurope`"
+        },
+        {
+          "description": "vm-api-01 is Ubuntu2204 at Standard_B2s",
+          "query": "length(vms[?name==`vm-api-01` && image==`Ubuntu2204` && size==`Standard_B2s`]) == `1`"
+        },
+        {
+          "description": "You listed what az vm create made",
+          "query": "length(history[?contains(@, 'resource list')]) > `0`"
+        },
+        {
+          "description": "vm-api-01 is deallocated",
+          "query": "vms[?name==`vm-api-01`] | [0].powerState == `VM deallocated`"
+        }
+      ]
+    },
+    {
+      "id": "tag-governance",
+      "title": "Tag for cost reporting",
+      "level": "beginner",
+      "exam": "AZ-104",
+      "goal": "Cost reports group spending by tag. Tag the existing groups `rg-shop` and `rg-batch` with `env=prod` and `costCentre=CC-1042`, then use `az group list` with the `--tag` filter to show only groups tagged `costCentre=CC-1042`.",
+      "steps": [
+        "`az group update -n <group> --tags env=prod costCentre=CC-1042` sets both tags at once (it replaces any existing tags).",
+        "`az group list --tag costCentre=CC-1042 -o table`"
+      ],
+      "hints": [
+        "--tags takes several key=value pairs separated by spaces.",
+        "`--set tags.env=prod` adds one tag without removing others."
+      ],
+      "setup": [
+        "az group create -n rg-shop -l uksouth --tags owner=web",
+        "az group create -n rg-batch -l ukwest",
+        "az group create -n rg-sandbox -l uksouth"
+      ],
+      "checks": [
+        {
+          "description": "rg-shop is tagged env=prod and costCentre=CC-1042",
+          "query": "resourceGroups[?name==`rg-shop`] | [0].tags.env == `prod` && resourceGroups[?name==`rg-shop`] | [0].tags.costCentre == `CC-1042`"
+        },
+        {
+          "description": "rg-batch is tagged env=prod and costCentre=CC-1042",
+          "query": "resourceGroups[?name==`rg-batch`] | [0].tags.env == `prod` && resourceGroups[?name==`rg-batch`] | [0].tags.costCentre == `CC-1042`"
+        },
+        {
+          "description": "You filtered the list by tag",
+          "query": "length(history[?contains(@, 'group list') && contains(@, '--tag')]) > `0`"
+        }
+      ]
+    },
+    {
+      "id": "protect-production",
+      "title": "Protect production from deletion",
+      "level": "intermediate",
+      "exam": "AZ-104",
+      "goal": "Put a `CanNotDelete` lock named `do-not-delete` on `rg-prod`. Then prove it works: try to delete `rg-prod` and watch it fail. (Leave the lock in place.)",
+      "steps": [
+        "`az lock create --name do-not-delete --lock-type CanNotDelete --resource-group rg-prod`",
+        "`az group delete -n rg-prod --yes` should now fail with ScopeLocked."
+      ],
+      "hints": [
+        "A CanNotDelete lock still lets people change resources; ReadOnly blocks changes too.",
+        "Locks are inherited by everything in the resource group."
+      ],
+      "setup": [
+        "az group create -n rg-prod -l uksouth",
+        "az storage account create -n stprodorders -g rg-prod"
+      ],
+      "checks": [
+        {
+          "description": "rg-prod has a CanNotDelete lock called do-not-delete",
+          "query": "length(locks[?name==`do-not-delete` && resourceGroup==`rg-prod` && level==`CanNotDelete`]) == `1`"
+        },
+        {
+          "description": "rg-prod still exists",
+          "query": "length(resourceGroups[?name==`rg-prod`]) == `1`"
+        },
+        {
+          "description": "You tried to delete it after locking it",
+          "query": "length(attempts[?contains(@, 'group delete') && contains(@, 'rg-prod')]) > `0`"
+        }
+      ]
+    },
+    {
+      "id": "query-skills",
+      "title": "Answer questions with --query",
+      "level": "intermediate",
+      "exam": "AZ-104",
+      "goal": "Three VMs already exist. Use `--query` (JMESPath) to answer: which VMs are deallocated? Print just their names, as tsv. Then print a table with only the name and size of every VM.",
+      "steps": [
+        "`az vm list -d` includes `powerState`.",
+        "Filter with `--query \"[?powerState=='VM deallocated'].name\" -o tsv`.",
+        "Pick fields with a multiselect hash: `--query \"[].{Name: name, Size: hardwareProfile.vmSize}\" -o table`."
+      ],
+      "hints": [
+        "JMESPath filter: `[?field=='value']`. Projection: `[].name`.",
+        "Inside a double-quoted --query, use single quotes for strings."
+      ],
+      "setup": [
+        "az group create -n rg-fleet -l uksouth",
+        "az vm create -g rg-fleet -n vm-web-01 --image Ubuntu2204 --size Standard_B2s --generate-ssh-keys",
+        "az vm create -g rg-fleet -n vm-batch-01 --image Ubuntu2204 --size Standard_D4s_v5 --generate-ssh-keys",
+        "az vm create -g rg-fleet -n vm-jump-01 --image Win2022Datacenter --size Standard_B1ms --admin-password Simulated123!",
+        "az vm deallocate -g rg-fleet -n vm-batch-01",
+        "az vm deallocate -g rg-fleet -n vm-jump-01"
+      ],
+      "checks": [
+        {
+          "description": "You filtered the VMs by power state with --query",
+          "query": "length(history[?contains(@, 'vm list') && contains(@, 'powerState') && contains(@, '--query')]) > `0`"
+        },
+        {
+          "description": "You printed names as tsv",
+          "query": "length(history[?contains(@, 'vm list') && contains(@, '.name') && (contains(@, '-o tsv') || contains(@, '--output tsv'))]) > `0`"
+        },
+        {
+          "description": "You built a name and size table",
+          "query": "length(history[?contains(@, 'vm list') && contains(@, 'vmSize') && (contains(@, '-o table') || contains(@, '--output table'))]) > `0`"
+        }
+      ]
+    },
+    {
+      "id": "powershell-basics",
+      "title": "The same, in PowerShell",
+      "level": "beginner",
+      "exam": "AZ-104",
+      "goal": "Switch the terminal to PowerShell. With Az cmdlets, create a resource group `rg-pwsh` in North Europe and a Standard_LRS storage account in it whose name starts with `stpwsh`.",
+      "steps": [
+        "Use the PowerShell button above the terminal.",
+        "`New-AzResourceGroup -Name rg-pwsh -Location northeurope`",
+        "`New-AzStorageAccount -ResourceGroupName rg-pwsh -Name stpwsh1234 -Location northeurope -SkuName Standard_LRS`"
+      ],
+      "hints": [
+        "`Get-Command` lists the cmdlets the simulator knows; `Get-Help New-AzStorageAccount` shows the syntax."
+      ],
+      "setup": [],
+      "checks": [
+        {
+          "description": "rg-pwsh exists in northeurope",
+          "query": "resourceGroups[?name==`rg-pwsh`] | [0].location == `northeurope`"
+        },
+        {
+          "description": "A Standard_LRS account starting stpwsh exists in rg-pwsh",
+          "query": "length(storageAccounts[?starts_with(name, 'stpwsh') && resourceGroup==`rg-pwsh` && sku==`Standard_LRS`]) > `0`"
+        },
+        {
+          "description": "You used PowerShell to do it",
+          "query": "length(history[?starts_with(@, '[pwsh] New-AzStorageAccount')]) > `0`"
+        }
+      ]
+    }
+  ]
+}
