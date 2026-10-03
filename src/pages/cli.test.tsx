@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { App } from '../App'
@@ -11,6 +11,12 @@ const goTo = (path: string) => {
 }
 
 describe('Azure CLI simulator', () => {
+  // The page is lazy-loaded; load it once up front so the first test does
+  // not spend its find timeout on the import when the machine is busy.
+  beforeAll(async () => {
+    await import('./CliPage')
+  }, 20_000)
+
   beforeEach(() => {
     window.localStorage.clear()
     signInForTest()
@@ -19,7 +25,7 @@ describe('Azure CLI simulator', () => {
   it('runs az commands and shows the resources they create', async () => {
     const user = userEvent.setup()
     goTo('/cli')
-    const input = await screen.findByRole('textbox', { name: 'Command' })
+    const input = await screen.findByRole('textbox', { name: 'Command' }, { timeout: 5000 })
     await user.type(input, 'az group create -n rg-demo -l uksouth{Enter}')
     const log = screen.getByRole('log')
     expect(within(log).getByText(/"provisioningState": "Succeeded"/)).toBeInTheDocument()
@@ -35,7 +41,7 @@ describe('Azure CLI simulator', () => {
   it('completes with Tab and walks history with the arrow keys', async () => {
     const user = userEvent.setup()
     goTo('/cli')
-    const input = await screen.findByRole('textbox', { name: 'Command' })
+    const input = await screen.findByRole('textbox', { name: 'Command' }, { timeout: 5000 })
     await user.type(input, 'az netw')
     await user.keyboard('{Tab}')
     expect(input).toHaveValue('az network ')
@@ -48,7 +54,7 @@ describe('Azure CLI simulator', () => {
   it('asks before deleting', async () => {
     const user = userEvent.setup()
     goTo('/cli')
-    const input = await screen.findByRole('textbox', { name: 'Command' })
+    const input = await screen.findByRole('textbox', { name: 'Command' }, { timeout: 5000 })
     await user.type(input, 'az group create -n rg-gone -l uksouth{Enter}')
     await user.type(input, 'az group delete -n rg-gone{Enter}')
     expect(

@@ -55,6 +55,12 @@ export function courseToolsFor(course: Course): NavItem[] {
       icon: '⌨️',
     },
     { to: `${course.route}/stats`, label: 'My stats', shortLabel: 'Stats', icon: '📊' },
+    {
+      to: `${course.route}/cheatsheet`,
+      label: 'Cheat sheets',
+      shortLabel: 'Cheat sheets',
+      icon: '🖨️',
+    },
   ]
 }
 
@@ -64,6 +70,18 @@ export function utilityNav(): NavItem[] {
     { to: '/cli', label: 'Azure CLI simulator', shortLabel: 'CLI', icon: '💻' },
     { to: '/lab', label: 'Config lab', shortLabel: 'Lab', icon: '🧰' },
     { to: '/network', label: 'Networking lab', shortLabel: 'Network', icon: '🌐' },
+    { to: '/visualise', label: 'Visualise', shortLabel: 'Visualise', icon: '🔭' },
+    { to: '/architecture', label: 'Architecture builder', shortLabel: 'Architect', icon: '🏗️' },
+    { to: '/incidents', label: 'Incident labs', shortLabel: 'Incidents', icon: '🚨' },
+    {
+      to: '/guided-labs',
+      label: 'Guided Azure labs',
+      shortLabel: 'Labs',
+      icon: '🛠️',
+      matchPrefix: true,
+    },
+    { to: '/iac', label: 'IaC compare', shortLabel: 'IaC', icon: '📐' },
+    { to: '/glossary', label: 'Glossary', shortLabel: 'Glossary', icon: '📖' },
     { to: '/sql', label: 'SQL playground', shortLabel: 'SQL', icon: '🗃️', matchPrefix: true },
     { to: '/kql', label: 'KQL simulator', shortLabel: 'KQL', icon: '📈', matchPrefix: true },
     {
@@ -74,6 +92,7 @@ export function utilityNav(): NavItem[] {
       matchPrefix: true,
     },
     { to: '/progress', label: 'Progress & data', shortLabel: 'Progress', icon: '💾' },
+    { to: '/settings', label: 'Settings', shortLabel: 'Settings', icon: '⚙️' },
   ]
 }
 

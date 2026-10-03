@@ -1,0 +1,4787 @@
+{
+  "$comment": "Roles & skills map. Edit freely: roles reference skills by id; a skill with no appLinks is a content gap. appLinks: itv:<interview topic>, lesson:<course lesson>, course:<course id>, tool:<sql|kql|python|cli|lab|network|playground>. Reviewed 2026-10; no salary or market-share data on purpose.",
+  "version": "2026-10",
+  "areas": [
+    {
+      "id": "linux",
+      "title": "Linux & networking fundamentals"
+    },
+    {
+      "id": "code",
+      "title": "Scripting & programming"
+    },
+    {
+      "id": "git",
+      "title": "Source control"
+    },
+    {
+      "id": "cicd",
+      "title": "CI/CD & release"
+    },
+    {
+      "id": "iac",
+      "title": "Infrastructure as code & configuration"
+    },
+    {
+      "id": "containers",
+      "title": "Containers & orchestration"
+    },
+    {
+      "id": "cloud",
+      "title": "Cloud platforms"
+    },
+    {
+      "id": "observability",
+      "title": "Monitoring & observability"
+    },
+    {
+      "id": "security",
+      "title": "Security, identity & compliance"
+    },
+    {
+      "id": "data",
+      "title": "Databases & data"
+    },
+    {
+      "id": "reliability",
+      "title": "Reliability & incident management"
+    },
+    {
+      "id": "cost",
+      "title": "Cost management"
+    },
+    {
+      "id": "architecture",
+      "title": "Architecture & design"
+    },
+    {
+      "id": "ml",
+      "title": "Machine learning operations"
+    },
+    {
+      "id": "soft",
+      "title": "Soft skills"
+    }
+  ],
+  "skills": [
+    {
+      "id": "linux-admin",
+      "name": "Linux administration (processes, systemd, permissions)",
+      "type": "concept",
+      "appLinks": ["itv:linux", "itv:my-linux"],
+      "search": "linux systemd permissions"
+    },
+    {
+      "id": "linux-troubleshooting",
+      "name": "Linux performance troubleshooting (CPU, memory, disk, load)",
+      "type": "concept",
+      "appLinks": ["itv:linux", "itv:my-linux"],
+      "search": "linux high load troubleshooting"
+    },
+    {
+      "id": "networking-basics",
+      "name": "TCP/IP, DNS, HTTP and TLS",
+      "type": "concept",
+      "appLinks": ["itv:my-networking", "itv:azure-networking"],
+      "search": "dns tls http troubleshooting"
+    },
+    {
+      "id": "cidr",
+      "name": "IP addressing & subnetting (CIDR)",
+      "type": "concept",
+      "appLinks": ["itv:azure-networking", "lesson:az1-vnets-peering", "tool:network"],
+      "search": "cidr subnet planning"
+    },
+    {
+      "id": "load-balancing",
+      "name": "Load balancing & reverse proxies",
+      "type": "concept",
+      "appLinks": ["lesson:az1-dns-load-balancing", "itv:my-networking"],
+      "search": "load balancer reverse proxy"
+    },
+    {
+      "id": "windows",
+      "name": "Windows Server basics",
+      "type": "platform",
+      "appLinks": ["itv:my-linux"],
+      "search": "windows server"
+    },
+    {
+      "id": "bash",
+      "name": "Bash / shell scripting",
+      "type": "language",
+      "appLinks": ["itv:shell", "itv:my-linux", "tool:playground"],
+      "search": "bash scripting"
+    },
+    {
+      "id": "python",
+      "name": "Python",
+      "type": "language",
+      "appLinks": ["itv:python", "itv:my-python", "tool:python"],
+      "search": "python automation"
+    },
+    {
+      "id": "powershell",
+      "name": "PowerShell",
+      "type": "language",
+      "appLinks": ["tool:cli"],
+      "search": "powershell"
+    },
+    {
+      "id": "go",
+      "name": "Go",
+      "type": "language",
+      "appLinks": [],
+      "gap": true,
+      "search": "golang"
+    },
+    {
+      "id": "yaml-json",
+      "name": "YAML & JSON",
+      "type": "concept",
+      "appLinks": ["tool:lab", "itv:my-general"],
+      "search": "yaml"
+    },
+    {
+      "id": "rest-apis",
+      "name": "REST APIs & HTTP clients",
+      "type": "concept",
+      "appLinks": ["itv:my-python"],
+      "search": "rest api requests"
+    },
+    {
+      "id": "sql",
+      "name": "SQL",
+      "type": "language",
+      "appLinks": ["tool:sql", "itv:azure-storage"],
+      "search": "sql query"
+    },
+    {
+      "id": "groovy",
+      "name": "Groovy (Jenkins pipelines)",
+      "type": "language",
+      "appLinks": ["itv:jenkins", "itv:my-jenkins"],
+      "search": "groovy jenkinsfile"
+    },
+    {
+      "id": "git",
+      "name": "Git (branching, merging, rebasing)",
+      "type": "tool",
+      "appLinks": ["itv:my-git", "lesson:az4-branching-pr", "tool:visualise-git"],
+      "search": "git rebase merge"
+    },
+    {
+      "id": "branching",
+      "name": "Branching strategies (trunk-based, GitFlow)",
+      "type": "concept",
+      "appLinks": ["lesson:az4-branching-pr", "itv:my-frequent", "tool:visualise-git"],
+      "search": "branching strategy"
+    },
+    {
+      "id": "pull-requests",
+      "name": "Pull requests & branch protection",
+      "type": "concept",
+      "appLinks": ["lesson:az4-branching-pr", "itv:my-git"],
+      "search": "branch policies pull request"
+    },
+    {
+      "id": "repo-management",
+      "name": "Large repos & repository management",
+      "type": "concept",
+      "appLinks": ["lesson:az4-repo-management"],
+      "search": "large repository"
+    },
+    {
+      "id": "azure-pipelines",
+      "name": "Azure Pipelines (YAML)",
+      "type": "tool",
+      "appLinks": [
+        "itv:azure-devops",
+        "itv:my-azure-devops",
+        "lesson:az4-yaml-pipelines",
+        "tool:lab"
+      ],
+      "search": "azure pipelines yaml"
+    },
+    {
+      "id": "github-actions",
+      "name": "GitHub Actions",
+      "type": "tool",
+      "appLinks": ["itv:github-actions", "lesson:az4-github-actions", "tool:lab"],
+      "search": "github actions workflow"
+    },
+    {
+      "id": "jenkins",
+      "name": "Jenkins",
+      "type": "tool",
+      "appLinks": ["itv:jenkins", "itv:my-jenkins"],
+      "search": "jenkins pipeline"
+    },
+    {
+      "id": "gitlab-ci",
+      "name": "GitLab CI/CD",
+      "type": "tool",
+      "appLinks": ["itv:my-git"],
+      "search": "gitlab ci"
+    },
+    {
+      "id": "pipeline-design",
+      "name": "Pipeline design (stages, templates, caching, agents)",
+      "type": "concept",
+      "appLinks": [
+        "lesson:az4-pipeline-templates",
+        "lesson:az4-agents-runners",
+        "lesson:az4-pipeline-maintenance"
+      ],
+      "search": "pipeline templates caching"
+    },
+    {
+      "id": "deploy-strategies",
+      "name": "Deployment strategies (blue-green, canary, rings)",
+      "type": "concept",
+      "appLinks": ["lesson:az4-deployment-strategies", "itv:my-frequent", "tool:visualise-deploy"],
+      "search": "blue green canary deployment"
+    },
+    {
+      "id": "artifacts",
+      "name": "Artifact & package management (Azure Artifacts, Artifactory, Nexus)",
+      "type": "tool",
+      "appLinks": ["itv:my-artifacts", "lesson:az4-package-management"],
+      "search": "artifact repository"
+    },
+    {
+      "id": "release-mgmt",
+      "name": "Release management, environments & approvals",
+      "type": "concept",
+      "appLinks": [
+        "lesson:az4-environments-approvals",
+        "itv:my-azure-devops",
+        "tool:visualise-deploy"
+      ],
+      "search": "release approvals environments"
+    },
+    {
+      "id": "versioning",
+      "name": "Semantic versioning & release notes",
+      "type": "concept",
+      "appLinks": ["lesson:az4-package-management", "lesson:az4-docs-integration"],
+      "search": "semantic versioning"
+    },
+    {
+      "id": "testing",
+      "name": "Test automation & quality gates",
+      "type": "concept",
+      "appLinks": ["lesson:az4-testing-strategy", "itv:my-jenkins"],
+      "search": "quality gates tests pipeline"
+    },
+    {
+      "id": "feature-flags",
+      "name": "Feature flags",
+      "type": "concept",
+      "appLinks": ["lesson:az4-deployment-strategies"],
+      "search": "feature flags"
+    },
+    {
+      "id": "build-tools",
+      "name": "Build tools (Maven, Gradle, npm, dotnet)",
+      "type": "tool",
+      "appLinks": ["lesson:az4-package-management", "itv:my-artifacts"],
+      "search": "maven gradle build"
+    },
+    {
+      "id": "terraform",
+      "name": "Terraform / OpenTofu",
+      "type": "tool",
+      "appLinks": ["itv:terraform", "itv:my-terraform", "itv:azure-iac"],
+      "search": "terraform"
+    },
+    {
+      "id": "bicep",
+      "name": "Bicep & ARM (Azure) · CloudFormation (AWS)",
+      "type": "tool",
+      "appLinks": ["itv:azure-iac", "lesson:az1-arm-bicep"],
+      "search": "bicep arm template"
+    },
+    {
+      "id": "ansible",
+      "name": "Ansible",
+      "type": "tool",
+      "appLinks": ["itv:ansible", "itv:my-ansible"],
+      "search": "ansible playbook"
+    },
+    {
+      "id": "iac-pipelines",
+      "name": "IaC in pipelines (plan, review, apply)",
+      "type": "concept",
+      "appLinks": ["lesson:az4-iac-pipelines", "itv:my-terraform"],
+      "search": "terraform pipeline plan apply"
+    },
+    {
+      "id": "state-drift",
+      "name": "State management & drift detection",
+      "type": "concept",
+      "appLinks": ["itv:terraform", "itv:my-terraform"],
+      "search": "terraform state drift"
+    },
+    {
+      "id": "policy-as-code",
+      "name": "Policy as code (Azure Policy, OPA)",
+      "type": "concept",
+      "appLinks": ["lesson:az1-azure-policy", "itv:azure-iac", "tool:visualise-rbac"],
+      "search": "azure policy"
+    },
+    {
+      "id": "docker",
+      "name": "Docker & container images",
+      "type": "tool",
+      "appLinks": ["itv:docker", "itv:my-docker", "tool:lab"],
+      "search": "dockerfile image"
+    },
+    {
+      "id": "kubernetes",
+      "name": "Kubernetes core (pods, deployments, services)",
+      "type": "platform",
+      "appLinks": ["itv:kubernetes", "itv:my-kubernetes", "tool:lab"],
+      "search": "kubernetes deployment service"
+    },
+    {
+      "id": "k8s-troubleshooting",
+      "name": "Kubernetes troubleshooting",
+      "type": "concept",
+      "appLinks": ["itv:my-study-scenarios", "itv:my-cheatsheets", "itv:my-kubernetes"],
+      "search": "crashloopbackoff troubleshooting"
+    },
+    {
+      "id": "managed-k8s",
+      "name": "Managed Kubernetes (AKS · EKS · GKE)",
+      "type": "platform",
+      "appLinks": ["itv:azure-compute", "itv:my-kubernetes", "itv:rounds-simcorp"],
+      "search": "aks upgrade"
+    },
+    {
+      "id": "helm",
+      "name": "Helm",
+      "type": "tool",
+      "appLinks": ["itv:my-helm"],
+      "search": "helm chart"
+    },
+    {
+      "id": "gitops",
+      "name": "GitOps (Argo CD / Flux)",
+      "type": "tool",
+      "appLinks": ["itv:my-ops", "itv:my-study-platform"],
+      "search": "gitops argo cd"
+    },
+    {
+      "id": "service-mesh",
+      "name": "Service mesh (Istio, Linkerd)",
+      "type": "tool",
+      "appLinks": ["itv:my-study-platform", "itv:my-kubernetes"],
+      "search": "service mesh istio"
+    },
+    {
+      "id": "k8s-networking",
+      "name": "Kubernetes networking (Ingress, CNI, NetworkPolicy)",
+      "type": "concept",
+      "appLinks": ["itv:my-study-platform", "itv:kubernetes"],
+      "search": "ingress networkpolicy"
+    },
+    {
+      "id": "k8s-security",
+      "name": "Kubernetes security (RBAC, Pod Security, secrets)",
+      "type": "concept",
+      "appLinks": ["itv:my-study-platform", "itv:rounds-atc", "itv:my-kubernetes"],
+      "search": "kubernetes rbac security"
+    },
+    {
+      "id": "autoscaling",
+      "name": "Autoscaling (HPA, KEDA, cluster autoscaler / Karpenter)",
+      "type": "concept",
+      "appLinks": ["itv:my-ops", "itv:my-cheatsheets", "itv:azure-compute"],
+      "search": "hpa keda autoscaling"
+    },
+    {
+      "id": "registries",
+      "name": "Container registries (ACR · ECR)",
+      "type": "tool",
+      "appLinks": ["lesson:az1-containers", "itv:my-study-scenarios"],
+      "search": "acr container registry"
+    },
+    {
+      "id": "serverless-containers",
+      "name": "Serverless containers (Container Apps · Fargate)",
+      "type": "platform",
+      "appLinks": ["lesson:az1-containers", "itv:aws"],
+      "search": "container apps fargate"
+    },
+    {
+      "id": "azure-core",
+      "name": "Azure core services & resource hierarchy",
+      "type": "platform",
+      "appLinks": ["course:az900", "itv:azure-fundamentals"],
+      "search": "azure resource hierarchy"
+    },
+    {
+      "id": "azure-admin",
+      "name": "Azure administration (AZ-104 scope)",
+      "type": "platform",
+      "appLinks": ["course:az104", "itv:my-azure"],
+      "search": "azure administration"
+    },
+    {
+      "id": "aws-core",
+      "name": "AWS core services (EC2, S3, VPC, IAM)",
+      "type": "platform",
+      "appLinks": ["itv:aws", "itv:my-aws"],
+      "search": "aws ec2 s3 vpc"
+    },
+    {
+      "id": "gcp-core",
+      "name": "Google Cloud core services",
+      "type": "platform",
+      "appLinks": [],
+      "gap": true,
+      "search": "google cloud"
+    },
+    {
+      "id": "cloud-networking",
+      "name": "Cloud networking (VNet · VPC, peering, private endpoints)",
+      "type": "concept",
+      "appLinks": [
+        "itv:azure-networking",
+        "lesson:az1-private-endpoints",
+        "tool:network",
+        "itv:my-networking",
+        "tool:architecture"
+      ],
+      "search": "vnet peering private endpoint"
+    },
+    {
+      "id": "hybrid",
+      "name": "Hybrid connectivity (VPN, ExpressRoute · Direct Connect)",
+      "type": "concept",
+      "appLinks": ["lesson:az9-networking-services", "lesson:az1-vnets-peering"],
+      "search": "vpn expressroute"
+    },
+    {
+      "id": "compute",
+      "name": "Compute (VMs, scale sets, App Service · EC2, Auto Scaling)",
+      "type": "platform",
+      "appLinks": ["itv:azure-compute", "lesson:az1-virtual-machines", "lesson:az1-app-service"],
+      "search": "vm scale set app service"
+    },
+    {
+      "id": "storage",
+      "name": "Storage (Blob, Files · S3, EBS)",
+      "type": "platform",
+      "appLinks": ["itv:azure-storage", "lesson:az1-storage-accounts", "lesson:az1-blob-storage"],
+      "search": "storage account redundancy"
+    },
+    {
+      "id": "serverless",
+      "name": "Serverless functions (Azure Functions · Lambda)",
+      "type": "platform",
+      "appLinks": ["itv:my-azure", "itv:aws", "itv:my-aws"],
+      "search": "azure functions lambda"
+    },
+    {
+      "id": "cloud-cli",
+      "name": "Cloud CLIs (Azure CLI, AWS CLI)",
+      "type": "tool",
+      "appLinks": ["tool:cli", "itv:my-cheatsheets"],
+      "search": "az cli"
+    },
+    {
+      "id": "landing-zones",
+      "name": "Landing zones & subscription / account design",
+      "type": "concept",
+      "appLinks": [
+        "itv:azure-iac",
+        "lesson:az1-subscriptions-governance",
+        "itv:my-azure",
+        "tool:architecture"
+      ],
+      "search": "landing zone"
+    },
+    {
+      "id": "multi-cloud",
+      "name": "Multi-cloud service mapping (Azure ⇄ AWS)",
+      "type": "concept",
+      "appLinks": ["itv:aws", "itv:my-aws"],
+      "search": "aws azure equivalent"
+    },
+    {
+      "id": "azure-monitor",
+      "name": "Azure Monitor & Log Analytics · CloudWatch",
+      "type": "tool",
+      "appLinks": ["itv:azure-monitoring", "lesson:az1-azure-monitor", "itv:my-aws"],
+      "search": "azure monitor log analytics"
+    },
+    {
+      "id": "kql",
+      "name": "KQL (Kusto Query Language)",
+      "type": "language",
+      "appLinks": ["lesson:az4-kql-analysis", "tool:kql"],
+      "search": "kql"
+    },
+    {
+      "id": "prometheus",
+      "name": "Prometheus & PromQL",
+      "type": "tool",
+      "appLinks": ["itv:prometheus"],
+      "search": "prometheus promql"
+    },
+    {
+      "id": "grafana",
+      "name": "Grafana",
+      "type": "tool",
+      "appLinks": ["itv:grafana"],
+      "search": "grafana dashboard"
+    },
+    {
+      "id": "logging",
+      "name": "Log management (Splunk, ELK / OpenSearch)",
+      "type": "tool",
+      "appLinks": ["itv:splunk", "itv:my-monitoring"],
+      "search": "splunk logs"
+    },
+    {
+      "id": "tracing",
+      "name": "OpenTelemetry & distributed tracing",
+      "type": "concept",
+      "appLinks": ["itv:my-monitoring", "lesson:az4-app-insights-monitoring"],
+      "search": "opentelemetry tracing"
+    },
+    {
+      "id": "alerting",
+      "name": "Alerting & on-call design",
+      "type": "concept",
+      "appLinks": ["itv:grafana", "itv:my-monitoring", "itv:prometheus"],
+      "search": "alerting on-call"
+    },
+    {
+      "id": "apm",
+      "name": "Application performance monitoring (Application Insights · X-Ray)",
+      "type": "tool",
+      "appLinks": ["lesson:az4-app-insights-monitoring", "itv:azure-monitoring"],
+      "search": "application insights"
+    },
+    {
+      "id": "golden-signals",
+      "name": "Golden signals, RED & USE methods",
+      "type": "concept",
+      "appLinks": ["itv:my-monitoring"],
+      "search": "golden signals"
+    },
+    {
+      "id": "iam",
+      "name": "Identity & access (Entra ID, RBAC · AWS IAM)",
+      "type": "concept",
+      "appLinks": ["itv:azure-identity", "lesson:az1-rbac", "itv:aws", "tool:visualise-rbac"],
+      "search": "rbac iam"
+    },
+    {
+      "id": "workload-identity",
+      "name": "Workload identity (managed identities, OIDC federation)",
+      "type": "concept",
+      "appLinks": [
+        "itv:azure-identity",
+        "lesson:az4-pipeline-security",
+        "lesson:az4-github-actions"
+      ],
+      "search": "managed identity oidc"
+    },
+    {
+      "id": "secrets",
+      "name": "Secrets management (Key Vault · Secrets Manager, Vault)",
+      "type": "tool",
+      "appLinks": ["itv:azure-identity", "lesson:az4-pipeline-security", "itv:my-azure-devops"],
+      "search": "key vault secrets"
+    },
+    {
+      "id": "network-security",
+      "name": "Network security (NSGs, firewalls, WAF · security groups)",
+      "type": "concept",
+      "appLinks": ["lesson:az1-nsg-bastion", "tool:network", "itv:my-networking"],
+      "search": "nsg firewall"
+    },
+    {
+      "id": "sast-sca",
+      "name": "Code, dependency & secret scanning (SAST, SCA)",
+      "type": "concept",
+      "appLinks": ["lesson:az4-security-scanning", "itv:rounds-simcorp"],
+      "search": "sonarqube dependency scanning"
+    },
+    {
+      "id": "container-scanning",
+      "name": "Container image scanning (Trivy, Defender for Containers)",
+      "type": "tool",
+      "appLinks": ["lesson:az4-security-scanning", "itv:rounds-simcorp", "itv:my-docker"],
+      "search": "trivy image scanning"
+    },
+    {
+      "id": "supply-chain",
+      "name": "Software supply chain (SBOM, signing, provenance)",
+      "type": "concept",
+      "appLinks": ["lesson:az4-security-scanning", "itv:my-ops", "itv:my-artifacts"],
+      "search": "sbom signing"
+    },
+    {
+      "id": "governance",
+      "name": "Governance & compliance (Azure Policy, Defender for Cloud · AWS Config)",
+      "type": "concept",
+      "appLinks": [
+        "lesson:az1-azure-policy",
+        "lesson:az9-governance-compliance",
+        "itv:azure-fundamentals",
+        "tool:visualise-rbac"
+      ],
+      "search": "governance compliance policy"
+    },
+    {
+      "id": "threat-modeling",
+      "name": "Threat modelling",
+      "type": "concept",
+      "appLinks": ["itv:my-ops"],
+      "search": "threat model"
+    },
+    {
+      "id": "zero-trust",
+      "name": "Zero Trust principles",
+      "type": "concept",
+      "appLinks": ["lesson:az9-identity-security"],
+      "search": "zero trust"
+    },
+    {
+      "id": "cspm",
+      "name": "Cloud security posture (Defender for Cloud · Security Hub)",
+      "type": "tool",
+      "appLinks": ["lesson:az9-identity-security", "itv:azure-monitoring"],
+      "search": "defender for cloud"
+    },
+    {
+      "id": "relational-db",
+      "name": "Relational databases (Azure SQL · RDS, PostgreSQL)",
+      "type": "platform",
+      "appLinks": ["itv:azure-storage", "tool:sql"],
+      "search": "azure sql database"
+    },
+    {
+      "id": "nosql",
+      "name": "NoSQL (Cosmos DB · DynamoDB)",
+      "type": "platform",
+      "appLinks": ["itv:azure-storage", "itv:my-aws"],
+      "search": "cosmos db"
+    },
+    {
+      "id": "backup-dr",
+      "name": "Backup & disaster recovery",
+      "type": "concept",
+      "appLinks": ["lesson:az1-backup-recovery", "itv:azure-storage"],
+      "search": "backup site recovery"
+    },
+    {
+      "id": "data-pipelines",
+      "name": "Data pipelines & orchestration (Data Factory, Airflow)",
+      "type": "tool",
+      "appLinks": [],
+      "gap": true,
+      "search": "data factory airflow"
+    },
+    {
+      "id": "caching",
+      "name": "Caching (Redis)",
+      "type": "tool",
+      "appLinks": ["itv:azure-storage"],
+      "search": "redis cache"
+    },
+    {
+      "id": "slo",
+      "name": "SLIs, SLOs & error budgets",
+      "type": "concept",
+      "appLinks": ["itv:my-ops", "itv:my-monitoring", "tool:visualise-sla"],
+      "search": "slo error budget"
+    },
+    {
+      "id": "incident-response",
+      "name": "Incident response & on-call",
+      "type": "concept",
+      "appLinks": ["itv:my-ops", "itv:rounds-managerial", "itv:azure-monitoring"],
+      "search": "incident response"
+    },
+    {
+      "id": "postmortems",
+      "name": "Blameless postmortems",
+      "type": "concept",
+      "appLinks": ["itv:my-ops"],
+      "search": "postmortem"
+    },
+    {
+      "id": "capacity",
+      "name": "Capacity planning & performance testing",
+      "type": "concept",
+      "appLinks": ["itv:prometheus", "lesson:az1-vm-scale-sets"],
+      "search": "capacity planning"
+    },
+    {
+      "id": "chaos",
+      "name": "Chaos engineering",
+      "type": "concept",
+      "appLinks": ["itv:my-ops"],
+      "search": "chaos engineering"
+    },
+    {
+      "id": "ha-dr",
+      "name": "High availability & DR design (zones, regions)",
+      "type": "concept",
+      "appLinks": [
+        "itv:azure-fundamentals",
+        "lesson:az1-backup-recovery",
+        "lesson:az9-core-architecture",
+        "tool:visualise-sla",
+        "tool:architecture"
+      ],
+      "search": "availability zones disaster recovery"
+    },
+    {
+      "id": "toil",
+      "name": "Toil reduction & automation",
+      "type": "concept",
+      "appLinks": ["itv:my-ops", "itv:python"],
+      "search": "toil automation"
+    },
+    {
+      "id": "cost-visibility",
+      "name": "Cost visibility (Cost Management · Cost Explorer)",
+      "type": "tool",
+      "appLinks": ["lesson:az9-cost-management", "lesson:az1-subscriptions-governance"],
+      "search": "cost management"
+    },
+    {
+      "id": "tagging",
+      "name": "Tagging & cost allocation",
+      "type": "concept",
+      "appLinks": ["lesson:az1-subscriptions-governance", "lesson:az9-cost-management"],
+      "search": "tagging cost allocation"
+    },
+    {
+      "id": "budgets",
+      "name": "Budgets & cost anomaly alerts",
+      "type": "concept",
+      "appLinks": ["lesson:az1-subscriptions-governance", "lesson:az9-cost-management"],
+      "search": "budgets alerts"
+    },
+    {
+      "id": "rightsizing",
+      "name": "Rightsizing & scaling for cost",
+      "type": "concept",
+      "appLinks": ["itv:my-ops", "itv:azure-fundamentals"],
+      "search": "rightsizing cost"
+    },
+    {
+      "id": "commitments",
+      "name": "Reservations & savings plans",
+      "type": "concept",
+      "appLinks": ["lesson:az9-cost-management", "itv:azure-fundamentals"],
+      "search": "reserved instances savings plan"
+    },
+    {
+      "id": "finops",
+      "name": "FinOps practice (inform, optimise, operate)",
+      "type": "concept",
+      "appLinks": ["itv:my-ops"],
+      "search": "finops"
+    },
+    {
+      "id": "unit-economics",
+      "name": "Unit economics, showback & chargeback",
+      "type": "concept",
+      "appLinks": ["itv:my-ops", "itv:azure-fundamentals"],
+      "search": "showback chargeback"
+    },
+    {
+      "id": "k8s-cost",
+      "name": "Kubernetes cost allocation (OpenCost, Kubecost)",
+      "type": "tool",
+      "appLinks": [],
+      "gap": true,
+      "search": "kubernetes cost"
+    },
+    {
+      "id": "storage-cost",
+      "name": "Storage & data-transfer cost optimisation",
+      "type": "concept",
+      "appLinks": ["lesson:az1-blob-storage", "itv:azure-storage"],
+      "search": "storage tiers lifecycle cost"
+    },
+    {
+      "id": "well-architected",
+      "name": "Well-Architected Framework (Azure · AWS)",
+      "type": "concept",
+      "appLinks": [
+        "itv:azure-fundamentals",
+        "itv:my-azure",
+        "tool:visualise-sla",
+        "tool:architecture"
+      ],
+      "search": "well-architected"
+    },
+    {
+      "id": "tradeoffs",
+      "name": "Design trade-offs & architecture decision records",
+      "type": "concept",
+      "appLinks": [],
+      "gap": true,
+      "search": "architecture decision"
+    },
+    {
+      "id": "microservices",
+      "name": "Microservices & distributed systems",
+      "type": "concept",
+      "appLinks": ["itv:rounds-innovartech", "itv:my-azure"],
+      "search": "microservices"
+    },
+    {
+      "id": "messaging",
+      "name": "Messaging & events (Service Bus, Event Grid · SQS, SNS)",
+      "type": "platform",
+      "appLinks": ["itv:my-azure"],
+      "search": "service bus event grid"
+    },
+    {
+      "id": "api-gateway",
+      "name": "API management & gateways",
+      "type": "tool",
+      "appLinks": ["itv:my-azure", "itv:my-networking"],
+      "search": "api management gateway"
+    },
+    {
+      "id": "migration",
+      "name": "Cloud migration strategies",
+      "type": "concept",
+      "appLinks": ["lesson:az9-storage-services", "itv:my-azure"],
+      "search": "migration"
+    },
+    {
+      "id": "hub-spoke",
+      "name": "Hub-spoke & landing-zone network architectures",
+      "type": "concept",
+      "appLinks": ["itv:azure-networking", "itv:azure-iac", "tool:network", "tool:architecture"],
+      "search": "hub spoke"
+    },
+    {
+      "id": "idp",
+      "name": "Internal developer platforms & golden paths (e.g. Backstage)",
+      "type": "concept",
+      "appLinks": [],
+      "gap": true,
+      "search": "internal developer platform"
+    },
+    {
+      "id": "platform-product",
+      "name": "Platform as a product & developer experience",
+      "type": "concept",
+      "appLinks": [],
+      "gap": true,
+      "search": "platform engineering"
+    },
+    {
+      "id": "multi-tenancy",
+      "name": "Multi-tenant cluster design (namespaces, quotas)",
+      "type": "concept",
+      "appLinks": ["itv:my-study-platform", "itv:my-kubernetes"],
+      "search": "namespaces resource quotas"
+    },
+    {
+      "id": "ml-lifecycle",
+      "name": "ML lifecycle (data, training, evaluation, deployment)",
+      "type": "concept",
+      "appLinks": [],
+      "gap": true,
+      "search": "machine learning lifecycle"
+    },
+    {
+      "id": "ml-platforms",
+      "name": "ML platforms (Azure Machine Learning · SageMaker)",
+      "type": "platform",
+      "appLinks": [],
+      "gap": true,
+      "search": "azure machine learning"
+    },
+    {
+      "id": "experiment-tracking",
+      "name": "Experiment tracking & model registry (MLflow)",
+      "type": "tool",
+      "appLinks": [],
+      "gap": true,
+      "search": "mlflow"
+    },
+    {
+      "id": "ml-pipelines",
+      "name": "ML pipelines (Kubeflow, Azure ML pipelines)",
+      "type": "tool",
+      "appLinks": [],
+      "gap": true,
+      "search": "kubeflow"
+    },
+    {
+      "id": "model-serving",
+      "name": "Model serving & inference scaling",
+      "type": "concept",
+      "appLinks": [],
+      "gap": true,
+      "search": "model serving"
+    },
+    {
+      "id": "model-monitoring",
+      "name": "Model monitoring & drift",
+      "type": "concept",
+      "appLinks": [],
+      "gap": true,
+      "search": "model drift"
+    },
+    {
+      "id": "gpu-k8s",
+      "name": "GPU workloads on Kubernetes",
+      "type": "concept",
+      "appLinks": [],
+      "gap": true,
+      "search": "gpu kubernetes"
+    },
+    {
+      "id": "data-versioning",
+      "name": "Data & feature versioning (DVC, feature stores)",
+      "type": "tool",
+      "appLinks": [],
+      "gap": true,
+      "search": "data versioning"
+    },
+    {
+      "id": "llmops",
+      "name": "LLM applications in production (evals, prompts, guardrails)",
+      "type": "concept",
+      "appLinks": ["itv:my-ai"],
+      "search": "llm ai devops"
+    },
+    {
+      "id": "communication",
+      "name": "Communication & stakeholder management",
+      "type": "concept",
+      "appLinks": ["itv:my-general", "itv:rounds-managerial"],
+      "search": "stakeholder communication"
+    },
+    {
+      "id": "collaboration",
+      "name": "Cross-team collaboration & mentoring",
+      "type": "concept",
+      "appLinks": ["itv:rounds-managerial", "itv:my-general"],
+      "search": "collaboration conflict"
+    },
+    {
+      "id": "documentation",
+      "name": "Documentation & runbooks",
+      "type": "concept",
+      "appLinks": ["lesson:az4-docs-integration"],
+      "search": "runbook documentation"
+    },
+    {
+      "id": "agile-dora",
+      "name": "Agile delivery & DORA metrics",
+      "type": "concept",
+      "appLinks": ["lesson:az4-work-tracking"],
+      "search": "dora metrics"
+    },
+    {
+      "id": "change-mgmt",
+      "name": "Change management",
+      "type": "concept",
+      "appLinks": ["itv:my-general"],
+      "search": "change management"
+    },
+    {
+      "id": "troubleshooting-method",
+      "name": "Structured troubleshooting",
+      "type": "concept",
+      "appLinks": ["itv:linux", "itv:my-study-scenarios"],
+      "search": "troubleshooting approach"
+    }
+  ],
+  "roles": [
+    {
+      "id": "devops-engineer",
+      "icon": "♾️",
+      "title": "DevOps Engineer",
+      "alsoKnownAs": [
+        "DevOps Specialist",
+        "Cloud DevOps Engineer",
+        "CI/CD Engineer",
+        "Automation Engineer"
+      ],
+      "oneLineSummary": "Builds and runs the path from commit to production: pipelines, infrastructure as code, containers and the cloud they run on.",
+      "focus": [
+        "Designing and maintaining CI/CD pipelines",
+        "Provisioning infrastructure with code (Terraform, Bicep)",
+        "Containerising applications and running them on Kubernetes or PaaS",
+        "Automating repetitive operational work with scripts",
+        "Making deployments safe, observable and repeatable"
+      ],
+      "dayInLife": [
+        "Fix a failing pipeline and make the fix reusable as a template",
+        "Review a Terraform plan in a pull request before it is applied",
+        "Add a new service to the cluster with a Helm chart and probes",
+        "Rotate a secret and move a pipeline to workload identity (OIDC)",
+        "Investigate a slow deployment with logs and metrics",
+        "Pair with developers on a Dockerfile or build cache problem"
+      ],
+      "skillAreas": [
+        {
+          "area": "cicd",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "azure-pipelines",
+              "level": "deep"
+            },
+            {
+              "skill": "github-actions",
+              "level": "working"
+            },
+            {
+              "skill": "jenkins",
+              "level": "working"
+            },
+            {
+              "skill": "pipeline-design",
+              "level": "deep"
+            },
+            {
+              "skill": "deploy-strategies",
+              "level": "working"
+            },
+            {
+              "skill": "artifacts",
+              "level": "working"
+            },
+            {
+              "skill": "release-mgmt",
+              "level": "working"
+            },
+            {
+              "skill": "testing",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "iac",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "terraform",
+              "level": "deep"
+            },
+            {
+              "skill": "bicep",
+              "level": "working"
+            },
+            {
+              "skill": "iac-pipelines",
+              "level": "deep"
+            },
+            {
+              "skill": "state-drift",
+              "level": "working"
+            },
+            {
+              "skill": "ansible",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "containers",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "docker",
+              "level": "deep"
+            },
+            {
+              "skill": "kubernetes",
+              "level": "working"
+            },
+            {
+              "skill": "managed-k8s",
+              "level": "working"
+            },
+            {
+              "skill": "helm",
+              "level": "working"
+            },
+            {
+              "skill": "registries",
+              "level": "working"
+            },
+            {
+              "skill": "k8s-troubleshooting",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "cloud",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "azure-core",
+              "level": "working"
+            },
+            {
+              "skill": "azure-admin",
+              "level": "working"
+            },
+            {
+              "skill": "aws-core",
+              "level": "basic"
+            },
+            {
+              "skill": "cloud-networking",
+              "level": "working"
+            },
+            {
+              "skill": "compute",
+              "level": "working"
+            },
+            {
+              "skill": "cloud-cli",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "code",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "bash",
+              "level": "deep"
+            },
+            {
+              "skill": "python",
+              "level": "working"
+            },
+            {
+              "skill": "powershell",
+              "level": "basic"
+            },
+            {
+              "skill": "yaml-json",
+              "level": "deep"
+            }
+          ]
+        },
+        {
+          "area": "git",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "git",
+              "level": "deep"
+            },
+            {
+              "skill": "branching",
+              "level": "working"
+            },
+            {
+              "skill": "pull-requests",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "linux",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "linux-admin",
+              "level": "working"
+            },
+            {
+              "skill": "linux-troubleshooting",
+              "level": "working"
+            },
+            {
+              "skill": "networking-basics",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "observability",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "azure-monitor",
+              "level": "working"
+            },
+            {
+              "skill": "prometheus",
+              "level": "basic"
+            },
+            {
+              "skill": "grafana",
+              "level": "basic"
+            },
+            {
+              "skill": "logging",
+              "level": "basic"
+            },
+            {
+              "skill": "alerting",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "security",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "iam",
+              "level": "working"
+            },
+            {
+              "skill": "workload-identity",
+              "level": "working"
+            },
+            {
+              "skill": "secrets",
+              "level": "working"
+            },
+            {
+              "skill": "sast-sca",
+              "level": "working"
+            },
+            {
+              "skill": "container-scanning",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "reliability",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "incident-response",
+              "level": "basic"
+            },
+            {
+              "skill": "ha-dr",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "cost",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "tagging",
+              "level": "basic"
+            },
+            {
+              "skill": "cost-visibility",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "soft",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "communication",
+              "level": "working"
+            },
+            {
+              "skill": "documentation",
+              "level": "working"
+            },
+            {
+              "skill": "agile-dora",
+              "level": "basic"
+            }
+          ]
+        }
+      ],
+      "toolsAtAGlance": [
+        "Azure DevOps",
+        "GitHub Actions",
+        "Jenkins",
+        "Terraform",
+        "Bicep",
+        "Docker",
+        "Kubernetes",
+        "Helm",
+        "Azure CLI",
+        "Bash",
+        "Python",
+        "Git",
+        "Azure Monitor",
+        "Ansible"
+      ],
+      "certifications": [
+        {
+          "name": "Microsoft Certified: DevOps Engineer Expert (AZ-400)",
+          "issuer": "Microsoft",
+          "status": "recommended",
+          "appLink": "course:az400"
+        },
+        {
+          "name": "Microsoft Certified: Azure Administrator Associate (AZ-104)",
+          "issuer": "Microsoft",
+          "status": "recommended",
+          "appLink": "course:az104"
+        },
+        {
+          "name": "HashiCorp Certified: Terraform Associate",
+          "issuer": "HashiCorp",
+          "status": "recommended"
+        },
+        {
+          "name": "Certified Kubernetes Administrator (CKA)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "optional"
+        },
+        {
+          "name": "AWS Certified DevOps Engineer – Professional",
+          "issuer": "AWS",
+          "status": "optional"
+        },
+        {
+          "name": "GitHub Actions (GH-200)",
+          "issuer": "GitHub / Microsoft",
+          "status": "optional"
+        }
+      ],
+      "interviewFocus": [
+        "Walk through a pipeline you built end to end",
+        "Terraform state, locking and drift",
+        "Deployment strategies and rollback",
+        "Docker image size, layers and security",
+        "Kubernetes basics: probes, rollouts, troubleshooting",
+        "Secrets and service connections in pipelines",
+        "A production incident you handled"
+      ],
+      "learningPath": [
+        {
+          "title": "Linux, networking and Bash",
+          "detail": "Be comfortable on a Linux shell and script small tasks.",
+          "appLinks": ["itv:linux", "itv:shell"]
+        },
+        {
+          "title": "Git and branching",
+          "detail": "Branches, pull requests, merge vs rebase, protected branches.",
+          "appLinks": ["itv:my-git", "lesson:az4-branching-pr"]
+        },
+        {
+          "title": "Cloud fundamentals",
+          "detail": "Learn one cloud's core services; Azure here, AWS equivalents alongside.",
+          "appLinks": ["course:az900", "itv:azure-fundamentals"]
+        },
+        {
+          "title": "CI pipelines",
+          "detail": "Build, test and package on every commit.",
+          "appLinks": ["itv:azure-devops", "itv:github-actions", "lesson:az4-yaml-pipelines"]
+        },
+        {
+          "title": "Docker",
+          "detail": "Write good Dockerfiles; multi-stage, small, non-root.",
+          "appLinks": ["itv:docker"]
+        },
+        {
+          "title": "Infrastructure as code",
+          "detail": "Terraform or Bicep, with remote state and plans reviewed in PRs.",
+          "appLinks": ["itv:terraform", "itv:azure-iac"]
+        },
+        {
+          "title": "CD and release strategies",
+          "detail": "Environments, approvals, blue-green and canary.",
+          "appLinks": ["lesson:az4-deployment-strategies", "lesson:az4-environments-approvals"]
+        },
+        {
+          "title": "Kubernetes and Helm",
+          "detail": "Deploy, probe, scale and debug workloads.",
+          "appLinks": ["itv:kubernetes", "itv:my-helm"]
+        },
+        {
+          "title": "Security in the pipeline",
+          "detail": "Workload identity, secrets, scanning.",
+          "appLinks": ["lesson:az4-pipeline-security", "lesson:az4-security-scanning"]
+        },
+        {
+          "title": "Observability",
+          "detail": "Metrics, logs, alerts and dashboards for what you ship.",
+          "appLinks": ["itv:azure-monitoring", "itv:prometheus"]
+        }
+      ],
+      "overlapsWith": ["build-release-engineer", "platform-engineer", "cloud-engineer", "sre"]
+    },
+    {
+      "id": "sre",
+      "icon": "🛟",
+      "title": "Site Reliability Engineer (SRE)",
+      "alsoKnownAs": ["Reliability Engineer", "Production Engineer", "Operations Engineer"],
+      "oneLineSummary": "Keeps production reliable and fast by treating operations as a software problem: SLOs, observability, automation and incident response.",
+      "focus": [
+        "Defining SLIs and SLOs and managing error budgets",
+        "Building monitoring, alerting and dashboards",
+        "Leading incident response and blameless postmortems",
+        "Automating toil and improving system design for reliability",
+        "Capacity planning and performance"
+      ],
+      "dayInLife": [
+        "Take the on-call handover and review overnight alerts",
+        "Tune a noisy alert so it pages only on user impact",
+        "Write a postmortem with clear follow-up actions",
+        "Automate a manual recovery runbook",
+        "Review a design for single points of failure",
+        "Run a load test before a big launch"
+      ],
+      "skillAreas": [
+        {
+          "area": "reliability",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "slo",
+              "level": "deep"
+            },
+            {
+              "skill": "incident-response",
+              "level": "deep"
+            },
+            {
+              "skill": "postmortems",
+              "level": "deep"
+            },
+            {
+              "skill": "capacity",
+              "level": "working"
+            },
+            {
+              "skill": "ha-dr",
+              "level": "deep"
+            },
+            {
+              "skill": "toil",
+              "level": "deep"
+            },
+            {
+              "skill": "chaos",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "observability",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "prometheus",
+              "level": "deep"
+            },
+            {
+              "skill": "grafana",
+              "level": "deep"
+            },
+            {
+              "skill": "alerting",
+              "level": "deep"
+            },
+            {
+              "skill": "logging",
+              "level": "working"
+            },
+            {
+              "skill": "tracing",
+              "level": "working"
+            },
+            {
+              "skill": "golden-signals",
+              "level": "deep"
+            },
+            {
+              "skill": "azure-monitor",
+              "level": "working"
+            },
+            {
+              "skill": "kql",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "linux",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "linux-admin",
+              "level": "deep"
+            },
+            {
+              "skill": "linux-troubleshooting",
+              "level": "deep"
+            },
+            {
+              "skill": "networking-basics",
+              "level": "deep"
+            },
+            {
+              "skill": "load-balancing",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "code",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "python",
+              "level": "deep"
+            },
+            {
+              "skill": "bash",
+              "level": "deep"
+            },
+            {
+              "skill": "go",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "containers",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "kubernetes",
+              "level": "deep"
+            },
+            {
+              "skill": "k8s-troubleshooting",
+              "level": "deep"
+            },
+            {
+              "skill": "autoscaling",
+              "level": "working"
+            },
+            {
+              "skill": "managed-k8s",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "cloud",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "azure-core",
+              "level": "working"
+            },
+            {
+              "skill": "aws-core",
+              "level": "working"
+            },
+            {
+              "skill": "cloud-networking",
+              "level": "working"
+            },
+            {
+              "skill": "compute",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "iac",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "terraform",
+              "level": "working"
+            },
+            {
+              "skill": "ansible",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "cicd",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "deploy-strategies",
+              "level": "working"
+            },
+            {
+              "skill": "feature-flags",
+              "level": "basic"
+            },
+            {
+              "skill": "pipeline-design",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "data",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "backup-dr",
+              "level": "working"
+            },
+            {
+              "skill": "relational-db",
+              "level": "basic"
+            },
+            {
+              "skill": "caching",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "security",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "iam",
+              "level": "basic"
+            },
+            {
+              "skill": "network-security",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "soft",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "communication",
+              "level": "deep"
+            },
+            {
+              "skill": "documentation",
+              "level": "deep"
+            },
+            {
+              "skill": "troubleshooting-method",
+              "level": "deep"
+            },
+            {
+              "skill": "collaboration",
+              "level": "working"
+            }
+          ]
+        }
+      ],
+      "toolsAtAGlance": [
+        "Prometheus",
+        "Grafana",
+        "Alertmanager",
+        "OpenTelemetry",
+        "Azure Monitor / CloudWatch",
+        "Splunk / ELK",
+        "Kubernetes",
+        "Terraform",
+        "Python",
+        "Go",
+        "Bash",
+        "PagerDuty / Opsgenie",
+        "k6 / JMeter"
+      ],
+      "certifications": [
+        {
+          "name": "Certified Kubernetes Administrator (CKA)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "recommended"
+        },
+        {
+          "name": "Prometheus Certified Associate (PCA)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "optional"
+        },
+        {
+          "name": "OpenTelemetry Certified Associate (OTCA)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "optional"
+        },
+        {
+          "name": "Microsoft Certified: Azure Administrator Associate (AZ-104)",
+          "issuer": "Microsoft",
+          "status": "optional",
+          "appLink": "course:az104"
+        },
+        {
+          "name": "AWS Certified DevOps Engineer – Professional",
+          "issuer": "AWS",
+          "status": "optional"
+        },
+        {
+          "name": "Google Cloud Professional Cloud DevOps Engineer",
+          "issuer": "Google Cloud",
+          "status": "optional"
+        },
+        {
+          "name": "Linux Foundation Certified System Administrator (LFCS)",
+          "issuer": "Linux Foundation",
+          "status": "optional"
+        }
+      ],
+      "interviewFocus": [
+        "SLIs, SLOs and error budgets for a real service",
+        "Designing alerts that page on symptoms, not causes",
+        "Walk through an incident you led and its postmortem",
+        "Linux performance troubleshooting (load, memory, disk)",
+        "Prometheus: rate(), histograms, cardinality",
+        "Designing for failure: zones, retries, timeouts, backpressure",
+        "Reducing toil with automation"
+      ],
+      "learningPath": [
+        {
+          "title": "Linux and networking deep dive",
+          "detail": "Processes, memory, disks, TCP and DNS under load.",
+          "appLinks": ["itv:linux", "itv:my-networking"]
+        },
+        {
+          "title": "Scripting for automation",
+          "detail": "Python and Bash you can run safely in production.",
+          "appLinks": ["itv:python", "itv:shell"]
+        },
+        {
+          "title": "Monitoring fundamentals",
+          "detail": "Metrics, logs and traces; the golden signals.",
+          "appLinks": ["itv:my-monitoring"]
+        },
+        {
+          "title": "Prometheus and Grafana",
+          "detail": "PromQL, recording rules, dashboards and alerting.",
+          "appLinks": ["itv:prometheus", "itv:grafana"]
+        },
+        {
+          "title": "SLOs and error budgets",
+          "detail": "Pick SLIs, set SLOs, alert on burn rate.",
+          "appLinks": ["itv:my-ops"]
+        },
+        {
+          "title": "Incident management",
+          "detail": "On-call, roles in an incident, blameless postmortems.",
+          "appLinks": ["itv:my-ops", "itv:rounds-managerial"]
+        },
+        {
+          "title": "Kubernetes in production",
+          "detail": "Probes, autoscaling, disruption budgets, debugging.",
+          "appLinks": ["itv:kubernetes", "itv:my-study-scenarios"]
+        },
+        {
+          "title": "Reliability design",
+          "detail": "Zones, regions, DR, graceful degradation.",
+          "appLinks": ["itv:azure-fundamentals", "lesson:az1-backup-recovery"]
+        },
+        {
+          "title": "Capacity and performance",
+          "detail": "Load testing and forecasting.",
+          "appLinks": ["itv:prometheus"]
+        },
+        {
+          "title": "Chaos and resilience testing",
+          "detail": "Prove the failure modes before users find them.",
+          "appLinks": ["itv:my-ops"]
+        }
+      ],
+      "overlapsWith": ["devops-engineer", "platform-engineer", "kubernetes-engineer"]
+    },
+    {
+      "id": "cloud-engineer",
+      "icon": "☁️",
+      "title": "Cloud Engineer",
+      "alsoKnownAs": [
+        "Cloud Administrator",
+        "Cloud Infrastructure Engineer",
+        "Azure Engineer",
+        "AWS Engineer",
+        "Cloud Operations Engineer"
+      ],
+      "oneLineSummary": "Builds, secures and runs cloud infrastructure: networking, identity, compute, storage and cost across one or more clouds.",
+      "focus": [
+        "Provisioning and operating cloud resources",
+        "Designing VNets/VPCs, connectivity and DNS",
+        "Identity, access and governance",
+        "Backup, monitoring and cost control",
+        "Automating the platform with IaC and CLIs"
+      ],
+      "dayInLife": [
+        "Build a new spoke VNet and peer it to the hub",
+        "Grant least-privilege RBAC for a new team",
+        "Troubleshoot a private endpoint DNS resolution failure",
+        "Set up backup and test a restore",
+        "Review the monthly cost report and tag untagged resources",
+        "Write a Bicep or Terraform module for a repeatable resource"
+      ],
+      "skillAreas": [
+        {
+          "area": "cloud",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "azure-core",
+              "level": "deep"
+            },
+            {
+              "skill": "azure-admin",
+              "level": "deep"
+            },
+            {
+              "skill": "aws-core",
+              "level": "working"
+            },
+            {
+              "skill": "cloud-networking",
+              "level": "deep"
+            },
+            {
+              "skill": "hybrid",
+              "level": "working"
+            },
+            {
+              "skill": "compute",
+              "level": "deep"
+            },
+            {
+              "skill": "storage",
+              "level": "deep"
+            },
+            {
+              "skill": "serverless",
+              "level": "working"
+            },
+            {
+              "skill": "cloud-cli",
+              "level": "deep"
+            },
+            {
+              "skill": "landing-zones",
+              "level": "working"
+            },
+            {
+              "skill": "multi-cloud",
+              "level": "working"
+            },
+            {
+              "skill": "gcp-core",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "security",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "iam",
+              "level": "deep"
+            },
+            {
+              "skill": "workload-identity",
+              "level": "working"
+            },
+            {
+              "skill": "secrets",
+              "level": "working"
+            },
+            {
+              "skill": "network-security",
+              "level": "deep"
+            },
+            {
+              "skill": "governance",
+              "level": "working"
+            },
+            {
+              "skill": "zero-trust",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "linux",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "networking-basics",
+              "level": "deep"
+            },
+            {
+              "skill": "cidr",
+              "level": "deep"
+            },
+            {
+              "skill": "load-balancing",
+              "level": "working"
+            },
+            {
+              "skill": "linux-admin",
+              "level": "working"
+            },
+            {
+              "skill": "windows",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "iac",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "terraform",
+              "level": "working"
+            },
+            {
+              "skill": "bicep",
+              "level": "working"
+            },
+            {
+              "skill": "policy-as-code",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "observability",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "azure-monitor",
+              "level": "working"
+            },
+            {
+              "skill": "kql",
+              "level": "working"
+            },
+            {
+              "skill": "alerting",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "data",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "backup-dr",
+              "level": "working"
+            },
+            {
+              "skill": "relational-db",
+              "level": "working"
+            },
+            {
+              "skill": "nosql",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "cost",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "cost-visibility",
+              "level": "working"
+            },
+            {
+              "skill": "tagging",
+              "level": "working"
+            },
+            {
+              "skill": "budgets",
+              "level": "working"
+            },
+            {
+              "skill": "commitments",
+              "level": "basic"
+            },
+            {
+              "skill": "rightsizing",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "code",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "powershell",
+              "level": "working"
+            },
+            {
+              "skill": "bash",
+              "level": "working"
+            },
+            {
+              "skill": "python",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "containers",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "docker",
+              "level": "basic"
+            },
+            {
+              "skill": "managed-k8s",
+              "level": "basic"
+            },
+            {
+              "skill": "serverless-containers",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "cicd",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "azure-pipelines",
+              "level": "basic"
+            },
+            {
+              "skill": "github-actions",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "soft",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "documentation",
+              "level": "working"
+            },
+            {
+              "skill": "communication",
+              "level": "working"
+            }
+          ]
+        }
+      ],
+      "toolsAtAGlance": [
+        "Azure Portal / CLI",
+        "AWS CLI",
+        "PowerShell",
+        "Bicep",
+        "Terraform",
+        "Entra ID",
+        "Azure Policy",
+        "Key Vault",
+        "Azure Monitor",
+        "Log Analytics",
+        "Azure Firewall",
+        "Private Link",
+        "Azure Backup",
+        "Cost Management"
+      ],
+      "certifications": [
+        {
+          "name": "Microsoft Certified: Azure Administrator Associate (AZ-104)",
+          "issuer": "Microsoft",
+          "status": "recommended",
+          "appLink": "course:az104"
+        },
+        {
+          "name": "Microsoft Certified: Azure Fundamentals (AZ-900)",
+          "issuer": "Microsoft",
+          "status": "optional",
+          "appLink": "course:az900"
+        },
+        {
+          "name": "Microsoft Certified: Azure Network Engineer Associate (AZ-700)",
+          "issuer": "Microsoft",
+          "status": "optional"
+        },
+        {
+          "name": "Microsoft Certified: Azure Solutions Architect Expert (AZ-305)",
+          "issuer": "Microsoft",
+          "status": "optional"
+        },
+        {
+          "name": "AWS Certified Solutions Architect – Associate",
+          "issuer": "AWS",
+          "status": "optional"
+        },
+        {
+          "name": "AWS Certified Cloud Practitioner",
+          "issuer": "AWS",
+          "status": "optional"
+        },
+        {
+          "name": "HashiCorp Certified: Terraform Associate",
+          "issuer": "HashiCorp",
+          "status": "optional"
+        }
+      ],
+      "interviewFocus": [
+        "VNet design: address planning, subnets, peering, hub-spoke",
+        "NSGs vs firewalls vs private endpoints",
+        "RBAC, managed identities and least privilege",
+        "Storage redundancy and backup/restore",
+        "High availability with zones and scale sets",
+        "Cost optimisation and tagging",
+        "Azure vs AWS service equivalents"
+      ],
+      "learningPath": [
+        {
+          "title": "Cloud concepts",
+          "detail": "IaaS/PaaS/SaaS, regions, zones, the resource hierarchy.",
+          "appLinks": ["course:az900"]
+        },
+        {
+          "title": "Networking fundamentals",
+          "detail": "CIDR, DNS, routing and load balancing.",
+          "appLinks": ["itv:azure-networking", "tool:network"]
+        },
+        {
+          "title": "Identity and governance",
+          "detail": "Entra ID, RBAC, Policy, management groups.",
+          "appLinks": ["itv:azure-identity", "lesson:az1-rbac", "lesson:az1-azure-policy"]
+        },
+        {
+          "title": "Compute and storage",
+          "detail": "VMs, scale sets, App Service, storage accounts.",
+          "appLinks": ["itv:azure-compute", "itv:azure-storage"]
+        },
+        {
+          "title": "Administration at depth (AZ-104)",
+          "detail": "Everything an administrator is expected to know.",
+          "appLinks": ["course:az104"]
+        },
+        {
+          "title": "Automation",
+          "detail": "Azure CLI and PowerShell, then Bicep or Terraform.",
+          "appLinks": ["tool:cli", "itv:azure-iac"]
+        },
+        {
+          "title": "Monitoring and backup",
+          "detail": "Azure Monitor, KQL, alerts, Backup and Site Recovery.",
+          "appLinks": ["lesson:az1-azure-monitor", "tool:kql", "lesson:az1-backup-recovery"]
+        },
+        {
+          "title": "Second cloud",
+          "detail": "Map what you know to AWS.",
+          "appLinks": ["itv:aws", "itv:my-aws"]
+        },
+        {
+          "title": "Cost management",
+          "detail": "Budgets, tags, rightsizing, reservations.",
+          "appLinks": ["lesson:az9-cost-management"]
+        }
+      ],
+      "overlapsWith": [
+        "cloud-architect",
+        "devops-engineer",
+        "devsecops-engineer",
+        "finops-engineer"
+      ]
+    },
+    {
+      "id": "platform-engineer",
+      "icon": "🧱",
+      "title": "Platform Engineer",
+      "alsoKnownAs": [
+        "Internal Developer Platform Engineer",
+        "Developer Experience Engineer",
+        "Infrastructure Platform Engineer"
+      ],
+      "oneLineSummary": "Builds the internal platform that lets product teams ship on their own: self-service infrastructure, golden paths and paved Kubernetes.",
+      "focus": [
+        "Building self-service infrastructure and templates (golden paths)",
+        "Running shared Kubernetes and CI/CD platforms",
+        "Treating the platform as a product with developers as customers",
+        "Standardising security, observability and cost by default",
+        "Automating everything behind a simple interface"
+      ],
+      "dayInLife": [
+        "Ship a new service template with CI, Helm chart and dashboards included",
+        "Upgrade the shared AKS clusters with zero downtime",
+        "Add a policy that blocks images without a scan",
+        "Interview developers about where they lose time",
+        "Turn a Terraform module into a self-service request",
+        "Write the docs and a quick-start for a new platform feature"
+      ],
+      "skillAreas": [
+        {
+          "area": "containers",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "kubernetes",
+              "level": "deep"
+            },
+            {
+              "skill": "managed-k8s",
+              "level": "deep"
+            },
+            {
+              "skill": "helm",
+              "level": "deep"
+            },
+            {
+              "skill": "gitops",
+              "level": "deep"
+            },
+            {
+              "skill": "k8s-networking",
+              "level": "working"
+            },
+            {
+              "skill": "k8s-security",
+              "level": "working"
+            },
+            {
+              "skill": "autoscaling",
+              "level": "working"
+            },
+            {
+              "skill": "registries",
+              "level": "working"
+            },
+            {
+              "skill": "service-mesh",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "architecture",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "idp",
+              "level": "deep"
+            },
+            {
+              "skill": "platform-product",
+              "level": "deep"
+            },
+            {
+              "skill": "multi-tenancy",
+              "level": "working"
+            },
+            {
+              "skill": "hub-spoke",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "iac",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "terraform",
+              "level": "deep"
+            },
+            {
+              "skill": "iac-pipelines",
+              "level": "deep"
+            },
+            {
+              "skill": "policy-as-code",
+              "level": "working"
+            },
+            {
+              "skill": "state-drift",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "cicd",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "pipeline-design",
+              "level": "deep"
+            },
+            {
+              "skill": "github-actions",
+              "level": "working"
+            },
+            {
+              "skill": "azure-pipelines",
+              "level": "working"
+            },
+            {
+              "skill": "artifacts",
+              "level": "working"
+            },
+            {
+              "skill": "deploy-strategies",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "code",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "python",
+              "level": "working"
+            },
+            {
+              "skill": "go",
+              "level": "working"
+            },
+            {
+              "skill": "bash",
+              "level": "working"
+            },
+            {
+              "skill": "yaml-json",
+              "level": "deep"
+            },
+            {
+              "skill": "rest-apis",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "cloud",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "azure-core",
+              "level": "working"
+            },
+            {
+              "skill": "aws-core",
+              "level": "working"
+            },
+            {
+              "skill": "cloud-networking",
+              "level": "working"
+            },
+            {
+              "skill": "landing-zones",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "observability",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "prometheus",
+              "level": "working"
+            },
+            {
+              "skill": "grafana",
+              "level": "working"
+            },
+            {
+              "skill": "tracing",
+              "level": "working"
+            },
+            {
+              "skill": "logging",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "security",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "workload-identity",
+              "level": "working"
+            },
+            {
+              "skill": "secrets",
+              "level": "working"
+            },
+            {
+              "skill": "supply-chain",
+              "level": "working"
+            },
+            {
+              "skill": "container-scanning",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "reliability",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "slo",
+              "level": "working"
+            },
+            {
+              "skill": "incident-response",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "cost",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "k8s-cost",
+              "level": "basic"
+            },
+            {
+              "skill": "tagging",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "soft",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "communication",
+              "level": "deep"
+            },
+            {
+              "skill": "documentation",
+              "level": "deep"
+            },
+            {
+              "skill": "collaboration",
+              "level": "working"
+            }
+          ]
+        }
+      ],
+      "toolsAtAGlance": [
+        "Kubernetes",
+        "Helm",
+        "Argo CD / Flux",
+        "Terraform",
+        "Crossplane",
+        "Backstage",
+        "GitHub Actions",
+        "Azure DevOps",
+        "OPA / Kyverno",
+        "Prometheus",
+        "Grafana",
+        "Go",
+        "Python"
+      ],
+      "certifications": [
+        {
+          "name": "Certified Kubernetes Administrator (CKA)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "recommended"
+        },
+        {
+          "name": "Certified Kubernetes Application Developer (CKAD)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "optional"
+        },
+        {
+          "name": "HashiCorp Certified: Terraform Associate",
+          "issuer": "HashiCorp",
+          "status": "recommended"
+        },
+        {
+          "name": "Certified Argo Project Associate (CAPA)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "optional"
+        },
+        {
+          "name": "Certified Backstage Associate (CBA)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "optional"
+        },
+        {
+          "name": "Microsoft Certified: DevOps Engineer Expert (AZ-400)",
+          "issuer": "Microsoft",
+          "status": "optional",
+          "appLink": "course:az400"
+        },
+        {
+          "name": "Kubernetes and Cloud Native Associate (KCNA)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "optional"
+        }
+      ],
+      "interviewFocus": [
+        "What a golden path is and how you measure adoption",
+        "Multi-tenant Kubernetes: namespaces, quotas, RBAC, network policies",
+        "GitOps workflows and drift",
+        "Self-service infrastructure with Terraform modules",
+        "Cluster upgrades without downtime",
+        "Platform as a product: roadmaps, feedback, developer experience",
+        "Policy as code and guardrails"
+      ],
+      "learningPath": [
+        {
+          "title": "Kubernetes core",
+          "detail": "Workloads, services, config, storage.",
+          "appLinks": ["itv:kubernetes", "itv:my-kubernetes"]
+        },
+        {
+          "title": "Helm and packaging",
+          "detail": "Charts, values, library charts.",
+          "appLinks": ["itv:my-helm"]
+        },
+        {
+          "title": "Infrastructure as code at scale",
+          "detail": "Modules, versioning, remote state.",
+          "appLinks": ["itv:terraform", "itv:my-terraform"]
+        },
+        {
+          "title": "CI/CD templates",
+          "detail": "Reusable pipelines that teams inherit.",
+          "appLinks": ["lesson:az4-pipeline-templates", "itv:github-actions"]
+        },
+        {
+          "title": "GitOps",
+          "detail": "Argo CD or Flux, environments, promotion.",
+          "appLinks": ["itv:my-ops"]
+        },
+        {
+          "title": "Multi-tenancy and security",
+          "detail": "RBAC, quotas, network policy, admission control.",
+          "appLinks": ["itv:my-study-platform", "lesson:az1-azure-policy"]
+        },
+        {
+          "title": "Observability by default",
+          "detail": "Every service gets metrics, logs and traces.",
+          "appLinks": ["itv:prometheus", "itv:grafana"]
+        },
+        {
+          "title": "Developer portals and golden paths",
+          "detail": "Templates, catalogs, scorecards (no app content yet).",
+          "appLinks": []
+        },
+        {
+          "title": "Platform as a product",
+          "detail": "Interview users, measure adoption, publish a roadmap (no app content yet).",
+          "appLinks": []
+        }
+      ],
+      "overlapsWith": ["kubernetes-engineer", "devops-engineer", "sre"]
+    },
+    {
+      "id": "devsecops-engineer",
+      "icon": "🛡️",
+      "title": "DevSecOps / Cloud Security Engineer",
+      "alsoKnownAs": [
+        "DevSecOps Engineer",
+        "Cloud Security Engineer",
+        "Application Security Engineer",
+        "Security Automation Engineer"
+      ],
+      "oneLineSummary": "Builds security into delivery and the cloud: scanning in pipelines, identity and least privilege, secrets, policy and compliance.",
+      "focus": [
+        "Shifting security left with scanning in CI/CD",
+        "Identity, access and secrets across cloud and pipelines",
+        "Cloud security posture and compliance as code",
+        "Securing containers, Kubernetes and the software supply chain",
+        "Threat modelling and responding to findings"
+      ],
+      "dayInLife": [
+        "Triage new findings from SAST, dependency and image scans",
+        "Move a pipeline from stored secrets to OIDC federation",
+        "Write a policy that denies public storage accounts",
+        "Review an architecture and threat-model a new service",
+        "Investigate a Defender for Cloud alert",
+        "Help a team fix a critical CVE in a base image"
+      ],
+      "skillAreas": [
+        {
+          "area": "security",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "iam",
+              "level": "deep"
+            },
+            {
+              "skill": "workload-identity",
+              "level": "deep"
+            },
+            {
+              "skill": "secrets",
+              "level": "deep"
+            },
+            {
+              "skill": "network-security",
+              "level": "working"
+            },
+            {
+              "skill": "sast-sca",
+              "level": "deep"
+            },
+            {
+              "skill": "container-scanning",
+              "level": "deep"
+            },
+            {
+              "skill": "supply-chain",
+              "level": "deep"
+            },
+            {
+              "skill": "governance",
+              "level": "deep"
+            },
+            {
+              "skill": "threat-modeling",
+              "level": "working"
+            },
+            {
+              "skill": "zero-trust",
+              "level": "working"
+            },
+            {
+              "skill": "cspm",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "cicd",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "azure-pipelines",
+              "level": "working"
+            },
+            {
+              "skill": "github-actions",
+              "level": "working"
+            },
+            {
+              "skill": "pipeline-design",
+              "level": "working"
+            },
+            {
+              "skill": "testing",
+              "level": "working"
+            },
+            {
+              "skill": "artifacts",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "containers",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "docker",
+              "level": "working"
+            },
+            {
+              "skill": "kubernetes",
+              "level": "working"
+            },
+            {
+              "skill": "k8s-security",
+              "level": "deep"
+            },
+            {
+              "skill": "registries",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "cloud",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "azure-core",
+              "level": "working"
+            },
+            {
+              "skill": "azure-admin",
+              "level": "working"
+            },
+            {
+              "skill": "aws-core",
+              "level": "working"
+            },
+            {
+              "skill": "cloud-networking",
+              "level": "working"
+            },
+            {
+              "skill": "landing-zones",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "iac",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "terraform",
+              "level": "working"
+            },
+            {
+              "skill": "policy-as-code",
+              "level": "deep"
+            },
+            {
+              "skill": "bicep",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "code",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "python",
+              "level": "working"
+            },
+            {
+              "skill": "bash",
+              "level": "working"
+            },
+            {
+              "skill": "powershell",
+              "level": "basic"
+            },
+            {
+              "skill": "yaml-json",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "observability",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "logging",
+              "level": "working"
+            },
+            {
+              "skill": "kql",
+              "level": "working"
+            },
+            {
+              "skill": "azure-monitor",
+              "level": "working"
+            },
+            {
+              "skill": "alerting",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "linux",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "linux-admin",
+              "level": "working"
+            },
+            {
+              "skill": "networking-basics",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "reliability",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "incident-response",
+              "level": "working"
+            },
+            {
+              "skill": "postmortems",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "git",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "git",
+              "level": "working"
+            },
+            {
+              "skill": "pull-requests",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "soft",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "communication",
+              "level": "working"
+            },
+            {
+              "skill": "documentation",
+              "level": "working"
+            },
+            {
+              "skill": "collaboration",
+              "level": "working"
+            }
+          ]
+        }
+      ],
+      "toolsAtAGlance": [
+        "Defender for Cloud / Security Hub",
+        "Microsoft Sentinel",
+        "Entra ID",
+        "Key Vault / Secrets Manager",
+        "HashiCorp Vault",
+        "SonarQube",
+        "GitHub Advanced Security",
+        "Trivy",
+        "Checkov / tfsec",
+        "OPA / Kyverno",
+        "Azure Policy",
+        "Snyk",
+        "KQL"
+      ],
+      "certifications": [
+        {
+          "name": "Microsoft Certified: Azure Security Engineer Associate (AZ-500)",
+          "issuer": "Microsoft",
+          "status": "recommended"
+        },
+        {
+          "name": "Microsoft Certified: Cybersecurity Architect Expert (SC-100)",
+          "issuer": "Microsoft",
+          "status": "optional"
+        },
+        {
+          "name": "Certified Kubernetes Security Specialist (CKS)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "recommended"
+        },
+        {
+          "name": "AWS Certified Security – Specialty",
+          "issuer": "AWS",
+          "status": "optional"
+        },
+        {
+          "name": "GitHub Advanced Security (GH-500)",
+          "issuer": "GitHub / Microsoft",
+          "status": "optional"
+        },
+        {
+          "name": "CompTIA Security+",
+          "issuer": "CompTIA",
+          "status": "optional"
+        },
+        {
+          "name": "Certified Cloud Security Professional (CCSP)",
+          "issuer": "ISC2",
+          "status": "optional"
+        },
+        {
+          "name": "HashiCorp Certified: Vault Associate",
+          "issuer": "HashiCorp",
+          "status": "optional"
+        }
+      ],
+      "interviewFocus": [
+        "Securing a CI/CD pipeline end to end",
+        "Managed identities and OIDC instead of secrets",
+        "SAST vs SCA vs DAST vs image scanning",
+        "Kubernetes security: RBAC, Pod Security, network policies",
+        "Software supply chain: SBOMs and signing",
+        "Policy as code and compliance reporting",
+        "Responding to a leaked credential"
+      ],
+      "learningPath": [
+        {
+          "title": "Identity first",
+          "detail": "Entra ID, RBAC, managed identities, least privilege.",
+          "appLinks": ["itv:azure-identity", "lesson:az1-rbac"]
+        },
+        {
+          "title": "Network security",
+          "detail": "NSGs, firewalls, private endpoints, Zero Trust.",
+          "appLinks": ["lesson:az1-nsg-bastion", "lesson:az1-private-endpoints", "tool:network"]
+        },
+        {
+          "title": "Secrets management",
+          "detail": "Key Vault, rotation, never in code.",
+          "appLinks": ["lesson:az4-pipeline-security"]
+        },
+        {
+          "title": "Pipeline security",
+          "detail": "Service connections, OIDC, protected environments.",
+          "appLinks": ["lesson:az4-pipeline-security", "lesson:az4-github-actions"]
+        },
+        {
+          "title": "Scanning in CI",
+          "detail": "SAST, SCA, secrets and image scanning with gates.",
+          "appLinks": ["lesson:az4-security-scanning"]
+        },
+        {
+          "title": "Container and Kubernetes security",
+          "detail": "Images, admission policy, runtime.",
+          "appLinks": ["itv:my-study-platform", "itv:my-kubernetes"]
+        },
+        {
+          "title": "Policy and compliance as code",
+          "detail": "Azure Policy, OPA, reporting.",
+          "appLinks": ["lesson:az1-azure-policy", "lesson:az9-governance-compliance"]
+        },
+        {
+          "title": "Detection and response",
+          "detail": "Logs, KQL, alerts and incident handling.",
+          "appLinks": ["tool:kql", "itv:azure-monitoring"]
+        },
+        {
+          "title": "Supply chain and threat modelling",
+          "detail": "SBOMs, signing, threat models.",
+          "appLinks": ["itv:my-ops"]
+        }
+      ],
+      "overlapsWith": ["devops-engineer", "cloud-engineer", "cloud-architect"]
+    },
+    {
+      "id": "cloud-architect",
+      "icon": "🏛️",
+      "title": "Cloud / Solutions Architect",
+      "alsoKnownAs": [
+        "Solutions Architect",
+        "Cloud Architect",
+        "Azure Architect",
+        "Infrastructure Architect"
+      ],
+      "oneLineSummary": "Designs cloud solutions that meet requirements and trade-offs: availability, security, cost and operations, guided by the Well-Architected pillars.",
+      "focus": [
+        "Turning business requirements into cloud designs",
+        "High availability, disaster recovery and scalability",
+        "Security, identity and governance by design",
+        "Cost and operational trade-offs",
+        "Guiding teams and reviewing designs"
+      ],
+      "dayInLife": [
+        "Run a design workshop and capture requirements and constraints",
+        "Draw the target architecture and write the decision record",
+        "Estimate cost and compare two options",
+        "Review a team's design against the Well-Architected pillars",
+        "Plan a migration wave for a set of applications",
+        "Present a recommendation to stakeholders"
+      ],
+      "skillAreas": [
+        {
+          "area": "architecture",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "well-architected",
+              "level": "deep"
+            },
+            {
+              "skill": "tradeoffs",
+              "level": "deep"
+            },
+            {
+              "skill": "microservices",
+              "level": "working"
+            },
+            {
+              "skill": "messaging",
+              "level": "working"
+            },
+            {
+              "skill": "api-gateway",
+              "level": "working"
+            },
+            {
+              "skill": "migration",
+              "level": "working"
+            },
+            {
+              "skill": "hub-spoke",
+              "level": "deep"
+            }
+          ]
+        },
+        {
+          "area": "cloud",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "azure-core",
+              "level": "deep"
+            },
+            {
+              "skill": "azure-admin",
+              "level": "working"
+            },
+            {
+              "skill": "aws-core",
+              "level": "working"
+            },
+            {
+              "skill": "cloud-networking",
+              "level": "deep"
+            },
+            {
+              "skill": "hybrid",
+              "level": "working"
+            },
+            {
+              "skill": "compute",
+              "level": "deep"
+            },
+            {
+              "skill": "storage",
+              "level": "deep"
+            },
+            {
+              "skill": "serverless",
+              "level": "working"
+            },
+            {
+              "skill": "landing-zones",
+              "level": "deep"
+            },
+            {
+              "skill": "multi-cloud",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "reliability",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "ha-dr",
+              "level": "deep"
+            },
+            {
+              "skill": "slo",
+              "level": "working"
+            },
+            {
+              "skill": "capacity",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "security",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "iam",
+              "level": "deep"
+            },
+            {
+              "skill": "network-security",
+              "level": "working"
+            },
+            {
+              "skill": "governance",
+              "level": "deep"
+            },
+            {
+              "skill": "zero-trust",
+              "level": "working"
+            },
+            {
+              "skill": "secrets",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "data",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "relational-db",
+              "level": "working"
+            },
+            {
+              "skill": "nosql",
+              "level": "working"
+            },
+            {
+              "skill": "backup-dr",
+              "level": "deep"
+            },
+            {
+              "skill": "caching",
+              "level": "working"
+            },
+            {
+              "skill": "data-pipelines",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "cost",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "cost-visibility",
+              "level": "working"
+            },
+            {
+              "skill": "commitments",
+              "level": "working"
+            },
+            {
+              "skill": "rightsizing",
+              "level": "working"
+            },
+            {
+              "skill": "unit-economics",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "iac",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "terraform",
+              "level": "working"
+            },
+            {
+              "skill": "bicep",
+              "level": "working"
+            },
+            {
+              "skill": "policy-as-code",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "containers",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "managed-k8s",
+              "level": "working"
+            },
+            {
+              "skill": "serverless-containers",
+              "level": "working"
+            },
+            {
+              "skill": "docker",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "observability",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "azure-monitor",
+              "level": "working"
+            },
+            {
+              "skill": "apm",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "cicd",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "deploy-strategies",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "soft",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "communication",
+              "level": "deep"
+            },
+            {
+              "skill": "documentation",
+              "level": "deep"
+            },
+            {
+              "skill": "collaboration",
+              "level": "deep"
+            },
+            {
+              "skill": "change-mgmt",
+              "level": "working"
+            }
+          ]
+        }
+      ],
+      "toolsAtAGlance": [
+        "Azure / AWS",
+        "Well-Architected Framework",
+        "Landing zones",
+        "Hub-spoke networking",
+        "Azure Front Door / Application Gateway",
+        "Service Bus / Event Grid",
+        "Cosmos DB / Azure SQL",
+        "Azure Pricing Calculator",
+        "Bicep / Terraform",
+        "Draw.io / Visio",
+        "Entra ID",
+        "Azure Policy"
+      ],
+      "certifications": [
+        {
+          "name": "Microsoft Certified: Azure Solutions Architect Expert (AZ-305)",
+          "issuer": "Microsoft",
+          "status": "recommended"
+        },
+        {
+          "name": "Microsoft Certified: Azure Administrator Associate (AZ-104)",
+          "issuer": "Microsoft",
+          "status": "recommended",
+          "appLink": "course:az104"
+        },
+        {
+          "name": "AWS Certified Solutions Architect – Associate",
+          "issuer": "AWS",
+          "status": "optional"
+        },
+        {
+          "name": "AWS Certified Solutions Architect – Professional",
+          "issuer": "AWS",
+          "status": "optional"
+        },
+        {
+          "name": "Google Cloud Professional Cloud Architect",
+          "issuer": "Google Cloud",
+          "status": "optional"
+        },
+        {
+          "name": "Microsoft Certified: DevOps Engineer Expert (AZ-400)",
+          "issuer": "Microsoft",
+          "status": "optional",
+          "appLink": "course:az400"
+        },
+        {
+          "name": "Microsoft Certified: Cybersecurity Architect Expert (SC-100)",
+          "issuer": "Microsoft",
+          "status": "optional"
+        }
+      ],
+      "interviewFocus": [
+        "Design a highly available multi-region web app",
+        "RTO/RPO and choosing a DR strategy",
+        "Network topology: hub-spoke, private endpoints, hybrid",
+        "Choosing between compute options (VMs, App Service, AKS, Functions)",
+        "Data store selection and consistency trade-offs",
+        "Cost-optimised design",
+        "How you document and defend a decision"
+      ],
+      "learningPath": [
+        {
+          "title": "Cloud fundamentals",
+          "detail": "Services, hierarchy, shared responsibility.",
+          "appLinks": ["course:az900", "itv:azure-fundamentals"]
+        },
+        {
+          "title": "Administrator depth",
+          "detail": "Know how things are built before designing them.",
+          "appLinks": ["course:az104"]
+        },
+        {
+          "title": "Networking architectures",
+          "detail": "Hub-spoke, private endpoints, hybrid connectivity.",
+          "appLinks": ["itv:azure-networking", "tool:network"]
+        },
+        {
+          "title": "Identity and governance",
+          "detail": "Landing zones, management groups, Policy.",
+          "appLinks": ["itv:azure-identity", "itv:azure-iac"]
+        },
+        {
+          "title": "Reliability patterns",
+          "detail": "Zones, regions, backups and DR.",
+          "appLinks": ["lesson:az1-backup-recovery", "itv:azure-fundamentals"]
+        },
+        {
+          "title": "Data and integration",
+          "detail": "Data stores, messaging and events.",
+          "appLinks": ["itv:azure-storage", "itv:my-azure"]
+        },
+        {
+          "title": "Well-Architected reviews",
+          "detail": "Score designs across the pillars.",
+          "appLinks": ["itv:azure-fundamentals"]
+        },
+        {
+          "title": "Cost architecture",
+          "detail": "Pricing models, reservations, unit costs.",
+          "appLinks": ["lesson:az9-cost-management"]
+        },
+        {
+          "title": "Decision records and communication",
+          "detail": "Writing ADRs and presenting trade-offs (no app content yet).",
+          "appLinks": []
+        }
+      ],
+      "overlapsWith": ["cloud-engineer", "devsecops-engineer", "finops-engineer"]
+    },
+    {
+      "id": "kubernetes-engineer",
+      "icon": "☸️",
+      "title": "Kubernetes / Container Platform Engineer",
+      "alsoKnownAs": [
+        "Kubernetes Engineer",
+        "Container Platform Engineer",
+        "AKS Engineer",
+        "Cloud Native Engineer"
+      ],
+      "oneLineSummary": "Runs Kubernetes in production: managed clusters, networking, security, GitOps and the tooling teams deploy with.",
+      "focus": [
+        "Building and upgrading managed clusters (AKS, EKS, GKE)",
+        "Cluster networking, ingress and service mesh",
+        "Security: RBAC, Pod Security, secrets, network policies",
+        "GitOps delivery with Helm and Argo CD / Flux",
+        "Scaling, cost and troubleshooting workloads"
+      ],
+      "dayInLife": [
+        "Plan and run a cluster upgrade with surge and disruption budgets",
+        "Debug a CrashLoopBackOff and an OOMKilled pod",
+        "Add an ingress with TLS and a network policy",
+        "Tune HPA and cluster autoscaler for a spiky service",
+        "Review a Helm chart for probes and resource requests",
+        "Roll out a change through GitOps and watch it sync"
+      ],
+      "skillAreas": [
+        {
+          "area": "containers",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "kubernetes",
+              "level": "deep"
+            },
+            {
+              "skill": "managed-k8s",
+              "level": "deep"
+            },
+            {
+              "skill": "k8s-troubleshooting",
+              "level": "deep"
+            },
+            {
+              "skill": "helm",
+              "level": "deep"
+            },
+            {
+              "skill": "gitops",
+              "level": "deep"
+            },
+            {
+              "skill": "k8s-networking",
+              "level": "deep"
+            },
+            {
+              "skill": "k8s-security",
+              "level": "deep"
+            },
+            {
+              "skill": "autoscaling",
+              "level": "deep"
+            },
+            {
+              "skill": "service-mesh",
+              "level": "working"
+            },
+            {
+              "skill": "registries",
+              "level": "working"
+            },
+            {
+              "skill": "docker",
+              "level": "deep"
+            }
+          ]
+        },
+        {
+          "area": "linux",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "linux-admin",
+              "level": "deep"
+            },
+            {
+              "skill": "linux-troubleshooting",
+              "level": "working"
+            },
+            {
+              "skill": "networking-basics",
+              "level": "deep"
+            },
+            {
+              "skill": "load-balancing",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "iac",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "terraform",
+              "level": "working"
+            },
+            {
+              "skill": "bicep",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "cicd",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "pipeline-design",
+              "level": "working"
+            },
+            {
+              "skill": "deploy-strategies",
+              "level": "working"
+            },
+            {
+              "skill": "github-actions",
+              "level": "working"
+            },
+            {
+              "skill": "azure-pipelines",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "observability",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "prometheus",
+              "level": "deep"
+            },
+            {
+              "skill": "grafana",
+              "level": "working"
+            },
+            {
+              "skill": "logging",
+              "level": "working"
+            },
+            {
+              "skill": "tracing",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "cloud",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "azure-core",
+              "level": "working"
+            },
+            {
+              "skill": "cloud-networking",
+              "level": "working"
+            },
+            {
+              "skill": "aws-core",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "security",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "workload-identity",
+              "level": "working"
+            },
+            {
+              "skill": "secrets",
+              "level": "working"
+            },
+            {
+              "skill": "container-scanning",
+              "level": "working"
+            },
+            {
+              "skill": "supply-chain",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "code",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "bash",
+              "level": "working"
+            },
+            {
+              "skill": "yaml-json",
+              "level": "deep"
+            },
+            {
+              "skill": "python",
+              "level": "working"
+            },
+            {
+              "skill": "go",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "architecture",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "multi-tenancy",
+              "level": "working"
+            },
+            {
+              "skill": "microservices",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "reliability",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "incident-response",
+              "level": "working"
+            },
+            {
+              "skill": "ha-dr",
+              "level": "working"
+            },
+            {
+              "skill": "slo",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "cost",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "k8s-cost",
+              "level": "working"
+            },
+            {
+              "skill": "rightsizing",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "soft",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "documentation",
+              "level": "working"
+            },
+            {
+              "skill": "troubleshooting-method",
+              "level": "deep"
+            }
+          ]
+        }
+      ],
+      "toolsAtAGlance": [
+        "Kubernetes",
+        "AKS / EKS / GKE",
+        "kubectl",
+        "Helm",
+        "Argo CD / Flux",
+        "Istio / Linkerd",
+        "NGINX / Gateway API",
+        "cert-manager",
+        "Prometheus",
+        "Grafana",
+        "KEDA",
+        "Karpenter",
+        "Trivy",
+        "Terraform"
+      ],
+      "certifications": [
+        {
+          "name": "Certified Kubernetes Administrator (CKA)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "recommended"
+        },
+        {
+          "name": "Certified Kubernetes Application Developer (CKAD)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "optional"
+        },
+        {
+          "name": "Certified Kubernetes Security Specialist (CKS)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "recommended"
+        },
+        {
+          "name": "Certified Argo Project Associate (CAPA)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "optional"
+        },
+        {
+          "name": "Istio Certified Associate (ICA)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "optional"
+        },
+        {
+          "name": "Kubernetes and Cloud Native Associate (KCNA)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "optional"
+        },
+        {
+          "name": "Microsoft Certified: Azure Administrator Associate (AZ-104)",
+          "issuer": "Microsoft",
+          "status": "optional",
+          "appLink": "course:az104"
+        }
+      ],
+      "interviewFocus": [
+        "Kubernetes architecture: control plane, kubelet, scheduler",
+        "Debugging pods: CrashLoopBackOff, OOMKilled, ImagePullBackOff",
+        "Services, ingress and network policies",
+        "RBAC and workload identity in AKS/EKS",
+        "Upgrades, PDBs and zero-downtime rollouts",
+        "HPA, KEDA and cluster autoscaling",
+        "Helm and GitOps workflows"
+      ],
+      "learningPath": [
+        {
+          "title": "Containers and Docker",
+          "detail": "Images, layers, runtimes, cgroups and namespaces.",
+          "appLinks": ["itv:docker", "itv:my-docker"]
+        },
+        {
+          "title": "Kubernetes fundamentals",
+          "detail": "Pods, deployments, services, config.",
+          "appLinks": ["itv:kubernetes"]
+        },
+        {
+          "title": "Hands-on troubleshooting",
+          "detail": "The common failure states and how to read them.",
+          "appLinks": ["itv:my-study-scenarios", "itv:my-cheatsheets"]
+        },
+        {
+          "title": "Managed Kubernetes",
+          "detail": "AKS specifics: identity, networking, upgrades.",
+          "appLinks": ["itv:azure-compute", "itv:rounds-simcorp"]
+        },
+        {
+          "title": "Networking",
+          "detail": "Ingress, CNI, network policies, service mesh.",
+          "appLinks": ["itv:my-study-platform"]
+        },
+        {
+          "title": "Security",
+          "detail": "RBAC, Pod Security, secrets, image scanning.",
+          "appLinks": ["itv:my-kubernetes", "lesson:az4-security-scanning"]
+        },
+        {
+          "title": "Packaging and GitOps",
+          "detail": "Helm charts, Argo CD / Flux.",
+          "appLinks": ["itv:my-helm", "itv:my-ops"]
+        },
+        {
+          "title": "Scaling and cost",
+          "detail": "HPA, KEDA, autoscalers, requests and limits.",
+          "appLinks": ["itv:my-ops"]
+        },
+        {
+          "title": "Observability",
+          "detail": "Prometheus, Grafana and the RED method.",
+          "appLinks": ["itv:prometheus", "itv:grafana"]
+        }
+      ],
+      "overlapsWith": ["platform-engineer", "sre", "devops-engineer"]
+    },
+    {
+      "id": "mlops-engineer",
+      "icon": "🧠",
+      "title": "MLOps Engineer",
+      "alsoKnownAs": [
+        "Machine Learning Platform Engineer",
+        "ML Infrastructure Engineer",
+        "AI Platform Engineer",
+        "LLMOps Engineer"
+      ],
+      "oneLineSummary": "Brings DevOps to machine learning: reproducible training pipelines, model registries, serving and monitoring models in production.",
+      "focus": [
+        "Automating training and evaluation pipelines",
+        "Packaging and serving models at scale",
+        "Model registry, versioning and promotion",
+        "Monitoring models for performance and drift",
+        "Running GPU and data infrastructure efficiently"
+      ],
+      "dayInLife": [
+        "Turn a data scientist's notebook into a reproducible pipeline",
+        "Add an evaluation gate before a model is promoted",
+        "Deploy a model behind an autoscaled endpoint",
+        "Investigate a drop in model accuracy in production",
+        "Optimise GPU node pool cost",
+        "Version a dataset alongside the model that used it"
+      ],
+      "skillAreas": [
+        {
+          "area": "ml",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "ml-lifecycle",
+              "level": "working"
+            },
+            {
+              "skill": "ml-platforms",
+              "level": "working"
+            },
+            {
+              "skill": "experiment-tracking",
+              "level": "working"
+            },
+            {
+              "skill": "ml-pipelines",
+              "level": "deep"
+            },
+            {
+              "skill": "model-serving",
+              "level": "deep"
+            },
+            {
+              "skill": "model-monitoring",
+              "level": "working"
+            },
+            {
+              "skill": "gpu-k8s",
+              "level": "working"
+            },
+            {
+              "skill": "data-versioning",
+              "level": "working"
+            },
+            {
+              "skill": "llmops",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "code",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "python",
+              "level": "deep"
+            },
+            {
+              "skill": "bash",
+              "level": "working"
+            },
+            {
+              "skill": "sql",
+              "level": "working"
+            },
+            {
+              "skill": "rest-apis",
+              "level": "working"
+            },
+            {
+              "skill": "yaml-json",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "containers",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "docker",
+              "level": "deep"
+            },
+            {
+              "skill": "kubernetes",
+              "level": "working"
+            },
+            {
+              "skill": "autoscaling",
+              "level": "working"
+            },
+            {
+              "skill": "managed-k8s",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "cicd",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "pipeline-design",
+              "level": "working"
+            },
+            {
+              "skill": "github-actions",
+              "level": "working"
+            },
+            {
+              "skill": "azure-pipelines",
+              "level": "working"
+            },
+            {
+              "skill": "testing",
+              "level": "working"
+            },
+            {
+              "skill": "artifacts",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "data",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "data-pipelines",
+              "level": "working"
+            },
+            {
+              "skill": "relational-db",
+              "level": "working"
+            },
+            {
+              "skill": "storage-cost",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "cloud",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "azure-core",
+              "level": "working"
+            },
+            {
+              "skill": "aws-core",
+              "level": "working"
+            },
+            {
+              "skill": "storage",
+              "level": "working"
+            },
+            {
+              "skill": "compute",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "iac",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "terraform",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "observability",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "prometheus",
+              "level": "working"
+            },
+            {
+              "skill": "grafana",
+              "level": "working"
+            },
+            {
+              "skill": "logging",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "security",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "workload-identity",
+              "level": "working"
+            },
+            {
+              "skill": "secrets",
+              "level": "working"
+            },
+            {
+              "skill": "iam",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "git",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "git",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "cost",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "rightsizing",
+              "level": "working"
+            },
+            {
+              "skill": "commitments",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "soft",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "communication",
+              "level": "working"
+            },
+            {
+              "skill": "collaboration",
+              "level": "working"
+            },
+            {
+              "skill": "documentation",
+              "level": "working"
+            }
+          ]
+        }
+      ],
+      "toolsAtAGlance": [
+        "Python",
+        "MLflow",
+        "Azure Machine Learning",
+        "SageMaker",
+        "Kubeflow",
+        "Docker",
+        "Kubernetes",
+        "KServe / Triton",
+        "DVC",
+        "Airflow",
+        "GitHub Actions",
+        "Terraform",
+        "Prometheus"
+      ],
+      "certifications": [
+        {
+          "name": "AWS Certified Machine Learning Engineer – Associate",
+          "issuer": "AWS",
+          "status": "optional"
+        },
+        {
+          "name": "Google Cloud Professional Machine Learning Engineer",
+          "issuer": "Google Cloud",
+          "status": "optional"
+        },
+        {
+          "name": "Certified Kubernetes Application Developer (CKAD)",
+          "issuer": "CNCF / Linux Foundation",
+          "status": "optional"
+        },
+        {
+          "name": "Microsoft Certified: Azure Administrator Associate (AZ-104)",
+          "issuer": "Microsoft",
+          "status": "optional",
+          "appLink": "course:az104"
+        },
+        {
+          "name": "HashiCorp Certified: Terraform Associate",
+          "issuer": "HashiCorp",
+          "status": "optional"
+        }
+      ],
+      "interviewFocus": [
+        "How ML CI/CD differs from application CI/CD",
+        "Experiment tracking and model registries",
+        "Batch vs real-time inference and scaling endpoints",
+        "Detecting data and model drift",
+        "Reproducibility: data, code and environment versioning",
+        "GPU scheduling and cost on Kubernetes",
+        "Serving and evaluating LLM-based features"
+      ],
+      "learningPath": [
+        {
+          "title": "Python for data and automation",
+          "detail": "Packaging, environments, APIs.",
+          "appLinks": ["itv:python", "itv:my-python"]
+        },
+        {
+          "title": "Containers",
+          "detail": "Package models and their dependencies.",
+          "appLinks": ["itv:docker"]
+        },
+        {
+          "title": "CI/CD fundamentals",
+          "detail": "Pipelines with tests and gates.",
+          "appLinks": ["itv:github-actions", "lesson:az4-yaml-pipelines"]
+        },
+        {
+          "title": "ML lifecycle basics",
+          "detail": "Data, training, evaluation, deployment (no app content yet).",
+          "appLinks": []
+        },
+        {
+          "title": "Experiment tracking and registries",
+          "detail": "MLflow and model promotion (no app content yet).",
+          "appLinks": []
+        },
+        {
+          "title": "ML pipelines",
+          "detail": "Kubeflow or Azure ML pipelines (no app content yet).",
+          "appLinks": []
+        },
+        {
+          "title": "Serving on Kubernetes",
+          "detail": "Endpoints, autoscaling, GPUs.",
+          "appLinks": ["itv:kubernetes", "itv:my-ops"]
+        },
+        {
+          "title": "Monitoring models",
+          "detail": "Metrics, drift and alerting.",
+          "appLinks": ["itv:my-monitoring"]
+        },
+        {
+          "title": "LLM features in production",
+          "detail": "Evaluation, guardrails and cost.",
+          "appLinks": ["itv:my-ai"]
+        }
+      ],
+      "overlapsWith": ["devops-engineer", "platform-engineer", "kubernetes-engineer"]
+    },
+    {
+      "id": "build-release-engineer",
+      "icon": "🚀",
+      "title": "Build & Release Engineer",
+      "alsoKnownAs": ["Release Engineer", "Release Manager", "Build Engineer", "CI/CD Engineer"],
+      "oneLineSummary": "Owns how software is built, versioned and released: pipelines, branching, artifacts and safe release strategies.",
+      "focus": [
+        "Maintaining fast, reliable build pipelines",
+        "Branching strategy and merge discipline",
+        "Artifacts, versioning and promotion between environments",
+        "Release planning, approvals and rollback",
+        "Release quality: tests, gates and release notes"
+      ],
+      "dayInLife": [
+        "Cut a release branch and publish versioned artifacts",
+        "Speed up a slow build with caching and parallel jobs",
+        "Coordinate a hotfix and merge it back",
+        "Set up an approval gate for production",
+        "Write release notes from the merged pull requests",
+        "Roll back a bad release and record why"
+      ],
+      "skillAreas": [
+        {
+          "area": "cicd",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "azure-pipelines",
+              "level": "deep"
+            },
+            {
+              "skill": "github-actions",
+              "level": "deep"
+            },
+            {
+              "skill": "jenkins",
+              "level": "deep"
+            },
+            {
+              "skill": "gitlab-ci",
+              "level": "working"
+            },
+            {
+              "skill": "pipeline-design",
+              "level": "deep"
+            },
+            {
+              "skill": "artifacts",
+              "level": "deep"
+            },
+            {
+              "skill": "release-mgmt",
+              "level": "deep"
+            },
+            {
+              "skill": "versioning",
+              "level": "deep"
+            },
+            {
+              "skill": "deploy-strategies",
+              "level": "deep"
+            },
+            {
+              "skill": "testing",
+              "level": "working"
+            },
+            {
+              "skill": "feature-flags",
+              "level": "working"
+            },
+            {
+              "skill": "build-tools",
+              "level": "deep"
+            }
+          ]
+        },
+        {
+          "area": "git",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "git",
+              "level": "deep"
+            },
+            {
+              "skill": "branching",
+              "level": "deep"
+            },
+            {
+              "skill": "pull-requests",
+              "level": "deep"
+            },
+            {
+              "skill": "repo-management",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "code",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "bash",
+              "level": "working"
+            },
+            {
+              "skill": "powershell",
+              "level": "working"
+            },
+            {
+              "skill": "python",
+              "level": "working"
+            },
+            {
+              "skill": "groovy",
+              "level": "working"
+            },
+            {
+              "skill": "yaml-json",
+              "level": "deep"
+            }
+          ]
+        },
+        {
+          "area": "containers",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "docker",
+              "level": "working"
+            },
+            {
+              "skill": "registries",
+              "level": "working"
+            },
+            {
+              "skill": "helm",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "iac",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "terraform",
+              "level": "basic"
+            },
+            {
+              "skill": "iac-pipelines",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "cloud",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "azure-core",
+              "level": "working"
+            },
+            {
+              "skill": "compute",
+              "level": "basic"
+            },
+            {
+              "skill": "cloud-cli",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "security",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "secrets",
+              "level": "working"
+            },
+            {
+              "skill": "sast-sca",
+              "level": "working"
+            },
+            {
+              "skill": "supply-chain",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "observability",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "azure-monitor",
+              "level": "basic"
+            },
+            {
+              "skill": "apm",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "linux",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "linux-admin",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "soft",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "communication",
+              "level": "deep"
+            },
+            {
+              "skill": "change-mgmt",
+              "level": "deep"
+            },
+            {
+              "skill": "documentation",
+              "level": "working"
+            },
+            {
+              "skill": "agile-dora",
+              "level": "working"
+            }
+          ]
+        }
+      ],
+      "toolsAtAGlance": [
+        "Git",
+        "Azure DevOps",
+        "GitHub Actions",
+        "Jenkins",
+        "GitLab CI",
+        "Azure Artifacts",
+        "JFrog Artifactory",
+        "Nexus",
+        "Maven / Gradle",
+        "npm",
+        "Docker",
+        "SonarQube",
+        "Groovy"
+      ],
+      "certifications": [
+        {
+          "name": "Microsoft Certified: DevOps Engineer Expert (AZ-400)",
+          "issuer": "Microsoft",
+          "status": "recommended",
+          "appLink": "course:az400"
+        },
+        {
+          "name": "GitHub Actions (GH-200)",
+          "issuer": "GitHub / Microsoft",
+          "status": "optional"
+        },
+        {
+          "name": "Microsoft Certified: Azure Administrator Associate (AZ-104)",
+          "issuer": "Microsoft",
+          "status": "optional",
+          "appLink": "course:az104"
+        },
+        {
+          "name": "AWS Certified DevOps Engineer – Professional",
+          "issuer": "AWS",
+          "status": "optional"
+        }
+      ],
+      "interviewFocus": [
+        "Branching strategies and when to use each",
+        "Semantic versioning and artifact promotion",
+        "Hotfix flow and keeping branches in sync",
+        "Pipeline speed: caching, parallelism, agents",
+        "Approvals, environments and gates",
+        "Blue-green, canary and rollback",
+        "Measuring delivery with DORA metrics"
+      ],
+      "learningPath": [
+        {
+          "title": "Git in depth",
+          "detail": "Merge, rebase, cherry-pick, conflicts.",
+          "appLinks": ["itv:my-git"]
+        },
+        {
+          "title": "Branching strategies",
+          "detail": "Trunk-based, GitFlow, release branches.",
+          "appLinks": ["lesson:az4-branching-pr", "itv:my-frequent"]
+        },
+        {
+          "title": "Build pipelines",
+          "detail": "YAML pipelines, triggers, stages, templates.",
+          "appLinks": ["lesson:az4-yaml-pipelines", "lesson:az4-pipeline-templates"]
+        },
+        {
+          "title": "Jenkins and GitHub Actions",
+          "detail": "Other common CI systems.",
+          "appLinks": ["itv:jenkins", "itv:github-actions"]
+        },
+        {
+          "title": "Artifacts and versioning",
+          "detail": "Feeds, retention, promotion.",
+          "appLinks": ["itv:my-artifacts", "lesson:az4-package-management"]
+        },
+        {
+          "title": "Quality gates",
+          "detail": "Tests, coverage, scanning in the pipeline.",
+          "appLinks": ["lesson:az4-testing-strategy", "lesson:az4-security-scanning"]
+        },
+        {
+          "title": "Release strategies",
+          "detail": "Environments, approvals, canary, rollback.",
+          "appLinks": ["lesson:az4-environments-approvals", "lesson:az4-deployment-strategies"]
+        },
+        {
+          "title": "Measuring delivery",
+          "detail": "DORA metrics and flow.",
+          "appLinks": ["lesson:az4-work-tracking"]
+        }
+      ],
+      "overlapsWith": ["devops-engineer", "platform-engineer"]
+    },
+    {
+      "id": "finops-engineer",
+      "icon": "💰",
+      "title": "FinOps / Cloud Cost Engineer",
+      "alsoKnownAs": [
+        "FinOps Analyst",
+        "Cloud Cost Analyst",
+        "Cloud Economist",
+        "Cost Optimisation Engineer"
+      ],
+      "oneLineSummary": "Makes cloud spend visible, accountable and efficient: allocation, budgets, optimisation and commitment management with engineering teams.",
+      "focus": [
+        "Cost visibility and allocation (tags, showback, chargeback)",
+        "Budgets, forecasts and anomaly detection",
+        "Optimisation: rightsizing, scheduling, storage tiers",
+        "Commitment management (reservations, savings plans)",
+        "Working with engineering and finance on unit costs"
+      ],
+      "dayInLife": [
+        "Find the cause of a cost spike from yesterday's report",
+        "Chase untagged resources and fix the tagging policy",
+        "Recommend rightsizing for under-used VMs",
+        "Model a savings plan purchase",
+        "Build a showback dashboard per team",
+        "Present monthly cost trends to engineering leads"
+      ],
+      "skillAreas": [
+        {
+          "area": "cost",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "cost-visibility",
+              "level": "deep"
+            },
+            {
+              "skill": "tagging",
+              "level": "deep"
+            },
+            {
+              "skill": "budgets",
+              "level": "deep"
+            },
+            {
+              "skill": "rightsizing",
+              "level": "deep"
+            },
+            {
+              "skill": "commitments",
+              "level": "deep"
+            },
+            {
+              "skill": "finops",
+              "level": "deep"
+            },
+            {
+              "skill": "unit-economics",
+              "level": "deep"
+            },
+            {
+              "skill": "k8s-cost",
+              "level": "working"
+            },
+            {
+              "skill": "storage-cost",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "cloud",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "azure-core",
+              "level": "deep"
+            },
+            {
+              "skill": "aws-core",
+              "level": "working"
+            },
+            {
+              "skill": "compute",
+              "level": "working"
+            },
+            {
+              "skill": "storage",
+              "level": "working"
+            },
+            {
+              "skill": "multi-cloud",
+              "level": "working"
+            },
+            {
+              "skill": "gcp-core",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "data",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "sql",
+              "level": "working"
+            },
+            {
+              "skill": "relational-db",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "code",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "python",
+              "level": "working"
+            },
+            {
+              "skill": "sql",
+              "level": "working"
+            },
+            {
+              "skill": "powershell",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "iac",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "policy-as-code",
+              "level": "working"
+            },
+            {
+              "skill": "terraform",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "observability",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "kql",
+              "level": "working"
+            },
+            {
+              "skill": "azure-monitor",
+              "level": "basic"
+            }
+          ]
+        },
+        {
+          "area": "containers",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "kubernetes",
+              "level": "basic"
+            },
+            {
+              "skill": "autoscaling",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "architecture",
+          "importance": "important",
+          "items": [
+            {
+              "skill": "well-architected",
+              "level": "working"
+            },
+            {
+              "skill": "tradeoffs",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "security",
+          "importance": "nice",
+          "items": [
+            {
+              "skill": "governance",
+              "level": "working"
+            }
+          ]
+        },
+        {
+          "area": "soft",
+          "importance": "core",
+          "items": [
+            {
+              "skill": "communication",
+              "level": "deep"
+            },
+            {
+              "skill": "collaboration",
+              "level": "deep"
+            },
+            {
+              "skill": "documentation",
+              "level": "working"
+            }
+          ]
+        }
+      ],
+      "toolsAtAGlance": [
+        "Azure Cost Management",
+        "AWS Cost Explorer",
+        "AWS Budgets / Azure Budgets",
+        "Azure Advisor / Trusted Advisor",
+        "Reservations / Savings Plans",
+        "Azure Policy (tagging)",
+        "Power BI",
+        "SQL",
+        "Python",
+        "KQL",
+        "OpenCost / Kubecost",
+        "FOCUS billing data"
+      ],
+      "certifications": [
+        {
+          "name": "FinOps Certified Practitioner (FOCP)",
+          "issuer": "FinOps Foundation",
+          "status": "recommended"
+        },
+        {
+          "name": "Microsoft Certified: Azure Fundamentals (AZ-900)",
+          "issuer": "Microsoft",
+          "status": "recommended",
+          "appLink": "course:az900"
+        },
+        {
+          "name": "AWS Certified Cloud Practitioner",
+          "issuer": "AWS",
+          "status": "optional"
+        },
+        {
+          "name": "Microsoft Certified: Azure Administrator Associate (AZ-104)",
+          "issuer": "Microsoft",
+          "status": "optional",
+          "appLink": "course:az104"
+        }
+      ],
+      "interviewFocus": [
+        "How you would find and explain a cost spike",
+        "Tagging strategy and allocation of shared costs",
+        "Rightsizing and commitment trade-offs",
+        "Showback vs chargeback",
+        "Kubernetes cost allocation",
+        "Storage and data-transfer costs",
+        "Working with engineers who own the spend"
+      ],
+      "learningPath": [
+        {
+          "title": "Cloud pricing basics",
+          "detail": "How Azure and AWS charge for compute, storage and network.",
+          "appLinks": ["lesson:az9-cost-management", "lesson:az9-cloud-models"]
+        },
+        {
+          "title": "Cost management tooling",
+          "detail": "Cost analysis, budgets, exports.",
+          "appLinks": ["lesson:az1-subscriptions-governance"]
+        },
+        {
+          "title": "Tagging and allocation",
+          "detail": "Tag policy and shared-cost splitting.",
+          "appLinks": ["lesson:az1-azure-policy"]
+        },
+        {
+          "title": "Optimisation levers",
+          "detail": "Rightsizing, scheduling, storage tiers.",
+          "appLinks": ["lesson:az1-blob-storage", "itv:my-ops"]
+        },
+        {
+          "title": "Commitments",
+          "detail": "Reservations and savings plans.",
+          "appLinks": ["lesson:az9-cost-management"]
+        },
+        {
+          "title": "Querying billing data",
+          "detail": "SQL and KQL over cost exports.",
+          "appLinks": ["tool:sql", "tool:kql"]
+        },
+        {
+          "title": "Kubernetes cost",
+          "detail": "Requests, limits and allocation (no tool-specific content yet).",
+          "appLinks": ["itv:my-ops"]
+        },
+        {
+          "title": "FinOps practice",
+          "detail": "Inform, optimise, operate with engineering.",
+          "appLinks": ["itv:my-ops"]
+        }
+      ],
+      "overlapsWith": ["cloud-engineer", "cloud-architect"]
+    }
+  ]
+}

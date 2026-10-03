@@ -1,0 +1,685 @@
+{
+  "$comment": "Guided labs for your own subscription. Commands are Bash for Azure Cloud Shell. Each verify.expect is a list of regular expressions the pasted output must match; verify.sample is an example output the tests check against.",
+  "labs": [
+    {
+      "id": "az104-storage",
+      "course": "az104",
+      "title": "Secure a storage account: TLS, no public access, data roles and lifecycle",
+      "summary": "Create a hardened storage account, upload a blob with your Entra identity instead of keys, and add a lifecycle rule that tiers and expires data.",
+      "minutes": 30,
+      "cost": {
+        "estimate": "Under $0.05",
+        "detail": "A Standard_LRS account with a few KB of data costs fractions of a cent per day. Delete it when you finish."
+      },
+      "prerequisites": [
+        "An Azure subscription (free account is fine)",
+        "Azure Cloud Shell (Bash) or Azure CLI 2.60+ signed in with az login"
+      ],
+      "goals": [
+        "Create a storage account with TLS 1.2 minimum and public blob access disabled",
+        "Use Storage Blob Data Contributor instead of account keys",
+        "Add a lifecycle management rule"
+      ],
+      "lessons": ["az1-storage-accounts", "az1-storage-security", "az1-blob-storage"],
+      "steps": [
+        {
+          "title": "Set variables",
+          "text": "Pick names once. Storage account names must be globally unique, lower case, 3-24 characters.",
+          "commands": "RG=rg-az104-storage\nLOC=westeurope\nSA=stlab$RANDOM$RANDOM\naz group create -n $RG -l $LOC -o table"
+        },
+        {
+          "title": "Create the account",
+          "text": "Hardened from the start: HTTPS only (the default), TLS 1.2, no anonymous blob access.",
+          "commands": "az storage account create -n $SA -g $RG -l $LOC \\\n  --sku Standard_LRS --kind StorageV2 \\\n  --min-tls-version TLS1_2 --allow-blob-public-access false",
+          "verify": {
+            "command": "az storage account show -n $SA -g $RG --query \"{tls:minimumTlsVersion, publicBlob:allowBlobPublicAccess, https:enableHttpsTrafficOnly}\" -o json",
+            "expect": ["\"tls\":\\s*\"TLS1_2\"", "\"publicBlob\":\\s*false", "\"https\":\\s*true"],
+            "sample": "{\n  \"https\": true,\n  \"publicBlob\": false,\n  \"tls\": \"TLS1_2\"\n}",
+            "explain": "All three settings should come back exactly like this."
+          }
+        },
+        {
+          "title": "Give yourself a data role",
+          "text": "Control-plane roles such as Owner do not let you read blob data with Entra ID. Assign a data role on the account. It can take a minute or two to apply.",
+          "commands": "ME=$(az ad signed-in-user show --query id -o tsv)\nSAID=$(az storage account show -n $SA -g $RG --query id -o tsv)\naz role assignment create --assignee $ME \\\n  --role \"Storage Blob Data Contributor\" --scope $SAID"
+        },
+        {
+          "title": "Upload a blob with your identity",
+          "text": "--auth-mode login uses your Entra token, so no account key is ever handled.",
+          "commands": "az storage container create --account-name $SA -n docs --auth-mode login\necho \"hello from the lab\" > hello.txt\naz storage blob upload --account-name $SA -c docs -n hello.txt -f hello.txt --auth-mode login",
+          "verify": {
+            "command": "az storage blob list --account-name $SA -c docs --auth-mode login --query \"[].name\" -o tsv",
+            "expect": ["hello\\.txt"],
+            "sample": "hello.txt",
+            "explain": "If you get AuthorizationPermissionMismatch, the role assignment has not propagated yet - wait a minute and retry."
+          }
+        },
+        {
+          "title": "Add a lifecycle rule",
+          "text": "Move blobs to Cool after 30 days and delete them after 365.",
+          "commands": "cat > policy.json <<'JSON'\n{\"rules\":[{\"enabled\":true,\"name\":\"tier-and-expire\",\"type\":\"Lifecycle\",\n  \"definition\":{\"filters\":{\"blobTypes\":[\"blockBlob\"],\"prefixMatch\":[\"docs/\"]},\n  \"actions\":{\"baseBlob\":{\"tierToCool\":{\"daysAfterModificationGreaterThan\":30},\n  \"delete\":{\"daysAfterModificationGreaterThan\":365}}}}}]}\nJSON\naz storage account management-policy create --account-name $SA -g $RG --policy @policy.json",
+          "verify": {
+            "command": "az storage account management-policy show --account-name $SA -g $RG --query \"policy.rules[0].name\" -o tsv",
+            "expect": ["tier-and-expire"],
+            "sample": "tier-and-expire",
+            "explain": "The rule is saved; Azure runs lifecycle policies about once a day."
+          }
+        }
+      ],
+      "checklist": [
+        "Account shows TLS1_2 and allowBlobPublicAccess false",
+        "Uploaded a blob with --auth-mode login (no keys)",
+        "Lifecycle rule tier-and-expire exists",
+        "I can explain why Owner alone could not read the blob"
+      ],
+      "cleanup": {
+        "commands": "az group delete -n $RG --yes --no-wait\nrm -f hello.txt policy.json",
+        "note": "Deleting the resource group deletes the account and the role assignment scoped to it."
+      }
+    },
+    {
+      "id": "az104-network",
+      "course": "az104",
+      "title": "VNet, subnets, an NSG and a private VM",
+      "summary": "Build a VNet with two subnets, lock SSH down to your own IP with a subnet NSG, and deploy a VM with no public IP that you manage through Run Command.",
+      "minutes": 40,
+      "cost": {
+        "estimate": "About $0.02-0.05 per hour",
+        "detail": "A Standard_B1s VM and its disk (750 B1s hours a month are included for 12 months on an eligible free account). Delete the group as soon as you finish - stopped VMs still pay for disks."
+      },
+      "prerequisites": ["An Azure subscription", "Cloud Shell (Bash) or Azure CLI"],
+      "goals": [
+        "Plan and create a VNet with subnets",
+        "Associate an NSG with a subnet and add a scoped rule",
+        "Deploy a VM without a public IP and inspect its effective rules"
+      ],
+      "lessons": ["az1-vnets-peering", "az1-nsg-bastion", "az1-virtual-machines"],
+      "steps": [
+        {
+          "title": "Set variables",
+          "text": "",
+          "commands": "RG=rg-az104-network\nLOC=westeurope\nMYIP=$(curl -s https://api.ipify.org)\naz group create -n $RG -l $LOC -o table"
+        },
+        {
+          "title": "Create the VNet and subnets",
+          "text": "A /16 for the VNet, a /24 per subnet - Azure keeps 5 addresses in each.",
+          "commands": "az network vnet create -g $RG -n vnet-lab --address-prefixes 10.10.0.0/16 \\\n  --subnet-name web --subnet-prefixes 10.10.1.0/24\naz network vnet subnet create -g $RG --vnet-name vnet-lab -n data --address-prefixes 10.10.2.0/24",
+          "verify": {
+            "command": "az network vnet subnet list -g $RG --vnet-name vnet-lab --query \"[].{name:name, prefix:addressPrefix}\" -o table",
+            "expect": ["web\\s+10\\.10\\.1\\.0/24", "data\\s+10\\.10\\.2\\.0/24"],
+            "sample": "Name    Prefix\n------  ------------\nweb     10.10.1.0/24\ndata    10.10.2.0/24",
+            "explain": "Both subnets with their own ranges."
+          }
+        },
+        {
+          "title": "Create the NSG and attach it to the web subnet",
+          "text": "Only your IP may reach port 22. Azure's default rules still deny all other inbound internet traffic.",
+          "commands": "az network nsg create -g $RG -n nsg-web\naz network nsg rule create -g $RG --nsg-name nsg-web -n allow-ssh-me --priority 100 \\\n  --direction Inbound --access Allow --protocol Tcp \\\n  --source-address-prefixes $MYIP --destination-port-ranges 22\naz network vnet subnet update -g $RG --vnet-name vnet-lab -n web --network-security-group nsg-web"
+        },
+        {
+          "title": "Deploy a VM with no public IP",
+          "text": "--public-ip-address \"\" and --nsg \"\" mean no public IP and no NIC-level NSG: the subnet NSG is the only filter.",
+          "commands": "az vm create -g $RG -n vm-lab --image Ubuntu2204 --size Standard_B1s \\\n  --vnet-name vnet-lab --subnet web --public-ip-address \"\" --nsg \"\" \\\n  --admin-username azureuser --generate-ssh-keys"
+        },
+        {
+          "title": "Run a command without SSH",
+          "text": "Run Command goes through the Azure agent - no inbound port needed.",
+          "commands": "az vm run-command invoke -g $RG -n vm-lab --command-id RunShellScript \\\n  --scripts \"hostname; ip -4 addr show eth0 | grep inet\" --query \"value[0].message\" -o tsv",
+          "verify": {
+            "command": "(the output of the command above)",
+            "expect": ["vm-lab", "inet 10\\.10\\.1\\.\\d+"],
+            "sample": "Enable succeeded:\n[stdout]\nvm-lab\n    inet 10.10.1.4/24 metric 100 brd 10.10.1.255 scope global eth0\n\n[stderr]",
+            "explain": "The VM has a private address from the web subnet."
+          }
+        },
+        {
+          "title": "Look at the effective rules",
+          "text": "What actually applies to the NIC: your rule plus Azure's defaults.",
+          "commands": "az network nic list-effective-nsg -g $RG -n vm-labVMNic \\\n  --query \"value[0].effectiveSecurityRules[].{name:name, access:access, priority:priority}\" -o table",
+          "verify": {
+            "command": "(the output of the command above)",
+            "expect": ["allow-ssh-me\\s+Allow\\s+100", "DenyAllInBound\\s+Deny\\s+65500"],
+            "sample": "Name                                   Access    Priority\n-------------------------------------  --------  ----------\nsecurityRules/allow-ssh-me             Allow     100\ndefaultSecurityRules/AllowVnetInBound  Allow     65000\ndefaultSecurityRules/AllowAzureLoadBalancerInBound  Allow  65001\ndefaultSecurityRules/DenyAllInBound    Deny      65500",
+            "explain": "Your rule at 100, then the defaults ending in DenyAllInBound."
+          }
+        }
+      ],
+      "checklist": [
+        "Two subnets with non-overlapping /24s",
+        "NSG associated with the web subnet, SSH only from my IP",
+        "VM has no public IP",
+        "Saw my rule and DenyAllInBound in the effective rules"
+      ],
+      "cleanup": {
+        "commands": "az group delete -n $RG --yes --no-wait",
+        "note": "This deletes the VM, its disk and NIC, the NSG and the VNet. Check the portal afterwards: the group should be gone in a few minutes."
+      }
+    },
+    {
+      "id": "az104-rbac",
+      "course": "az104",
+      "title": "Custom RBAC role with a scoped assignment",
+      "summary": "Write a least-privilege custom role that can only start, restart and read VMs, assign it at resource-group scope, and inspect what it grants.",
+      "minutes": 25,
+      "cost": {
+        "estimate": "Free",
+        "detail": "Roles, assignments and empty resource groups cost nothing."
+      },
+      "prerequisites": [
+        "Owner or User Access Administrator on the subscription (needed to create custom roles)",
+        "Cloud Shell (Bash)"
+      ],
+      "goals": [
+        "Author a custom role definition",
+        "Assign it at the narrowest useful scope",
+        "Read back actions vs notActions"
+      ],
+      "lessons": ["az1-rbac", "az1-subscriptions-governance"],
+      "steps": [
+        {
+          "title": "Set variables",
+          "text": "",
+          "commands": "RG=rg-az104-rbac\nLOC=westeurope\nSUB=$(az account show --query id -o tsv)\nME=$(az ad signed-in-user show --query id -o tsv)\naz group create -n $RG -l $LOC -o table"
+        },
+        {
+          "title": "Write the role",
+          "text": "Read everything in Compute, plus start and restart - nothing else.",
+          "commands": "cat > role.json <<JSON\n{\n  \"Name\": \"VM Operator (lab)\",\n  \"Description\": \"Read, start and restart virtual machines.\",\n  \"Actions\": [\n    \"Microsoft.Compute/*/read\",\n    \"Microsoft.Compute/virtualMachines/start/action\",\n    \"Microsoft.Compute/virtualMachines/restart/action\",\n    \"Microsoft.Resources/subscriptions/resourceGroups/read\"\n  ],\n  \"NotActions\": [],\n  \"AssignableScopes\": [\"/subscriptions/$SUB\"]\n}\nJSON\naz role definition create --role-definition @role.json",
+          "verify": {
+            "command": "az role definition list --custom-role-only true --name \"VM Operator (lab)\" --query \"[0].permissions[0].actions\" -o tsv",
+            "expect": [
+              "Microsoft\\.Compute/virtualMachines/start/action",
+              "Microsoft\\.Compute/virtualMachines/restart/action"
+            ],
+            "sample": "Microsoft.Compute/*/read\nMicrosoft.Compute/virtualMachines/start/action\nMicrosoft.Compute/virtualMachines/restart/action\nMicrosoft.Resources/subscriptions/resourceGroups/read",
+            "explain": "New custom roles can take a few minutes to show up everywhere."
+          }
+        },
+        {
+          "title": "Assign it at resource-group scope",
+          "text": "The narrowest scope that does the job.",
+          "commands": "RGID=$(az group show -n $RG --query id -o tsv)\naz role assignment create --assignee $ME --role \"VM Operator (lab)\" --scope $RGID",
+          "verify": {
+            "command": "az role assignment list --scope $RGID --query \"[].roleDefinitionName\" -o tsv",
+            "expect": ["VM Operator \\(lab\\)"],
+            "sample": "VM Operator (lab)",
+            "explain": "Assignments inherit down to everything in the group, and only there."
+          }
+        },
+        {
+          "title": "Compare with built-in roles",
+          "text": "See why you did not use Virtual Machine Contributor.",
+          "commands": "az role definition list --name \"Virtual Machine Contributor\" --query \"[0].permissions[0].actions\" -o tsv | head -20"
+        }
+      ],
+      "checklist": [
+        "Custom role created with only the actions I need",
+        "Assigned at resource-group scope, not subscription",
+        "I can explain actions vs notActions vs dataActions",
+        "I can say why VM Contributor is broader (it includes listKeys on storage)"
+      ],
+      "cleanup": {
+        "commands": "az role assignment delete --assignee $ME --role \"VM Operator (lab)\" --scope $RGID\naz role definition delete --name \"VM Operator (lab)\"\naz group delete -n $RG --yes --no-wait\nrm -f role.json",
+        "note": "Delete the assignment before the role definition - a role with assignments cannot be deleted."
+      }
+    },
+    {
+      "id": "az104-policy",
+      "course": "az104",
+      "title": "Azure Policy: allowed locations and a deny you can see",
+      "summary": "Assign the built-in Allowed locations policy at a resource group, watch a deployment fail with RequestDisallowedByPolicy, and check compliance.",
+      "minutes": 25,
+      "cost": {
+        "estimate": "Free",
+        "detail": "Policy assignments and evaluation are free; the storage account you create in an allowed region costs a fraction of a cent."
+      },
+      "prerequisites": [
+        "Resource Policy Contributor or Owner on the subscription",
+        "Cloud Shell (Bash)"
+      ],
+      "goals": [
+        "Find a built-in policy definition",
+        "Assign it with parameters at resource-group scope",
+        "See Deny in action and read the compliance state"
+      ],
+      "lessons": ["az1-azure-policy", "az1-subscriptions-governance"],
+      "steps": [
+        {
+          "title": "Set variables",
+          "text": "",
+          "commands": "RG=rg-az104-policy\nLOC=westeurope\naz group create -n $RG -l $LOC -o table\nRGID=$(az group show -n $RG --query id -o tsv)"
+        },
+        {
+          "title": "Find the built-in definition",
+          "text": "Look it up by display name rather than hard-coding a GUID.",
+          "commands": "DEF=$(az policy definition list --query \"[?displayName=='Allowed locations'].name | [0]\" -o tsv)\necho $DEF",
+          "verify": {
+            "command": "echo $DEF",
+            "expect": ["^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"],
+            "sample": "e56962a6-4747-49cd-b67b-bf8b01975c4c",
+            "explain": "Built-in definitions are identified by a GUID name."
+          }
+        },
+        {
+          "title": "Assign it to the resource group",
+          "text": "Only West Europe and North Europe allowed.",
+          "commands": "az policy assignment create -n allowed-locations-lab --policy $DEF --scope $RGID \\\n  --params '{\"listOfAllowedLocations\":{\"value\":[\"westeurope\",\"northeurope\"]}}'"
+        },
+        {
+          "title": "Try a disallowed region",
+          "text": "Wait a few minutes after assigning, then create a storage account in East US. It must fail.",
+          "commands": "az storage account create -n stdeny$RANDOM -g $RG -l eastus --sku Standard_LRS",
+          "verify": {
+            "command": "(the error from the command above)",
+            "expect": ["RequestDisallowedByPolicy"],
+            "sample": "(RequestDisallowedByPolicy) Resource 'stdeny12345' was disallowed by policy. Policy identifiers: '[{\"policyAssignment\":{\"name\":\"allowed-locations-lab\"...",
+            "explain": "Being Owner does not bypass a Deny policy."
+          }
+        },
+        {
+          "title": "Create one in an allowed region and check compliance",
+          "text": "Compliance scans run periodically; you can trigger one.",
+          "commands": "az storage account create -n stok$RANDOM -g $RG -l westeurope --sku Standard_LRS -o none\naz policy state trigger-scan -g $RG\naz policy state summarize -g $RG --query \"results.nonCompliantResources\""
+        }
+      ],
+      "checklist": [
+        "Found the definition by display name",
+        "Assignment scoped to the resource group with parameters",
+        "Saw RequestDisallowedByPolicy for eastus",
+        "Created a compliant resource in westeurope"
+      ],
+      "cleanup": {
+        "commands": "az policy assignment delete -n allowed-locations-lab --scope $RGID\naz group delete -n $RG --yes --no-wait",
+        "note": "Delete the assignment first so it does not linger on an empty scope."
+      }
+    },
+    {
+      "id": "az104-monitor",
+      "course": "az104",
+      "title": "Diagnostic settings to Log Analytics and a KQL query",
+      "summary": "Send a storage account's blob logs to a Log Analytics workspace, generate some traffic, and query it with KQL from the CLI.",
+      "minutes": 35,
+      "cost": {
+        "estimate": "Under $0.10",
+        "detail": "Log Analytics bills per GB ingested; a lab produces a few KB. The workspace has no charge when empty. Delete it afterwards."
+      },
+      "prerequisites": ["An Azure subscription", "Cloud Shell (Bash)"],
+      "goals": [
+        "Create a Log Analytics workspace",
+        "Configure diagnostic settings on the blob service",
+        "Query StorageBlobLogs with KQL"
+      ],
+      "lessons": ["az1-azure-monitor", "az4-kql-analysis"],
+      "steps": [
+        {
+          "title": "Set variables and resources",
+          "text": "",
+          "commands": "RG=rg-az104-monitor\nLOC=westeurope\nSA=stmon$RANDOM$RANDOM\naz group create -n $RG -l $LOC -o table\naz monitor log-analytics workspace create -g $RG -n law-lab -l $LOC -o none\naz storage account create -n $SA -g $RG -l $LOC --sku Standard_LRS -o none\nLAWID=$(az monitor log-analytics workspace show -g $RG -n law-lab --query id -o tsv)\nLAWGUID=$(az monitor log-analytics workspace show -g $RG -n law-lab --query customerId -o tsv)\nSAID=$(az storage account show -n $SA -g $RG --query id -o tsv)"
+        },
+        {
+          "title": "Turn on diagnostic settings",
+          "text": "Blob logs are configured on the blob service, not the account.",
+          "commands": "az monitor diagnostic-settings create -n to-law --resource \"$SAID/blobServices/default\" \\\n  --workspace $LAWID \\\n  --logs '[{\"category\":\"StorageRead\",\"enabled\":true},{\"category\":\"StorageWrite\",\"enabled\":true}]'",
+          "verify": {
+            "command": "az monitor diagnostic-settings list --resource \"$SAID/blobServices/default\" --query \"[].name\" -o tsv",
+            "expect": ["to-law"],
+            "sample": "to-law",
+            "explain": "The setting exists on the blob service."
+          }
+        },
+        {
+          "title": "Generate traffic",
+          "text": "A few writes and reads with the account key (fine for a throwaway lab).",
+          "commands": "KEY=$(az storage account keys list -n $SA -g $RG --query \"[0].value\" -o tsv)\naz storage container create --account-name $SA --account-key $KEY -n logs -o none\nfor i in 1 2 3; do echo $i > f$i.txt; az storage blob upload --account-name $SA --account-key $KEY -c logs -f f$i.txt -n f$i.txt -o none; done"
+        },
+        {
+          "title": "Query with KQL",
+          "text": "Logs take 5-15 minutes to arrive. If the result is empty, wait and run it again.",
+          "commands": "az monitor log-analytics query -w $LAWGUID \\\n  --analytics-query \"StorageBlobLogs | summarize count() by OperationName\" -o table",
+          "verify": {
+            "command": "(the output of the query)",
+            "expect": ["PutBlob"],
+            "sample": "OperationName    Count_    TableName\n---------------  --------  -------------\nPutBlob          3         PrimaryResult\nCreateContainer  1         PrimaryResult",
+            "explain": "Your uploads appear as PutBlob."
+          }
+        }
+      ],
+      "checklist": [
+        "Workspace created",
+        "Diagnostic setting on blobServices/default",
+        "KQL query returns PutBlob rows",
+        "I know logs can take minutes to arrive"
+      ],
+      "cleanup": {
+        "commands": "az group delete -n $RG --yes --no-wait\nrm -f f1.txt f2.txt f3.txt",
+        "note": "Deleting the group removes the workspace and the account. A deleted workspace can be recovered for 14 days unless you force-delete it."
+      }
+    },
+    {
+      "id": "az400-gha-oidc",
+      "course": "az400",
+      "title": "GitHub Actions deploys to App Service with OIDC (no secrets)",
+      "summary": "Create a free App Service, trust your GitHub repo's main branch with a federated credential, and deploy from a workflow without storing any password.",
+      "minutes": 45,
+      "cost": {
+        "estimate": "Free",
+        "detail": "The F1 (Free) App Service plan costs nothing. Delete the group and the app registration when done."
+      },
+      "prerequisites": [
+        "A GitHub repository you own with a small Node app (or the sample below)",
+        "Permission to create app registrations in Entra ID",
+        "Cloud Shell (Bash)"
+      ],
+      "goals": [
+        "Create an app registration with a federated credential for one branch",
+        "Grant it the least role needed",
+        "Deploy with azure/login using OIDC"
+      ],
+      "lessons": ["az4-github-actions", "az4-pipeline-security"],
+      "steps": [
+        {
+          "title": "Set variables",
+          "text": "Replace OWNER/REPO with your repository.",
+          "commands": "RG=rg-az400-oidc\nLOC=westeurope\nAPP=web-oidc-$RANDOM\nREPO=OWNER/REPO\naz group create -n $RG -l $LOC -o table"
+        },
+        {
+          "title": "Create the web app",
+          "text": "A Linux F1 plan and a Node web app.",
+          "commands": "az appservice plan create -g $RG -n plan-lab --sku F1 --is-linux\naz webapp create -g $RG -p plan-lab -n $APP --runtime \"NODE:20-lts\"",
+          "verify": {
+            "command": "az webapp show -g $RG -n $APP --query state -o tsv",
+            "expect": ["Running"],
+            "sample": "Running",
+            "explain": "The app exists and is running."
+          }
+        },
+        {
+          "title": "Create the identity and trust GitHub",
+          "text": "The federated credential trusts tokens for the main branch of this repo only.",
+          "commands": "CLIENT_ID=$(az ad app create --display-name gh-oidc-lab --query appId -o tsv)\naz ad sp create --id $CLIENT_ID -o none\ncat > fic.json <<JSON\n{\"name\":\"gh-main\",\"issuer\":\"https://token.actions.githubusercontent.com\",\n \"subject\":\"repo:$REPO:ref:refs/heads/main\",\"audiences\":[\"api://AzureADTokenExchange\"]}\nJSON\naz ad app federated-credential create --id $CLIENT_ID --parameters fic.json\nRGID=$(az group show -n $RG --query id -o tsv)\naz role assignment create --assignee $CLIENT_ID --role \"Website Contributor\" --scope $RGID\necho \"AZURE_CLIENT_ID=$CLIENT_ID\"; echo \"AZURE_TENANT_ID=$(az account show --query tenantId -o tsv)\"; echo \"AZURE_SUBSCRIPTION_ID=$(az account show --query id -o tsv)\"",
+          "verify": {
+            "command": "az ad app federated-credential list --id $CLIENT_ID --query \"[0].subject\" -o tsv",
+            "expect": ["^repo:[^:]+/[^:]+:ref:refs/heads/main$"],
+            "sample": "repo:contoso/web:ref:refs/heads/main",
+            "explain": "The subject must match the branch exactly - a push from another branch will be refused."
+          }
+        },
+        {
+          "title": "Add the workflow",
+          "text": "Save the three IDs as repository secrets or variables (they are identifiers, not passwords), then commit this as .github/workflows/deploy.yml and push to main.",
+          "commands": "cat <<'YAML'\nname: deploy\non: { push: { branches: [main] } }\npermissions: { id-token: write, contents: read }\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: azure/login@v2\n        with:\n          client-id: ${{ vars.AZURE_CLIENT_ID }}\n          tenant-id: ${{ vars.AZURE_TENANT_ID }}\n          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}\n      - uses: azure/webapps-deploy@v3\n        with:\n          app-name: YOUR_APP_NAME\n          package: .\nYAML"
+        },
+        {
+          "title": "Check the deployment",
+          "text": "After the push, check the run (or open the repository's Actions tab), then browse to the site.",
+          "commands": "gh run list --repo $REPO --workflow deploy.yml --limit 1 --json conclusion -q '.[0].conclusion'\ncurl -s -o /dev/null -w \"%{http_code}\\n\" https://$APP.azurewebsites.net",
+          "verify": {
+            "command": "gh run list --repo $REPO --workflow deploy.yml --limit 1 --json conclusion -q '.[0].conclusion'",
+            "expect": ["^success$"],
+            "sample": "success",
+            "explain": "The workflow logged in with OIDC and deployed. A failure at azure/login usually means the federated credential subject does not match the branch."
+          }
+        }
+      ],
+      "checklist": [
+        "No client secret was created anywhere",
+        "Federated credential subject pins repo and branch",
+        "Role is Website Contributor on the resource group, not Contributor on the subscription",
+        "Workflow has permissions: id-token: write"
+      ],
+      "cleanup": {
+        "commands": "az group delete -n $RG --yes --no-wait\naz ad app delete --id $CLIENT_ID\nrm -f fic.json",
+        "note": "Delete the app registration too - it lives in Entra ID, outside the resource group."
+      }
+    },
+    {
+      "id": "az400-pipelines",
+      "course": "az400",
+      "title": "Azure Pipelines: multi-stage YAML with an approval",
+      "summary": "Create an Azure DevOps project from the CLI, add a build-and-deploy YAML pipeline with an environment that needs approval, and run it.",
+      "minutes": 40,
+      "cost": {
+        "estimate": "Free",
+        "detail": "Azure DevOps is free for up to 5 users. New organisations may need to request the free Microsoft-hosted parallel job (or use a self-hosted agent)."
+      },
+      "prerequisites": [
+        "An Azure DevOps organisation (dev.azure.com)",
+        "Azure CLI with the azure-devops extension (az extension add -n azure-devops)",
+        "git"
+      ],
+      "goals": [
+        "Script project and pipeline creation",
+        "Use stages, a deployment job and an environment",
+        "Gate production with an approval"
+      ],
+      "lessons": ["az4-yaml-pipelines", "az4-environments-approvals", "az4-pipeline-templates"],
+      "steps": [
+        {
+          "title": "Set defaults",
+          "text": "Replace ORG with your organisation name.",
+          "commands": "ORG=https://dev.azure.com/ORG\naz devops configure --defaults organization=$ORG\naz devops project create --name az400-lab -o table\naz devops configure --defaults organization=$ORG project=az400-lab"
+        },
+        {
+          "title": "Push a pipeline file",
+          "text": "The project's default repository has the project's name.",
+          "commands": "git clone $(az repos show -r az400-lab --query remoteUrl -o tsv) lab && cd lab\ncat > azure-pipelines.yml <<'YAML'\ntrigger: [main]\npool: { vmImage: ubuntu-latest }\nstages:\n  - stage: Build\n    jobs:\n      - job: build\n        steps:\n          - script: echo \"building $(Build.BuildNumber)\" > out.txt\n          - publish: out.txt\n            artifact: drop\n  - stage: Prod\n    dependsOn: Build\n    jobs:\n      - deployment: deploy\n        environment: prod\n        strategy:\n          runOnce:\n            deploy:\n              steps:\n                - script: cat $(Pipeline.Workspace)/drop/out.txt\nYAML\ngit add . && git commit -m \"Add pipeline\" && git push -u origin HEAD:main"
+        },
+        {
+          "title": "Create the pipeline",
+          "text": "",
+          "commands": "az pipelines create --name lab-ci --repository az400-lab --repository-type tfsgit \\\n  --branch main --yml-path azure-pipelines.yml --skip-first-run true -o table"
+        },
+        {
+          "title": "Add the approval",
+          "text": "In the portal: Pipelines \u2192 Environments \u2192 prod \u2192 \u22ef \u2192 Approvals and checks \u2192 Approvals \u2192 add yourself. (Approvals are not available from the CLI.) Then run the pipeline and approve it when it pauses before Prod.",
+          "commands": "az pipelines run --name lab-ci -o table",
+          "verify": {
+            "command": "az pipelines runs list --pipeline-ids $(az pipelines show --name lab-ci --query id -o tsv) --top 1 --query \"[0].result\" -o tsv",
+            "expect": ["succeeded"],
+            "sample": "succeeded",
+            "explain": "After you approve, the run finishes."
+          }
+        }
+      ],
+      "checklist": [
+        "Two stages with dependsOn",
+        "Prod uses a deployment job and the prod environment",
+        "The run waited for my approval",
+        "I can say why approvals live on environments, not in YAML"
+      ],
+      "cleanup": {
+        "commands": "cd .. && rm -rf lab\naz devops project delete --id $(az devops project show -p az400-lab --query id -o tsv) --yes",
+        "note": "Deleting the project removes the repo, pipeline and environment. It stays recoverable for 28 days."
+      }
+    },
+    {
+      "id": "az400-artifacts",
+      "course": "az400",
+      "title": "Azure Artifacts: publish and consume a versioned package",
+      "summary": "Create a feed, publish a Universal Package with a semantic version from the CLI, then download it by version - the basis of promoting build outputs.",
+      "minutes": 25,
+      "cost": {
+        "estimate": "Free",
+        "detail": "Azure Artifacts includes 2 GiB of storage free per organisation."
+      },
+      "prerequisites": [
+        "The az400-lab project from the pipelines lab (or any project)",
+        "Azure CLI with the azure-devops extension"
+      ],
+      "goals": [
+        "Create a project-scoped feed",
+        "Publish a package version",
+        "Consume a specific version"
+      ],
+      "lessons": ["az4-package-management"],
+      "steps": [
+        {
+          "title": "Create the feed",
+          "text": "In the portal: Artifacts \u2192 Create Feed \u2192 name lab-feed, scope Project (feeds can't be created from the az devops CLI). Then set variables.",
+          "commands": "ORG=https://dev.azure.com/ORG\nPROJECT=az400-lab"
+        },
+        {
+          "title": "Publish version 1.0.0",
+          "text": "Universal Packages hold any files - here a tiny 'tool'.",
+          "commands": "mkdir -p tool && echo 'echo hello from 1.0.0' > tool/run.sh\naz artifacts universal publish --organization $ORG --project $PROJECT --scope project \\\n  --feed lab-feed --name lab-tool --version 1.0.0 --description \"Lab tool\" --path ./tool"
+        },
+        {
+          "title": "Publish 1.1.0",
+          "text": "Versions are immutable: you cannot overwrite 1.0.0, so a change is a new version.",
+          "commands": "echo 'echo hello from 1.1.0' > tool/run.sh\naz artifacts universal publish --organization $ORG --project $PROJECT --scope project \\\n  --feed lab-feed --name lab-tool --version 1.1.0 --path ./tool"
+        },
+        {
+          "title": "Consume a pinned version",
+          "text": "",
+          "commands": "az artifacts universal download --organization $ORG --project $PROJECT --scope project \\\n  --feed lab-feed --name lab-tool --version 1.0.0 --path ./download\ncat download/run.sh",
+          "verify": {
+            "command": "cat download/run.sh",
+            "expect": ["hello from 1\\.0\\.0"],
+            "sample": "echo hello from 1.0.0",
+            "explain": "You got exactly the version you asked for."
+          }
+        }
+      ],
+      "checklist": [
+        "Feed created with project scope",
+        "Published 1.0.0 and 1.1.0",
+        "Downloaded 1.0.0 by version",
+        "I can explain feed views (@local, @prerelease, @release) for promotion"
+      ],
+      "cleanup": {
+        "commands": "rm -rf tool download",
+        "note": "Delete the feed in the portal (Artifacts \u2192 feed settings \u2192 Delete feed), or delete the whole project."
+      }
+    },
+    {
+      "id": "az400-keyvault-pipeline",
+      "course": "az400",
+      "title": "Pipeline secrets from Key Vault, never in YAML",
+      "summary": "Store a secret in an RBAC-mode Key Vault and read it in a GitHub Actions workflow through OIDC, masked in the logs.",
+      "minutes": 30,
+      "cost": {
+        "estimate": "Under $0.01",
+        "detail": "Key Vault charges per 10,000 operations; a lab uses a handful."
+      },
+      "prerequisites": [
+        "The OIDC app registration from the GitHub Actions lab (CLIENT_ID), or create one the same way",
+        "Cloud Shell (Bash)"
+      ],
+      "goals": [
+        "Create a Key Vault using the Azure RBAC permission model",
+        "Grant the pipeline identity Key Vault Secrets User only",
+        "Read and mask the secret in a workflow"
+      ],
+      "lessons": ["az4-pipeline-security", "az4-github-actions"],
+      "steps": [
+        {
+          "title": "Set variables and create the vault",
+          "text": "",
+          "commands": "RG=rg-az400-kv\nLOC=westeurope\nKV=kv-lab-$RANDOM\nME=$(az ad signed-in-user show --query id -o tsv)\naz group create -n $RG -l $LOC -o table\naz keyvault create -n $KV -g $RG -l $LOC --enable-rbac-authorization true -o none\nKVID=$(az keyvault show -n $KV --query id -o tsv)"
+        },
+        {
+          "title": "Add a secret",
+          "text": "You need a data-plane role to write secrets, even as Owner.",
+          "commands": "az role assignment create --assignee $ME --role \"Key Vault Secrets Officer\" --scope $KVID -o none\nsleep 30\naz keyvault secret set --vault-name $KV -n db-password --value \"$(openssl rand -base64 18)\" -o none",
+          "verify": {
+            "command": "az keyvault secret list --vault-name $KV --query \"[].name\" -o tsv",
+            "expect": ["db-password"],
+            "sample": "db-password",
+            "explain": "If you see Forbidden, wait a minute for the role assignment and retry."
+          }
+        },
+        {
+          "title": "Let the pipeline read it",
+          "text": "Read-only, on this vault only.",
+          "commands": "az role assignment create --assignee $CLIENT_ID --role \"Key Vault Secrets User\" --scope $KVID",
+          "verify": {
+            "command": "az role assignment list --scope $KVID --query \"[].roleDefinitionName\" -o tsv",
+            "expect": ["Key Vault Secrets User", "Key Vault Secrets Officer"],
+            "sample": "Key Vault Secrets Officer\nKey Vault Secrets User",
+            "explain": "You can write; the pipeline can only read."
+          }
+        },
+        {
+          "title": "Read it in the workflow",
+          "text": "Add these steps after azure/login in your workflow. add-mask hides the value from the logs.",
+          "commands": "cat <<'YAML'\n      - name: Get secret\n        run: |\n          value=$(az keyvault secret show --vault-name YOUR_KV -n db-password --query value -o tsv)\n          echo \"::add-mask::$value\"\n          echo \"DB_PASSWORD=$value\" >> \"$GITHUB_ENV\"\n      - run: echo \"The password is $DB_PASSWORD\"   # prints ***\nYAML"
+        }
+      ],
+      "checklist": [
+        "Vault uses the Azure RBAC permission model",
+        "Pipeline identity has Key Vault Secrets User only",
+        "The secret appears as *** in the run log",
+        "No secret value is stored in the repository"
+      ],
+      "cleanup": {
+        "commands": "az group delete -n $RG --yes\naz keyvault purge -n $KV",
+        "note": "Key Vault soft delete keeps the name reserved for 90 days; purging frees it (purge protection is off in this lab)."
+      }
+    },
+    {
+      "id": "az400-acr-containerapps",
+      "course": "az400",
+      "title": "Build in ACR and run on Container Apps",
+      "summary": "Build an image in Azure Container Registry without Docker on your machine, then run it on Azure Container Apps pulling with a managed identity.",
+      "minutes": 35,
+      "cost": {
+        "estimate": "About $0.20 for an afternoon",
+        "detail": "ACR Basic is about $0.17 per day; Container Apps' consumption plan has a monthly free grant. Delete everything the same day."
+      },
+      "prerequisites": [
+        "An Azure subscription",
+        "Cloud Shell (Bash) - the containerapp extension installs on first use"
+      ],
+      "goals": [
+        "Use az acr build (no local Docker)",
+        "Pull with a managed identity instead of admin credentials",
+        "Expose the app with external ingress"
+      ],
+      "lessons": ["az1-containers", "az4-security-scanning"],
+      "steps": [
+        {
+          "title": "Set variables and create the registry",
+          "text": "",
+          "commands": "RG=rg-az400-aca\nLOC=westeurope\nACR=acrlab$RANDOM$RANDOM\naz group create -n $RG -l $LOC -o table\naz acr create -n $ACR -g $RG --sku Basic -o none"
+        },
+        {
+          "title": "Build the image in ACR",
+          "text": "ACR Tasks builds in Azure from your local folder.",
+          "commands": "mkdir -p app && cd app\necho '<h1>Hello from Container Apps</h1>' > index.html\nprintf 'FROM nginx:alpine\\nCOPY index.html /usr/share/nginx/html/index.html\\n' > Dockerfile\naz acr build -r $ACR -t hello:v1 .\ncd ..",
+          "verify": {
+            "command": "az acr repository show-tags -n $ACR --repository hello -o tsv",
+            "expect": ["^v1$"],
+            "sample": "v1",
+            "explain": "The image is in your registry."
+          }
+        },
+        {
+          "title": "Create the environment and the app",
+          "text": "--registry-identity system gives the app a managed identity with AcrPull - no admin user or password.",
+          "commands": "az containerapp env create -n cae-lab -g $RG -l $LOC -o none\naz containerapp create -n ca-lab -g $RG --environment cae-lab \\\n  --image $ACR.azurecr.io/hello:v1 --registry-server $ACR.azurecr.io --registry-identity system \\\n  --ingress external --target-port 80 -o none"
+        },
+        {
+          "title": "Browse to it",
+          "text": "",
+          "commands": "FQDN=$(az containerapp show -n ca-lab -g $RG --query properties.configuration.ingress.fqdn -o tsv)\ncurl -s https://$FQDN",
+          "verify": {
+            "command": "curl -s https://$FQDN",
+            "expect": ["Hello from Container Apps"],
+            "sample": "<h1>Hello from Container Apps</h1>",
+            "explain": "Served over HTTPS by Container Apps."
+          }
+        }
+      ],
+      "checklist": [
+        "Built with az acr build",
+        "Registry admin user stays disabled",
+        "App pulls with a system-assigned managed identity",
+        "Reached the app over HTTPS"
+      ],
+      "cleanup": {
+        "commands": "az group delete -n $RG --yes --no-wait\nrm -rf app",
+        "note": "This removes the registry (and its daily charge), the environment and the app."
+      }
+    }
+  ]
+}

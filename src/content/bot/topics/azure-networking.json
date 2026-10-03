@@ -1,0 +1,1974 @@
+{
+  "topic": "azure-networking",
+  "questions": [
+    {
+      "id": "itv-aznet-1",
+      "shortAnswer": "A VNet is a private address space in one region, split into subnets. I take ranges from a central IPAM plan so nothing overlaps with on-premises or any VNet I might peer with, and I leave room to grow - Azure keeps five addresses in every subnet, and services like GatewaySubnet, Azure Firewall and Bastion need subnets of a minimum size.",
+      "keyPoints": [
+        {
+          "point": "Address ranges must not overlap with on-premises or other VNets",
+          "keywords": [
+            "no overlap",
+            "non-overlapping",
+            "overlap",
+            "overlapping",
+            "unique ranges",
+            "clash"
+          ],
+          "weight": 3
+        },
+        {
+          "point": "Plan centrally with IPAM rather than portal defaults",
+          "keywords": [
+            "ipam",
+            "ip address management",
+            "central plan",
+            "address plan",
+            "azure virtual network manager ipam"
+          ],
+          "weight": 2
+        },
+        {
+          "point": "Azure reserves five addresses in every subnet",
+          "keywords": [
+            "five addresses",
+            "5 addresses",
+            "reserved addresses",
+            "reserves 5",
+            "reserves five"
+          ],
+          "weight": 3
+        },
+        {
+          "point": "Leave room for growth when sizing subnets",
+          "keywords": ["room to grow", "growth", "future", "headroom", "leave room", "scale"],
+          "weight": 2
+        },
+        {
+          "point": "Some subnets need special names and minimum sizes",
+          "keywords": [
+            "gatewaysubnet",
+            "azurefirewallsubnet",
+            "azurebastionsubnet",
+            "/26",
+            "/27",
+            "dedicated subnet",
+            "delegated subnet",
+            "delegation"
+          ],
+          "weight": 2
+        },
+        {
+          "point": "AKS networking choice (CNI vs overlay) changes the IP plan",
+          "keywords": ["azure cni", "cni overlay", "overlay", "pod ips", "aks", "kubenet"],
+          "weight": 1
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "You can just use the default 10.0.0.0/16 the portal suggests everywhere.",
+          "triggers": ["default range", "10.0.0.0/16 everywhere", "portal default"],
+          "correction": "Every VNet that might ever be peered or connected to on-premises needs a unique range - defaults collide the moment you connect two of them."
+        },
+        {
+          "mistake": "A /29 subnet gives you 8 usable addresses.",
+          "triggers": ["/29 gives 8", "8 usable", "all addresses usable"],
+          "correction": "Azure keeps 5 addresses per subnet, so a /29 has 3 usable and a /24 has 251."
+        },
+        {
+          "mistake": "Address space can be fixed later without disruption.",
+          "triggers": ["change it later", "fix it later", "easy to renumber"],
+          "correction": "You can add ranges, but renumbering subnets in use means redeploying resources - and peered VNets need their peerings synced. Plan it up front."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "Can you change a VNet's address space after peering?",
+          "shortAnswer": "Yes - you can add or resize address ranges on a peered VNet, then sync the peering so the other side learns the new prefix. You cannot shrink a range that subnets are using.",
+          "keyPoints": [
+            {
+              "point": "Address space can be added or changed on a peered VNet",
+              "keywords": ["yes", "can add", "can resize", "supported"],
+              "weight": 2
+            },
+            {
+              "point": "The peering must be synced afterwards",
+              "keywords": ["sync", "resync", "update the peering", "sync peering"],
+              "weight": 3
+            }
+          ]
+        },
+        {
+          "question": "Why does GatewaySubnet need to be at least a /27?",
+          "shortAnswer": "A /29 is the hard minimum, but Microsoft recommends a /27 or larger so the gateway has room for more instances, active-active configuration and coexisting ExpressRoute and VPN gateways.",
+          "keyPoints": [
+            {
+              "point": "/27 is recommended, /29 is the minimum",
+              "keywords": ["/27", "/29", "recommended", "minimum"],
+              "weight": 2
+            },
+            {
+              "point": "The gateway needs IPs for instances and coexistence",
+              "keywords": [
+                "instances",
+                "active-active",
+                "expressroute and vpn",
+                "coexist",
+                "scale"
+              ],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Think about what breaks the day you connect two networks together.",
+        "There are three rules: uniqueness, a fixed per-subnet overhead, and services with size requirements.",
+        "No overlap, Azure's 5 reserved addresses per subnet, and minimum sizes for GatewaySubnet, AzureFirewallSubnet and AzureBastionSubnet."
+      ],
+      "analogy": "Planning a VNet is like numbering houses in a new town before anyone moves in. If two towns use the same street numbers and you later build a road between them, the post can no longer tell the houses apart - and renumbering occupied streets is miserable.",
+      "simpleExplanation": "A VNet is your own private network in Azure, and subnets are smaller sections of it. Pick address ranges that never clash with any other network you might connect to, make sections bigger than you need today, and remember Azure keeps 5 addresses in each section for itself.",
+      "related": ["itv-aznet-2", "itv-aznet-4", "itv-aznet-15"],
+      "scenarioVariant": {
+        "question": "You join a company where every team created VNets with 10.0.0.0/16, and now they want hub-and-spoke peering. What do you do?",
+        "shortAnswer": "Peering fails across overlapping ranges, so I would set up an IPAM plan, give each VNet a unique range, and migrate workloads into new VNets (or add new non-overlapping ranges and move subnets) one team at a time, with NAT as a temporary bridge only where migration is impossible."
+      }
+    },
+    {
+      "id": "itv-aznet-2",
+      "shortAnswer": "A /27 has 32 addresses, and Azure reserves 5 in every subnet - the network address, the default gateway, two for Azure DNS and the broadcast address - so 27 can be assigned to resources.",
+      "keyPoints": [
+        {
+          "point": "A /27 contains 32 addresses",
+          "keywords": ["32", "thirty-two", "2 to the 5"],
+          "weight": 2
+        },
+        {
+          "point": "Azure reserves 5 addresses in each subnet",
+          "keywords": [
+            "5 reserved",
+            "five reserved",
+            "reserves 5",
+            "reserves five",
+            "minus 5",
+            "minus five"
+          ],
+          "weight": 3
+        },
+        {
+          "point": "That leaves 27 usable addresses",
+          "keywords": ["27", "twenty-seven", "27 usable"],
+          "weight": 3
+        },
+        {
+          "point": "The reserved ones are network, gateway, two for DNS and broadcast",
+          "keywords": ["network address", "gateway", "dns", "broadcast", "x.x.x.0", "x.x.x.1"],
+          "weight": 1
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "You can use 30, like on a normal network with network and broadcast removed.",
+          "triggers": ["30 usable", "thirty", "minus 2", "minus two"],
+          "correction": "On-premises you lose 2; in Azure you lose 5, because the first three host addresses are kept for the gateway and Azure DNS."
+        },
+        {
+          "mistake": "All 32 can be used.",
+          "triggers": ["all 32", "32 usable"],
+          "correction": "Azure always keeps 5 addresses per subnet."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "What is the smallest subnet Azure allows?",
+          "shortAnswer": "A /29: 8 addresses, of which 3 are usable after Azure's 5 reserved addresses.",
+          "keyPoints": [
+            {
+              "point": "/29 is the smallest",
+              "keywords": ["/29", "29"],
+              "weight": 3
+            },
+            {
+              "point": "It has 3 usable addresses",
+              "keywords": ["3 usable", "three usable"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "Which five addresses does Azure reserve in 10.0.1.0/24?",
+          "shortAnswer": "10.0.1.0 is the network, .1 the default gateway, .2 and .3 map to Azure DNS, and .255 is broadcast.",
+          "keyPoints": [
+            {
+              "point": "x.0 network and x.255 broadcast",
+              "keywords": [".0", ".255", "network", "broadcast"],
+              "weight": 2
+            },
+            {
+              "point": "x.1 gateway and x.2/x.3 Azure DNS",
+              "keywords": [".1", ".2", ".3", "gateway", "dns"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Start with how many addresses a /27 has in total.",
+        "Then remember Azure takes more than the usual two.",
+        "32 addresses minus Azure's 5 reserved ones."
+      ],
+      "analogy": "It is a 32-seat bus where the driver, the conductor, two guides and the emergency exit seat are always taken: 27 passengers fit.",
+      "simpleExplanation": "Every subnet size has a total number of addresses. Azure always keeps 5 of them for its own use, so you subtract 5 to know how many machines you can put there.",
+      "related": ["itv-aznet-1"],
+      "scenarioVariant": {
+        "question": "A team needs 60 VMs in one subnet. What is the smallest subnet size that fits?",
+        "shortAnswer": "A /26 has 64 addresses, minus 5 reserved = 59 - one short. So a /25 (123 usable)."
+      }
+    },
+    {
+      "id": "itv-aznet-3",
+      "shortAnswer": "An NSG is a stateful set of allow and deny rules on a subnet or a NIC. Rules are checked in priority order, lowest number first, and the first match wins; default rules at the bottom allow VNet traffic and load-balancer probes and deny everything else inbound. Application security groups let rules target groups of VMs by role instead of IP addresses.",
+      "keyPoints": [
+        {
+          "point": "Attached to a subnet or a NIC (or both)",
+          "keywords": ["subnet", "nic", "network interface", "both"],
+          "weight": 2
+        },
+        {
+          "point": "Rules are evaluated by priority, lowest number first",
+          "keywords": ["priority", "lowest number", "lowest first", "100", "4096"],
+          "weight": 3
+        },
+        {
+          "point": "First matching rule wins and processing stops",
+          "keywords": ["first match", "first rule that matches", "stops processing", "stop"],
+          "weight": 3
+        },
+        {
+          "point": "NSGs are stateful: return traffic is allowed automatically",
+          "keywords": ["stateful", "return traffic", "response traffic", "established"],
+          "weight": 2
+        },
+        {
+          "point": "Default rules allow VNet and load-balancer traffic and deny the rest",
+          "keywords": [
+            "default rules",
+            "allowvnetinbound",
+            "denyallinbound",
+            "65000",
+            "65500",
+            "azureloadbalancer"
+          ],
+          "weight": 2
+        },
+        {
+          "point": "With subnet and NIC NSGs, traffic must be allowed by both",
+          "keywords": ["both", "subnet then nic", "nic then subnet", "two nsgs", "both must allow"],
+          "weight": 2
+        },
+        {
+          "point": "Application security groups group VMs by role for rules",
+          "keywords": [
+            "application security group",
+            "asg",
+            "asgs",
+            "group vms",
+            "role-based groups"
+          ],
+          "weight": 2
+        },
+        {
+          "point": "Service tags stand for Azure-managed address ranges",
+          "keywords": ["service tag", "service tags", "internet", "virtualnetwork", "storage tag"],
+          "weight": 1
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "The rule with the highest priority number wins.",
+          "triggers": ["highest number", "higher number wins", "largest priority"],
+          "correction": "Lower numbers are evaluated first - 100 beats 200."
+        },
+        {
+          "mistake": "You need a rule for the return traffic.",
+          "triggers": ["outbound rule for the response", "return rule", "rule for replies"],
+          "correction": "NSGs are stateful; replies to an allowed flow are allowed automatically."
+        },
+        {
+          "mistake": "A deny rule only blocks what you meant it to.",
+          "triggers": ["deny all is safe", "deny everything is safe"],
+          "correction": "A broad custom deny with low priority also blocks the AzureLoadBalancer probes and VNet traffic the default rules would have allowed."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "Why would a load balancer health probe fail after you add a deny rule?",
+          "shortAnswer": "Probes come from 168.63.129.16 (service tag AzureLoadBalancer). The default rule that allows them is at priority 65001, so a custom deny with a lower number matches first and blocks the probe - the backend looks unhealthy.",
+          "keyPoints": [
+            {
+              "point": "Probes come from the AzureLoadBalancer tag / 168.63.129.16",
+              "keywords": ["168.63.129.16", "azureloadbalancer", "load balancer tag"],
+              "weight": 3
+            },
+            {
+              "point": "A custom deny is evaluated before the default allow",
+              "keywords": [
+                "before the default",
+                "lower priority number",
+                "65001",
+                "custom deny first"
+              ],
+              "weight": 3
+            }
+          ]
+        },
+        {
+          "question": "Which subnets cannot have an NSG, or need specific rules?",
+          "shortAnswer": "GatewaySubnet does not support an NSG; AzureBastionSubnet can have one only with Bastion's required rules; Application Gateway v2 subnets must allow the GatewayManager ports 65200-65535.",
+          "keyPoints": [
+            {
+              "point": "GatewaySubnet should not have an NSG",
+              "keywords": ["gatewaysubnet", "gateway subnet"],
+              "weight": 2
+            },
+            {
+              "point": "Bastion and Application Gateway subnets need specific rules",
+              "keywords": [
+                "azurebastionsubnet",
+                "bastion",
+                "application gateway",
+                "gatewaymanager",
+                "65200"
+              ],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Think about where you can attach an NSG, and the order rules are read in.",
+        "Lowest number first, and what happens at the first match? What about replies?",
+        "Priority order with first-match-wins, stateful, defaults at 65000+, subnet and NIC both apply, ASGs group VMs by role."
+      ],
+      "analogy": "An NSG is a list of door rules read top to bottom by a guard: the first rule that fits your situation decides, and the guard remembers you on the way out, so you do not need a separate rule to leave.",
+      "simpleExplanation": "An NSG is a firewall rule list for a subnet or a VM's network card. Azure reads the rules from the smallest number up and stops at the first one that matches the traffic. If traffic is allowed in, the reply is allowed out automatically.",
+      "related": ["itv-aznet-15", "itv-aznet-6"],
+      "scenarioVariant": {
+        "question": "After you add a 'deny all inbound' rule at priority 100, users get timeouts and the load balancer marks every VM unhealthy. Why?",
+        "shortAnswer": "The custom deny is evaluated before the default AllowAzureLoadBalancerInBound (65001) and before your own allow rules if they have higher numbers, so probes and real traffic both hit the deny. Give the allow rules lower numbers and allow the AzureLoadBalancer tag explicitly."
+      }
+    },
+    {
+      "id": "itv-aznet-4",
+      "shortAnswer": "Peering connects two VNets over the Microsoft backbone so they route to each other privately. It is non-transitive: if spoke A and spoke B both peer with a hub, A and B still cannot talk. In hub-and-spoke, spokes reach each other either through a firewall or NVA in the hub, using user-defined routes and peerings that allow forwarded traffic, or by peering them directly.",
+      "keyPoints": [
+        {
+          "point": "Peering links two VNets over the Microsoft backbone, privately",
+          "keywords": ["peering", "microsoft backbone", "private", "low latency", "backbone"],
+          "weight": 2
+        },
+        {
+          "point": "Peering is non-transitive",
+          "keywords": ["non-transitive", "not transitive", "nontransitive", "does not chain"],
+          "weight": 3
+        },
+        {
+          "point": "Hub-and-spoke centralises shared services in a hub",
+          "keywords": ["hub-and-spoke", "hub and spoke", "hub", "shared services"],
+          "weight": 2
+        },
+        {
+          "point": "Spoke-to-spoke goes through a hub firewall or NVA",
+          "keywords": ["firewall", "nva", "network virtual appliance", "azure firewall"],
+          "weight": 3
+        },
+        {
+          "point": "User-defined routes send spoke traffic to the hub firewall",
+          "keywords": ["user-defined route", "udr", "route table", "next hop"],
+          "weight": 2
+        },
+        {
+          "point": "Peerings must allow forwarded traffic for that",
+          "keywords": ["allow forwarded traffic", "forwarded traffic", "allowforwardedtraffic"],
+          "weight": 1
+        },
+        {
+          "point": "Gateway transit lets spokes use the hub's VPN/ExpressRoute gateway",
+          "keywords": ["gateway transit", "use remote gateways", "allow gateway transit"],
+          "weight": 1
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "If A peers with the hub and B peers with the hub, A can reach B.",
+          "triggers": ["a can reach b", "transitive", "goes through the hub automatically"],
+          "correction": "Peering is not transitive. Without routing through a firewall/NVA (or a direct A-B peering), there is no path."
+        },
+        {
+          "mistake": "Peering only needs to be created on one side.",
+          "triggers": ["one side", "one-sided"],
+          "correction": "Both sides must exist; with only one, the peering stays Initiated and carries no traffic."
+        },
+        {
+          "mistake": "Peering works between overlapping address spaces.",
+          "triggers": ["overlapping peering works"],
+          "correction": "Azure refuses to peer VNets whose address spaces overlap."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "What happens to peering if you need to add an address range to a spoke?",
+          "shortAnswer": "You can add the range to the peered VNet, then sync the peering so the hub learns the new prefix - no need to delete and recreate it.",
+          "keyPoints": [
+            {
+              "point": "Ranges can be added to a peered VNet",
+              "keywords": ["add", "resize", "can change"],
+              "weight": 2
+            },
+            {
+              "point": "Sync the peering afterwards",
+              "keywords": ["sync", "resync"],
+              "weight": 3
+            }
+          ]
+        },
+        {
+          "question": "When would you choose direct spoke peering over routing through the firewall?",
+          "shortAnswer": "When two spokes exchange a lot of traffic that does not need inspection - direct peering is cheaper and faster than hair-pinning through the firewall - and when your security model allows it.",
+          "keyPoints": [
+            {
+              "point": "High-volume traffic between two spokes",
+              "keywords": ["high volume", "lots of traffic", "chatty", "throughput"],
+              "weight": 2
+            },
+            {
+              "point": "Cost and latency of going through the firewall",
+              "keywords": ["cost", "cheaper", "latency", "firewall cost", "hairpin"],
+              "weight": 2
+            },
+            {
+              "point": "Only when inspection is not required",
+              "keywords": ["no inspection", "security allows", "trusted"],
+              "weight": 1
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "What does peering give two VNets - and does it pass through to a third?",
+        "Say the word that describes A-hub-B not working on its own, then how you fix it.",
+        "Non-transitive peering; spoke-to-spoke via a hub Azure Firewall/NVA with UDRs and forwarded traffic allowed, or direct peering."
+      ],
+      "analogy": "Peering is a private footbridge between two buildings. If building A has a bridge to the hub and so does building B, you still cannot walk from A to B unless someone in the hub lets you through and points the way - that is the firewall and the routes.",
+      "simpleExplanation": "Peering joins two networks so they can talk privately. It only joins those two: a network peered with your hub cannot automatically reach every other network the hub is peered with. To let spokes talk, send their traffic through a firewall in the hub, or peer them directly.",
+      "related": ["itv-aznet-6", "itv-aznet-5", "itv-aznet-1"],
+      "scenarioVariant": {
+        "question": "Spoke 1 and spoke 2 are both peered with the hub, which runs Azure Firewall. VMs in spoke 1 still cannot reach spoke 2. What do you check?",
+        "shortAnswer": "That the spokes have route tables sending the other spoke's prefix to the firewall's private IP, that the spoke-side peerings allow forwarded traffic, that the firewall has a network rule allowing the flow, and that NSGs on both ends allow it."
+      }
+    },
+    {
+      "id": "itv-aznet-5",
+      "shortAnswer": "A self-managed hub-and-spoke gives you full control of routing and appliances, but you build and operate the transit yourself. Azure Virtual WAN is a Microsoft-managed hub service that routes between hubs, branches, VPN, ExpressRoute and VNets automatically, with secured hubs and routing intent for inspection. I choose Virtual WAN for many regions and branches, and self-managed when I need unusual routing or third-party appliances it does not support.",
+      "keyPoints": [
+        {
+          "point": "Self-managed hub-and-spoke gives full control but you operate it",
+          "keywords": [
+            "full control",
+            "self-managed",
+            "you manage",
+            "operate it yourself",
+            "custom"
+          ],
+          "weight": 2
+        },
+        {
+          "point": "Virtual WAN is a Microsoft-managed hub that routes automatically",
+          "keywords": [
+            "virtual wan",
+            "vwan",
+            "managed hub",
+            "routes automatically",
+            "microsoft-managed"
+          ],
+          "weight": 3
+        },
+        {
+          "point": "Any-to-any transit between hubs, branches and VNets",
+          "keywords": ["any-to-any", "transit", "branch", "branches", "global transit"],
+          "weight": 2
+        },
+        {
+          "point": "Secured hub with Azure Firewall and routing intent",
+          "keywords": ["secured hub", "routing intent", "firewall manager"],
+          "weight": 2
+        },
+        {
+          "point": "Choose by scale (regions/branches) versus need for custom control",
+          "keywords": ["many regions", "many branches", "scale", "large estate", "sd-wan"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Virtual WAN is just a VPN service.",
+          "triggers": ["only vpn", "just vpn"],
+          "correction": "It is a managed routing hub covering VNets, VPN, ExpressRoute, SD-WAN branches and inter-hub transit."
+        },
+        {
+          "mistake": "Virtual WAN is always cheaper.",
+          "triggers": ["always cheaper"],
+          "correction": "It has hub and data-processing charges; for a small single-region estate a self-managed hub can cost less."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "What is routing intent?",
+          "shortAnswer": "A Virtual WAN setting that sends Internet and/or private traffic through a security solution in the hub (Azure Firewall or a supported NVA) without managing route tables by hand.",
+          "keyPoints": [
+            {
+              "point": "Sends Internet/private traffic through the hub's firewall",
+              "keywords": ["firewall", "inspection", "through the hub", "nva"],
+              "weight": 3
+            },
+            {
+              "point": "Replaces hand-written route tables",
+              "keywords": ["no route tables", "automatically", "without udrs"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "How does Azure Virtual Network Manager differ from Virtual WAN?",
+          "shortAnswer": "Virtual Network Manager manages connectivity and security rules for your own VNets at scale - it can create hub-and-spoke or mesh topologies and apply admin rules - while Virtual WAN is the managed hub itself. AVNM organises your VNets; Virtual WAN replaces the hub.",
+          "keyPoints": [
+            {
+              "point": "AVNM manages topology and security rules across your VNets",
+              "keywords": [
+                "virtual network manager",
+                "avnm",
+                "mesh",
+                "admin rules",
+                "network groups"
+              ],
+              "weight": 3
+            },
+            {
+              "point": "Virtual WAN is the managed hub, not a management tool",
+              "keywords": ["managed hub", "replaces the hub"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Who runs the hub in each option?",
+        "Think about routing between many hubs and branches, and who writes the routes.",
+        "Self-managed = full control, you operate it; Virtual WAN = Microsoft-managed any-to-any transit, secured hubs, routing intent - better at scale."
+      ],
+      "analogy": "Self-managed hub-and-spoke is running your own airport: you choose every gate and rule, and you staff it. Virtual WAN is flying through a major airline's hub network: you give up some control, and connections between cities just work.",
+      "simpleExplanation": "You can build your own central network hub and manage all the routing, or let Microsoft run the hub for you with Virtual WAN. Building your own gives more control; Virtual WAN is easier when you have lots of regions or offices to connect.",
+      "related": ["itv-aznet-4", "itv-aznet-10", "itv-aznet-6"],
+      "scenarioVariant": {
+        "question": "A retailer with 300 stores on SD-WAN and three Azure regions wants every store to reach every region, with inspection. Which design?",
+        "shortAnswer": "Virtual WAN: one hub per region, SD-WAN branches connected to the nearest hub, secured hubs with Azure Firewall and routing intent for inspection, and automatic hub-to-hub transit."
+      }
+    },
+    {
+      "id": "itv-aznet-6",
+      "shortAnswer": "Every subnet gets system routes (local VNet, peerings, Internet), plus routes learned over BGP from gateways. A route table with user-defined routes overrides them by longest prefix match. To force spoke traffic through Azure Firewall, I put a 0.0.0.0/0 route (and routes to other spokes) with next hop = the firewall's private IP on the spoke subnets, and keep routing symmetric so return traffic also passes the firewall.",
+      "keyPoints": [
+        {
+          "point": "System routes exist by default for the VNet, peerings and Internet",
+          "keywords": ["system routes", "default routes", "system route"],
+          "weight": 2
+        },
+        {
+          "point": "User-defined routes in a route table override them",
+          "keywords": ["user-defined route", "udr", "route table", "custom route"],
+          "weight": 3
+        },
+        {
+          "point": "The most specific route wins (longest prefix match)",
+          "keywords": ["longest prefix", "most specific", "prefix length"],
+          "weight": 3
+        },
+        {
+          "point": "Next hop is the firewall's private IP (virtual appliance)",
+          "keywords": ["private ip", "virtual appliance", "next hop", "firewall ip"],
+          "weight": 3
+        },
+        {
+          "point": "BGP routes from gateways, and propagation can be disabled",
+          "keywords": [
+            "bgp",
+            "route propagation",
+            "propagate gateway routes",
+            "disable propagation"
+          ],
+          "weight": 1
+        },
+        {
+          "point": "Keep routing symmetric so return traffic hits the firewall too",
+          "keywords": ["symmetric", "symmetry", "asymmetric", "return path"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "A 0.0.0.0/0 route sends everything, including traffic to peered VNets, to the firewall.",
+          "triggers": ["0.0.0.0/0 covers everything", "default route catches peering"],
+          "correction": "More specific system routes (the VNet and peering prefixes) still win over /0; add explicit UDRs for the other spokes' ranges."
+        },
+        {
+          "mistake": "Point the route at the firewall's public IP.",
+          "triggers": ["public ip of the firewall", "firewall public ip"],
+          "correction": "The next hop is the firewall's private IP address, type VirtualAppliance."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How do you troubleshoot a route that is not being used?",
+          "shortAnswer": "Look at the effective routes on the VM's NIC (or Network Watcher's next hop tool) to see which route actually applies and why - usually a more specific route, a route table on the wrong subnet, or BGP propagation.",
+          "keyPoints": [
+            {
+              "point": "Check effective routes on the NIC",
+              "keywords": ["effective routes", "show-effective-route-table", "nic"],
+              "weight": 3
+            },
+            {
+              "point": "Network Watcher next hop",
+              "keywords": ["next hop", "network watcher"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "Which subnets have special rules about route tables?",
+          "shortAnswer": "GatewaySubnet should not get a 0.0.0.0/0 UDR; AzureBastionSubnet does not support route tables; and AzureFirewallSubnet only allows a default route to the Internet (forced tunnelling uses a management subnet).",
+          "keyPoints": [
+            {
+              "point": "GatewaySubnet restrictions",
+              "keywords": ["gatewaysubnet", "gateway subnet"],
+              "weight": 2
+            },
+            {
+              "point": "Bastion and Firewall subnets have their own rules",
+              "keywords": ["azurebastionsubnet", "azurefirewallsubnet", "forced tunnelling"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "What routes does a subnet have before you add anything?",
+        "How do you override them, and how does Azure pick between two matching routes?",
+        "System routes + UDRs in a route table, longest prefix match, next hop = firewall private IP, keep it symmetric."
+      ],
+      "analogy": "System routes are the road signs Azure puts up for you. A route table is you putting up your own, more specific signs that say 'all traffic to other towns, go via the checkpoint' - and the checkpoint is the firewall.",
+      "simpleExplanation": "Azure already knows how to send traffic inside your network and to the Internet. You can add your own rules that say 'send this traffic to the firewall first', and the most specific rule for an address always wins.",
+      "related": ["itv-aznet-4", "itv-aznet-7"],
+      "scenarioVariant": {
+        "question": "After adding a 0.0.0.0/0 UDR to the firewall, VMs in the spoke lose SSH from the hub's jump box. Why?",
+        "shortAnswer": "The return traffic is now routed to the firewall while the inbound path came directly over the peering - asymmetric routing - so the firewall drops replies it never saw start. Route the hub-to-spoke path through the firewall too, or exempt that range."
+      }
+    },
+    {
+      "id": "itv-aznet-7",
+      "shortAnswer": "Outbound Internet access comes from a public IP on the VM, outbound rules on a Standard Load Balancer, Azure Firewall, or - the recommended option - a NAT gateway on the subnet. New VNets are private by default, so default outbound access should not be relied on. Every outbound flow uses a SNAT port on a public IP; if an app opens too many short-lived connections it runs out of ports, which is SNAT port exhaustion - fixed by connection reuse and pooling, more IPs, or a NAT gateway.",
+      "keyPoints": [
+        {
+          "point": "Outbound options: VM public IP, load balancer outbound rules, Azure Firewall, NAT gateway",
+          "keywords": [
+            "public ip",
+            "outbound rules",
+            "load balancer",
+            "azure firewall",
+            "nat gateway"
+          ],
+          "weight": 2
+        },
+        {
+          "point": "NAT gateway is the recommended way for subnets",
+          "keywords": ["nat gateway", "recommended", "nat gw"],
+          "weight": 3
+        },
+        {
+          "point": "Default outbound access is being retired; subnets are private by default",
+          "keywords": ["default outbound", "private by default", "private subnet", "retired"],
+          "weight": 2
+        },
+        {
+          "point": "Outbound connections consume SNAT ports",
+          "keywords": ["snat", "snat port", "source nat", "ports"],
+          "weight": 3
+        },
+        {
+          "point": "Too many connections exhaust SNAT ports",
+          "keywords": ["exhaustion", "run out", "exhausted", "port exhaustion"],
+          "weight": 3
+        },
+        {
+          "point": "Fix with connection reuse and pooling",
+          "keywords": ["connection pooling", "reuse", "keep-alive", "httpclient", "pooling"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Every VM gets free, reliable outbound Internet access forever.",
+          "triggers": ["default outbound is fine", "always has internet"],
+          "correction": "Default outbound access is retired for new VNets and was never meant for production - use a NAT gateway or explicit outbound."
+        },
+        {
+          "mistake": "SNAT exhaustion means the VM is out of CPU or memory.",
+          "triggers": ["cpu", "memory", "out of resources"],
+          "correction": "It is a shortage of source ports on the public IP; CPU and memory can look perfectly normal."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "Why do private endpoints help with SNAT?",
+          "shortAnswer": "Traffic to a private endpoint stays on a private IP inside the VNet, so it does not go through SNAT at all and uses no public SNAT ports.",
+          "keyPoints": [
+            {
+              "point": "Private endpoint traffic is private, not SNATed",
+              "keywords": ["private ip", "no snat", "not translated", "stays private"],
+              "weight": 3
+            }
+          ]
+        },
+        {
+          "question": "How does NAT gateway interact with a VM that also has a public IP?",
+          "shortAnswer": "Once a NAT gateway is on the subnet, it takes over all outbound traffic, even for VMs with their own public IPs; the instance-level public IP still serves inbound connections.",
+          "keyPoints": [
+            {
+              "point": "NAT gateway takes precedence for outbound",
+              "keywords": ["takes precedence", "overrides", "all outbound"],
+              "weight": 3
+            },
+            {
+              "point": "The VM's public IP still handles inbound",
+              "keywords": ["inbound", "instance public ip"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "List the ways a VM can reach the Internet without anyone connecting to it first.",
+        "Each outbound connection needs something on the public IP that can run out.",
+        "VM public IP / LB outbound rules / Firewall / NAT gateway (recommended); SNAT ports and exhaustion; pooling as the fix."
+      ],
+      "analogy": "SNAT ports are like the phone lines in an office switchboard: everyone shares the same public number, each call takes a line, and if people keep hanging up and redialling instead of staying on the line, you run out of lines while the office itself is quiet.",
+      "simpleExplanation": "When your app calls something on the Internet, Azure gives that connection a temporary port on a shared public address. There are only so many ports, so an app that opens lots of new connections can run out. Reusing connections, or using a NAT gateway with more ports, fixes it.",
+      "related": ["itv-aznet-8", "itv-aznet-11"],
+      "scenarioVariant": {
+        "question": "A batch job on 20 VMs behind a Standard Load Balancer starts failing to reach an external API only when all VMs run at once. What is happening?",
+        "shortAnswer": "They share the load balancer's outbound SNAT ports; running together they exhaust them. Add a NAT gateway (64,512 ports per public IP, up to 16 IPs), assign more outbound IPs, and make the job reuse connections."
+      }
+    },
+    {
+      "id": "itv-aznet-8",
+      "shortAnswer": "Intermittent timeouts only at peak, with normal CPU and memory, point to outbound connection exhaustion - SNAT ports - not the app or the partner. I would prove it with App Service's 'Diagnose and solve problems' SNAT Port Exhaustion detector, then fix the code to reuse connections (one HttpClient, pooling), and add VNet integration with a NAT gateway for more ports, or private endpoints where the target supports them.",
+      "keyPoints": [
+        {
+          "point": "The pattern (peak only, normal CPU/memory) suggests SNAT/outbound exhaustion",
+          "keywords": ["snat", "port exhaustion", "outbound connection", "exhaustion"],
+          "weight": 3
+        },
+        {
+          "point": "Prove it before changing things",
+          "keywords": ["prove", "evidence", "confirm", "measure", "metrics"],
+          "weight": 2
+        },
+        {
+          "point": "Use the Diagnose and solve problems SNAT detector",
+          "keywords": ["diagnose and solve", "snat port exhaustion detector", "detector"],
+          "weight": 2
+        },
+        {
+          "point": "Fix the code to reuse connections",
+          "keywords": ["reuse", "pooling", "httpclient", "singleton", "keep-alive", "the code"],
+          "weight": 3
+        },
+        {
+          "point": "VNet integration with a NAT gateway adds ports",
+          "keywords": ["vnet integration", "nat gateway"],
+          "weight": 2
+        },
+        {
+          "point": "Private endpoints avoid SNAT where possible",
+          "keywords": ["private endpoint", "private link"],
+          "weight": 1
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Scale up the App Service plan.",
+          "triggers": ["scale up", "bigger plan", "more cpu", "add instances"],
+          "correction": "CPU and memory are fine; a bigger plan does not fix port reuse. Fix connection handling first."
+        },
+        {
+          "mistake": "The partner API is slow, so raise the timeout.",
+          "triggers": ["increase timeout", "raise the timeout", "partner is slow"],
+          "correction": "Longer timeouts hide the symptom and hold ports even longer."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How many SNAT ports does a NAT gateway provide?",
+          "shortAnswer": "64,512 SNAT ports per public IP address, and a NAT gateway can have up to 16 public IPs (about one million ports). Check the current documentation - limits change.",
+          "keyPoints": [
+            {
+              "point": "About 64,000 ports per public IP",
+              "keywords": ["64,512", "64512", "64k", "64,000"],
+              "weight": 3
+            },
+            {
+              "point": "Up to 16 public IPs",
+              "keywords": ["16 public ips", "sixteen"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "How would you do the same analysis for a VM behind a load balancer?",
+          "shortAnswer": "Check the load balancer's SNAT connection count and allocated/used SNAT port metrics in Azure Monitor, look at outbound rules and how many ports each VM gets, and consider a NAT gateway.",
+          "keyPoints": [
+            {
+              "point": "Load balancer SNAT metrics",
+              "keywords": [
+                "snat connection count",
+                "used snat ports",
+                "allocated snat ports",
+                "metrics"
+              ],
+              "weight": 3
+            },
+            {
+              "point": "Outbound rules port allocation",
+              "keywords": ["outbound rules", "ports per instance", "allocation"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Peak-only, CPU fine, 30-second timeouts on outbound calls. What resource is shared and finite?",
+        "Name the resource, then how you would prove it on App Service.",
+        "SNAT port exhaustion; prove with the Diagnose and solve SNAT detector; fix connection reuse, then VNet integration + NAT gateway or private endpoints."
+      ],
+      "analogy": "It is a busy restaurant where the food is fine and the chefs are idle, but customers wait because there are no free tables: the tables are the SNAT ports, and diners who never stay long but keep coming back are the new connections.",
+      "simpleExplanation": "The app is not slow - it is running out of the temporary ports it needs for each new outgoing connection when it is busy. Make the app reuse connections, and give it more ports with a NAT gateway.",
+      "related": ["itv-aznet-7", "itv-aznet-11"],
+      "scenarioVariant": {
+        "question": "A Function app on a Consumption plan calling a database over its public endpoint fails with 'connection refused' bursts during traffic spikes. What is your plan?",
+        "shortAnswer": "Suspect SNAT exhaustion; confirm with diagnostics; reuse a static client/connection pool across invocations; move to a plan with VNet integration and a NAT gateway or reach the database over a private endpoint."
+      }
+    },
+    {
+      "id": "itv-aznet-9",
+      "shortAnswer": "ExpressRoute is a private, dedicated connection from your network to Microsoft through a connectivity provider, not over the Internet - but it is not encrypted by default. You add MACsec on ExpressRoute Direct or IPsec over ExpressRoute if you need encryption, and for resilience you use both circuit connections and ideally two peering locations.",
+      "keyPoints": [
+        {
+          "point": "Private, dedicated connection, not over the public Internet",
+          "keywords": [
+            "private",
+            "dedicated",
+            "not over the internet",
+            "provider",
+            "connectivity provider"
+          ],
+          "weight": 3
+        },
+        {
+          "point": "Not encrypted by default",
+          "keywords": ["not encrypted", "no encryption", "unencrypted"],
+          "weight": 3
+        },
+        {
+          "point": "MACsec (ExpressRoute Direct) or IPsec over ExpressRoute for encryption",
+          "keywords": ["macsec", "ipsec", "vpn over expressroute"],
+          "weight": 2
+        },
+        {
+          "point": "Needs an ExpressRoute gateway in GatewaySubnet",
+          "keywords": ["expressroute gateway", "gatewaysubnet", "gateway"],
+          "weight": 1
+        },
+        {
+          "point": "Each circuit has two connections; use both for resilience",
+          "keywords": ["two connections", "redundant", "both connections", "two peering locations"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "ExpressRoute is encrypted because it is private.",
+          "triggers": ["encrypted because private", "is encrypted", "encrypted by default"],
+          "correction": "Private is not encrypted. Use MACsec or IPsec if you need encryption in transit."
+        },
+        {
+          "mistake": "ExpressRoute runs over the Internet like a VPN.",
+          "triggers": ["over the internet", "like a vpn"],
+          "correction": "It does not use the public Internet at all."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How would you design ExpressRoute for maximum resiliency?",
+          "shortAnswer": "Two circuits in two different peering locations, each with both connections active, zone-redundant ExpressRoute gateways, and optionally a site-to-site VPN as a backup path.",
+          "keyPoints": [
+            {
+              "point": "Two circuits in different peering locations",
+              "keywords": ["two circuits", "two peering locations", "different locations"],
+              "weight": 3
+            },
+            {
+              "point": "Zone-redundant gateway",
+              "keywords": ["zone-redundant", "ergw", "availability zones"],
+              "weight": 2
+            },
+            {
+              "point": "VPN as backup",
+              "keywords": ["vpn backup", "site-to-site backup"],
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "question": "What is ExpressRoute Global Reach?",
+          "shortAnswer": "It connects your on-premises sites to each other through Microsoft's backbone using their ExpressRoute circuits.",
+          "keyPoints": [
+            {
+              "point": "Links on-premises sites to each other via ExpressRoute",
+              "keywords": ["site to site", "on-premises to on-premises", "between circuits"],
+              "weight": 3
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "What does ExpressRoute avoid that a VPN uses?",
+        "Private and dedicated - but does that also mean encrypted?",
+        "Private dedicated circuit via a provider, not encrypted by default (MACsec/IPsec), two connections for resilience."
+      ],
+      "analogy": "ExpressRoute is a private road from your warehouse to Microsoft's: no public traffic on it, but the trucks are not locked - if the cargo is sensitive, you still need locks (MACsec or IPsec).",
+      "simpleExplanation": "ExpressRoute is a private line between your offices and Azure that does not go over the Internet. It is fast and predictable, but data on it is not encrypted unless you add encryption yourself.",
+      "related": ["itv-aznet-10"],
+      "scenarioVariant": {
+        "question": "Compliance requires all traffic between on-premises and Azure to be encrypted. You already have ExpressRoute. What do you do?",
+        "shortAnswer": "Add encryption: MACsec if you use ExpressRoute Direct, or IPsec tunnels over the ExpressRoute private peering (a VPN gateway over ExpressRoute) - and keep TLS at the application layer."
+      }
+    },
+    {
+      "id": "itv-aznet-10",
+      "shortAnswer": "For a critical app I would use ExpressRoute from both datacenters, ideally to two different peering locations, terminating on a zone-redundant ExpressRoute gateway, with a site-to-site VPN as a backup path. A VPN alone runs over the Internet with variable latency; ExpressRoute gives private, predictable connectivity, and combining them gives resilience if a circuit or provider fails.",
+      "keyPoints": [
+        {
+          "point": "Site-to-site VPN runs over the Internet with an Azure VPN gateway",
+          "keywords": ["site-to-site vpn", "s2s", "vpn gateway", "ipsec", "over the internet"],
+          "weight": 2
+        },
+        {
+          "point": "ExpressRoute gives private, predictable connectivity",
+          "keywords": ["expressroute", "private", "predictable", "dedicated"],
+          "weight": 2
+        },
+        {
+          "point": "ExpressRoute from both datacenters",
+          "keywords": ["both datacenters", "each datacenter", "two datacenters", "two circuits"],
+          "weight": 3
+        },
+        {
+          "point": "Different peering locations for resilience",
+          "keywords": ["two peering locations", "different peering locations", "diverse"],
+          "weight": 2
+        },
+        {
+          "point": "Zone-redundant ExpressRoute gateway",
+          "keywords": ["zone-redundant", "zone redundant", "availability zones"],
+          "weight": 2
+        },
+        {
+          "point": "VPN as a backup path",
+          "keywords": ["vpn as backup", "backup", "failover", "secondary"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "One ExpressRoute circuit is redundant enough because it has two connections.",
+          "triggers": ["one circuit is enough", "single circuit"],
+          "correction": "Both connections terminate in the same peering location; a location or provider outage takes the whole circuit down."
+        },
+        {
+          "mistake": "VPN and ExpressRoute cannot coexist.",
+          "triggers": ["cannot coexist", "either or"],
+          "correction": "They can share a VNet: ExpressRoute and VPN gateways coexist in GatewaySubnet, and BGP prefers ExpressRoute."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How does BGP decide between ExpressRoute and VPN routes?",
+          "shortAnswer": "For the same prefix Azure prefers ExpressRoute over VPN; on-premises you influence the choice with AS path prepending, local preference or more specific prefixes.",
+          "keyPoints": [
+            {
+              "point": "ExpressRoute is preferred for the same prefix",
+              "keywords": ["prefers expressroute", "expressroute preferred"],
+              "weight": 3
+            },
+            {
+              "point": "Influence with AS path prepending or more specific prefixes",
+              "keywords": ["as path", "prepending", "local preference", "more specific"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "What does FastPath change?",
+          "shortAnswer": "FastPath sends traffic from the on-premises network straight to the VMs, bypassing the ExpressRoute gateway in the data path, for lower latency and higher throughput. It needs an Ultra Performance or ErGw3AZ-class gateway; check current feature limits.",
+          "keyPoints": [
+            {
+              "point": "Bypasses the gateway in the data path",
+              "keywords": ["bypass the gateway", "bypasses", "direct to vms"],
+              "weight": 3
+            },
+            {
+              "point": "Requires a high-performance gateway SKU",
+              "keywords": ["ultra performance", "ergw3az", "gateway sku"],
+              "weight": 1
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Compare what a VPN and ExpressRoute each run over.",
+        "Critical app, two datacenters: what single failures must you survive?",
+        "ExpressRoute from both datacenters, two peering locations, zone-redundant gateway, VPN as backup."
+      ],
+      "analogy": "It is like connecting two factories to a port with private rail lines from different stations, plus a public road for emergencies: the rail is fast and predictable, the road keeps goods moving if a rail line closes.",
+      "simpleExplanation": "A VPN is a secure tunnel over the Internet; ExpressRoute is a private line. For something important, use private lines from both datacenters, through different locations, and keep a VPN as a spare.",
+      "related": ["itv-aznet-9", "itv-aznet-5"],
+      "scenarioVariant": {
+        "question": "Your single ExpressRoute provider has an outage and the business app is unreachable. How do you stop this happening again?",
+        "shortAnswer": "Add a second circuit with a different provider at a different peering location, make the gateway zone-redundant, and keep a site-to-site VPN as a tested backup path."
+      }
+    },
+    {
+      "id": "itv-aznet-11",
+      "shortAnswer": "A service endpoint keeps traffic from your subnet to a PaaS service on the Azure backbone, but the service still has a public endpoint and you restrict it with firewall rules. A private endpoint puts a NIC with a private IP for one specific resource into your subnet, so you can disable public access entirely and reach it from on-premises and peered VNets - at the cost of private DNS. For new designs I prefer private endpoints with public access disabled.",
+      "keyPoints": [
+        {
+          "point": "Service endpoints keep using the service's public endpoint",
+          "keywords": ["service endpoint", "public endpoint", "public ip", "backbone"],
+          "weight": 2
+        },
+        {
+          "point": "Private endpoint gives the resource a private IP in your subnet",
+          "keywords": ["private endpoint", "private ip", "private link", "nic in your subnet"],
+          "weight": 3
+        },
+        {
+          "point": "With private endpoints you can disable public access",
+          "keywords": [
+            "disable public access",
+            "public network access disabled",
+            "no public access"
+          ],
+          "weight": 3
+        },
+        {
+          "point": "Private endpoints work from on-premises and peered VNets",
+          "keywords": ["on-premises", "peered", "on-prem", "hybrid"],
+          "weight": 2
+        },
+        {
+          "point": "A private endpoint maps to one resource",
+          "keywords": ["one resource", "specific resource", "per resource"],
+          "weight": 1
+        },
+        {
+          "point": "Private endpoints need private DNS",
+          "keywords": ["private dns", "dns zone", "privatelink"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Service endpoints give the service a private IP.",
+          "triggers": ["service endpoint private ip"],
+          "correction": "No - the service keeps its public IP; your subnet's traffic just takes the backbone and is identified by the firewall rule."
+        },
+        {
+          "mistake": "Private endpoints work without any DNS changes.",
+          "triggers": ["no dns", "dns not needed"],
+          "correction": "The public name must resolve to the private IP, which needs a privatelink private DNS zone (or equivalent)."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "Why does a private endpoint need DNS changes and a service endpoint does not?",
+          "shortAnswer": "With a service endpoint you still connect to the public IP, so public DNS is correct. A private endpoint has a new private IP, so the service's name must resolve to it - via a privatelink.* private DNS zone linked to your VNets.",
+          "keyPoints": [
+            {
+              "point": "Service endpoint still uses the public IP",
+              "keywords": ["public ip", "same address"],
+              "weight": 2
+            },
+            {
+              "point": "Private endpoint needs the name to resolve to a private IP",
+              "keywords": ["resolve to private ip", "privatelink", "private dns zone"],
+              "weight": 3
+            }
+          ]
+        },
+        {
+          "question": "What are service endpoint policies?",
+          "shortAnswer": "Policies on a subnet that restrict which specific storage accounts traffic over the service endpoint may reach, to prevent data exfiltration to other accounts.",
+          "keyPoints": [
+            {
+              "point": "Restrict which storage accounts can be reached",
+              "keywords": ["specific storage accounts", "allowed accounts", "restrict"],
+              "weight": 3
+            },
+            {
+              "point": "Prevents data exfiltration",
+              "keywords": ["exfiltration", "data leak"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Ask yourself what IP address the client connects to in each case.",
+        "One keeps the public endpoint, the other brings the service into your subnet.",
+        "Service endpoint: public endpoint + firewall rule, backbone; private endpoint: private IP for one resource, public access off, on-prem reachable, needs private DNS."
+      ],
+      "analogy": "A service endpoint is a reserved express lane to a shop's public front door. A private endpoint is the shop opening a private door inside your building - and you can then lock the public front door completely.",
+      "simpleExplanation": "Both let your Azure network reach services like Storage more safely. A service endpoint still uses the service's public address but limits who can use it. A private endpoint gives the service a private address inside your network, so you can turn the public address off.",
+      "related": ["itv-aznet-12", "itv-aznet-13", "itv-aznet-14"],
+      "scenarioVariant": {
+        "question": "An auditor says storage accounts must not be reachable from the Internet at all, but on-premises apps must reach them. Which option and what else is needed?",
+        "shortAnswer": "Private endpoints with public network access disabled, private DNS zones for privatelink.blob.core.windows.net linked to the VNets, and on-premises DNS forwarding to an Azure DNS Private Resolver inbound endpoint."
+      }
+    },
+    {
+      "id": "itv-aznet-12",
+      "shortAnswer": "Clients keep using the public name, like account.blob.core.windows.net. Public DNS returns a CNAME to account.privatelink.blob.core.windows.net; if the client's resolver can see a privatelink private DNS zone with an A record for it, the name resolves to the private IP. At scale I keep one set of privatelink zones centrally in the hub, link them to every VNet, let private DNS zone groups create the records, and point on-premises DNS at an Azure DNS Private Resolver inbound endpoint.",
+      "keyPoints": [
+        {
+          "point": "Clients use the public FQDN, which CNAMEs to privatelink",
+          "keywords": ["public name", "public fqdn", "cname", "privatelink"],
+          "weight": 3
+        },
+        {
+          "point": "A private DNS zone holds the A record with the private IP",
+          "keywords": ["private dns zone", "a record", "privatelink zone"],
+          "weight": 3
+        },
+        {
+          "point": "The zone must be linked to the VNets that resolve it",
+          "keywords": ["linked", "virtual network link", "vnet link"],
+          "weight": 2
+        },
+        {
+          "point": "One central set of privatelink zones, not one per team",
+          "keywords": ["central", "one set", "hub", "centralised", "shared zones"],
+          "weight": 2
+        },
+        {
+          "point": "Private DNS zone groups manage the records automatically",
+          "keywords": ["zone group", "private dns zone group", "automatic records"],
+          "weight": 2
+        },
+        {
+          "point": "On-premises uses Azure DNS Private Resolver inbound endpoint",
+          "keywords": [
+            "private resolver",
+            "inbound endpoint",
+            "conditional forwarder",
+            "on-premises"
+          ],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Clients should connect to the privatelink.* name.",
+          "triggers": ["connect to privatelink", "use the privatelink name"],
+          "correction": "Always connect to the public name - TLS certificates and service routing expect it; the CNAME chain does the rest."
+        },
+        {
+          "mistake": "Each application team creates its own privatelink zone.",
+          "triggers": ["each team its own zone", "zone per vnet"],
+          "correction": "Duplicate zones break resolution for everyone not linked to the right one. Keep one central set."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "Why must you keep connecting to the public FQDN, not the privatelink one?",
+          "shortAnswer": "The service's TLS certificate and host routing are for the public name; privatelink names are an internal DNS detail and can change.",
+          "keyPoints": [
+            {
+              "point": "TLS certificate is issued for the public name",
+              "keywords": ["tls", "certificate", "ssl", "cert"],
+              "weight": 3
+            },
+            {
+              "point": "privatelink is a DNS implementation detail",
+              "keywords": ["implementation detail", "internal", "cname"],
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "question": "How would you automate zone group creation for every new private endpoint?",
+          "shortAnswer": "With an Azure Policy using DeployIfNotExists that adds a private DNS zone group pointing at the central zone whenever a private endpoint of that type is created.",
+          "keyPoints": [
+            {
+              "point": "Azure Policy DeployIfNotExists",
+              "keywords": ["azure policy", "deployifnotexists", "dine", "policy"],
+              "weight": 3
+            },
+            {
+              "point": "Points at the central zone",
+              "keywords": ["central zone", "hub zone"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Start with the name the application actually uses.",
+        "Follow the CNAME - where does the answer for the privatelink name come from?",
+        "Public FQDN -> CNAME privatelink -> A record in a linked private DNS zone; central zones, zone groups, Private Resolver for on-premises."
+      ],
+      "analogy": "The public phone book says 'for this shop, ask reception'. Inside your building, reception has a private extension number for it. Visitors from your other offices must ring your reception (the resolver) to get that extension.",
+      "simpleExplanation": "Your app still uses the normal service name. Azure DNS points that name at a special 'privatelink' name, and a private DNS zone in your network answers it with the private address. Keep those zones in one central place and make every network use them.",
+      "related": ["itv-aznet-11", "itv-aznet-13", "itv-aznet-20"],
+      "scenarioVariant": {
+        "question": "On-premises servers resolve a storage account to its public IP even though it has a private endpoint. What is missing?",
+        "shortAnswer": "On-premises DNS needs a conditional forwarder for blob.core.windows.net (or the privatelink zone) to an Azure DNS Private Resolver inbound endpoint in a VNet linked to the privatelink zone."
+      }
+    },
+    {
+      "id": "itv-aznet-13",
+      "shortAnswer": "nslookup returning a public IP means DNS is not resolving to the private endpoint, so the request goes to the public endpoint - which is disabled, hence 403. I would check the privatelink.blob.core.windows.net private DNS zone has an A record for the account, that the zone is linked to the spoke VNet (or the hub, if spokes use central DNS), and which resolver the app actually uses - custom DNS servers must forward to Azure DNS.",
+      "keyPoints": [
+        {
+          "point": "A public IP from nslookup means private DNS is not working",
+          "keywords": ["public ip", "dns", "nslookup", "resolves publicly"],
+          "weight": 3
+        },
+        {
+          "point": "The 403 is the public endpoint rejecting traffic",
+          "keywords": ["public endpoint", "disabled", "403", "public access disabled"],
+          "weight": 2
+        },
+        {
+          "point": "Check the private DNS zone has the A record",
+          "keywords": ["a record", "private dns zone", "privatelink.blob"],
+          "weight": 3
+        },
+        {
+          "point": "The zone must be linked to the VNet the app uses",
+          "keywords": ["linked", "vnet link", "link to the spoke"],
+          "weight": 3
+        },
+        {
+          "point": "Check which DNS resolver the app uses",
+          "keywords": ["which resolver", "custom dns", "dns servers", "168.63.129.16"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "403 means a permissions/RBAC problem.",
+          "triggers": ["rbac", "permission", "role assignment", "access key"],
+          "correction": "Here it is network: the request hit the public endpoint, which public access settings reject. Fix DNS, not roles."
+        },
+        {
+          "mistake": "Re-enable public access to fix it.",
+          "triggers": ["enable public access", "turn public access back on"],
+          "correction": "That defeats the private endpoint. Fix name resolution instead."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How would this differ for an on-premises client?",
+          "shortAnswer": "On-premises DNS must forward the zone to an Azure DNS Private Resolver inbound endpoint (or a DNS forwarder VM) in a VNet linked to the privatelink zone; on-premises cannot query 168.63.129.16 directly.",
+          "keyPoints": [
+            {
+              "point": "Forward to Private Resolver inbound endpoint",
+              "keywords": ["private resolver", "inbound endpoint", "conditional forwarder"],
+              "weight": 3
+            },
+            {
+              "point": "168.63.129.16 is not reachable from on-premises",
+              "keywords": ["168.63.129.16", "not reachable"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "What does a duplicate private DNS zone look like in practice?",
+          "shortAnswer": "Two privatelink.blob.core.windows.net zones linked to different VNets: each VNet only sees records in its own zone, so some clients resolve the private IP and others get NXDOMAIN-style failures or the public IP.",
+          "keyPoints": [
+            {
+              "point": "Two zones with the same name linked to different VNets",
+              "keywords": ["two zones", "duplicate", "same name"],
+              "weight": 3
+            },
+            {
+              "point": "Clients resolve differently depending on VNet",
+              "keywords": ["inconsistent", "some clients", "depends on vnet"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "The 403 and the public IP are the same problem. Which one comes first?",
+        "Think about where the private IP for that name is supposed to come from.",
+        "DNS: privatelink zone A record exists, zone linked to the spoke (or central DNS path), app's resolver forwards to Azure DNS."
+      ],
+      "analogy": "You moved the shop to a private entrance and locked the front door, but the directory in the spoke still lists the old street address, so everyone walks to the locked front door and is turned away.",
+      "simpleExplanation": "The app is still looking up the storage account's public address, and public access is turned off, so it is refused. Make sure the private DNS zone has the account's private address and is connected to the network the app is in.",
+      "related": ["itv-aznet-12", "itv-aznet-11", "itv-aznet-20"],
+      "scenarioVariant": {
+        "question": "A Key Vault with a private endpoint works from the hub but fails from one new spoke. Same error pattern. Where do you look first?",
+        "shortAnswer": "Whether privatelink.vaultcore.azure.net is linked to the new spoke (or the spoke uses the central DNS servers), then the spoke's DNS settings."
+      }
+    },
+    {
+      "id": "itv-aznet-14",
+      "shortAnswer": "A private endpoint is a NIC with a private IP in your subnet for one resource and one sub-resource, such as a storage account's blob service. It is reachable from anywhere routed to that subnet - peered VNets and on-premises - and NSGs and UDRs can be applied to private endpoint traffic once network policies are enabled on the subnet.",
+      "keyPoints": [
+        {
+          "point": "It is a private IP (NIC) in your subnet",
+          "keywords": ["private ip", "nic", "network interface", "in your subnet"],
+          "weight": 3
+        },
+        {
+          "point": "Reachable from peered VNets and on-premises",
+          "keywords": ["peered", "on-premises", "anywhere routed", "vpn", "expressroute"],
+          "weight": 2
+        },
+        {
+          "point": "NSGs and UDRs can apply when network policies are enabled",
+          "keywords": ["nsg", "udr", "network policies", "route table"],
+          "weight": 2
+        },
+        {
+          "point": "One private endpoint per resource and sub-resource",
+          "keywords": ["one resource", "sub-resource", "blob", "groupid", "per sub-resource"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "One private endpoint covers blob, file, queue and table.",
+          "triggers": ["covers all services", "one endpoint for everything"],
+          "correction": "Each sub-resource (blob, file, dfs, queue, table) needs its own private endpoint and DNS zone."
+        },
+        {
+          "mistake": "Private endpoints cannot be reached from on-premises.",
+          "triggers": ["only from the vnet", "not from on-premises"],
+          "correction": "They can, over VPN or ExpressRoute, as long as DNS resolves to the private IP."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "What does a private endpoint cost, and when does that matter?",
+          "shortAnswer": "There is an hourly charge per endpoint plus a per-GB data processing charge; it matters with many endpoints (one per sub-resource per account) or high data volumes. Check current pricing.",
+          "keyPoints": [
+            {
+              "point": "Hourly charge per endpoint",
+              "keywords": ["hourly", "per hour", "per endpoint"],
+              "weight": 2
+            },
+            {
+              "point": "Per-GB data processed",
+              "keywords": ["per gb", "data processing", "data processed"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "Do you need a private endpoint in every VNet that uses the resource?",
+          "shortAnswer": "No - one private endpoint in a hub or shared VNet is reachable from peered VNets, as long as they resolve its name to the private IP.",
+          "keyPoints": [
+            {
+              "point": "One endpoint can serve peered VNets",
+              "keywords": ["one endpoint", "shared", "hub", "peered"],
+              "weight": 3
+            },
+            {
+              "point": "DNS must resolve to it everywhere",
+              "keywords": ["dns", "resolve"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "What does a private endpoint physically add to your subnet?",
+        "Think about who can route to that subnet, and how specific the endpoint is.",
+        "A private IP/NIC for one resource + sub-resource, reachable over peering and hybrid links, NSG/UDR support with network policies."
+      ],
+      "analogy": "It is a dedicated extension cable from one appliance into one specific socket in your room: anyone who can reach the room can use that socket, but each appliance (and each of its functions) gets its own cable.",
+      "simpleExplanation": "A private endpoint puts a private address for one Azure service into your network. Anything that can reach that part of your network can use it, and you need a separate one for each part of a service, like blob or file storage.",
+      "related": ["itv-aznet-11", "itv-aznet-12"],
+      "scenarioVariant": {
+        "question": "An app uses blob and queue storage on the same account through a private endpoint, and queue calls fail. Why?",
+        "shortAnswer": "The private endpoint only covers the blob sub-resource; queue needs its own private endpoint (and privatelink.queue zone)."
+      }
+    },
+    {
+      "id": "itv-aznet-15",
+      "shortAnswer": "Azure Bastion is a managed service that gives you RDP and SSH to VMs from the Azure portal or native client over TLS, so VMs need no public IPs and you never expose ports 3389 or 22 to the Internet. It lives in a dedicated subnet named AzureBastionSubnet (a /26 or larger) and comes in Developer, Basic, Standard and Premium tiers with different features.",
+      "keyPoints": [
+        {
+          "point": "Managed RDP/SSH over TLS from the portal or native client",
+          "keywords": ["rdp", "ssh", "tls", "443", "portal", "native client", "browser"],
+          "weight": 3
+        },
+        {
+          "point": "VMs need no public IPs",
+          "keywords": ["no public ip", "without public ip", "no public ips", "private only"],
+          "weight": 3
+        },
+        {
+          "point": "No ports 22/3389 exposed to the Internet",
+          "keywords": ["3389", "22", "no open ports", "not exposed"],
+          "weight": 2
+        },
+        {
+          "point": "Dedicated AzureBastionSubnet of /26 or larger",
+          "keywords": ["azurebastionsubnet", "/26", "dedicated subnet"],
+          "weight": 2
+        },
+        {
+          "point": "SKUs/tiers differ in features",
+          "keywords": ["developer", "basic", "standard", "premium", "sku", "tier"],
+          "weight": 1
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "You can name the subnet anything.",
+          "triggers": ["any name", "bastion-subnet"],
+          "correction": "It must be called exactly AzureBastionSubnet, and be /26 or larger."
+        },
+        {
+          "mistake": "Bastion replaces NSGs on the VMs.",
+          "triggers": ["no nsg needed", "replaces nsg"],
+          "correction": "VM NSGs still apply; allow RDP/SSH from the Bastion subnet only."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "What NSG rules does AzureBastionSubnet need if you attach one?",
+          "shortAnswer": "Inbound 443 from Internet and from GatewayManager, and from AzureLoadBalancer; outbound 22/3389 to the VNet, 443 to AzureCloud, and the Bastion data-plane ports 8080 and 5701 within VirtualNetwork. Check the docs for the current list.",
+          "keyPoints": [
+            {
+              "point": "Inbound 443 from Internet and GatewayManager",
+              "keywords": ["443", "gatewaymanager", "internet"],
+              "weight": 3
+            },
+            {
+              "point": "Outbound 22/3389 to the VMs",
+              "keywords": ["22", "3389", "outbound"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "How would you give admins access for only two hours?",
+          "shortAnswer": "Make them eligible for a role that allows Bastion connections through Privileged Identity Management, with a two-hour activation and approval - or use just-in-time VM access in Defender for Cloud.",
+          "keyPoints": [
+            {
+              "point": "PIM eligible role with time limit",
+              "keywords": ["pim", "privileged identity management", "eligible", "just-in-time"],
+              "weight": 3
+            },
+            {
+              "point": "JIT VM access in Defender for Cloud",
+              "keywords": ["jit", "defender for cloud"],
+              "weight": 1
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "How do admins usually reach a VM, and what does that expose?",
+        "A managed service, a specially named subnet, and something the VMs no longer need.",
+        "RDP/SSH over TLS via portal/native client, no public IPs or open 22/3389, AzureBastionSubnet /26+, tiers."
+      ],
+      "analogy": "Bastion is a staffed security gate into a gated community: instead of every house having its own front door to the street, visitors are checked at one gate and walked to the house.",
+      "simpleExplanation": "Instead of giving every VM a public address so admins can log in, Bastion gives you a secure login through the Azure portal. The VMs stay private and the risky ports stay closed.",
+      "related": ["itv-aznet-3", "itv-aznet-1"],
+      "scenarioVariant": {
+        "question": "Security found port 3389 open to the Internet on 40 VMs. How do you remove it without losing admin access?",
+        "shortAnswer": "Deploy Bastion in each hub/VNet (AzureBastionSubnet /26), test access, then remove the VMs' public IPs and the NSG rules allowing 3389 from Internet, allowing it only from the Bastion subnet."
+      }
+    },
+    {
+      "id": "itv-aznet-16",
+      "shortAnswer": "I choose by layer and scope. Azure Load Balancer is layer 4 and regional; Application Gateway is layer 7, regional, with WAF and path-based routing; Front Door is layer 7 and global, with CDN, WAF and fast failover between regions; Traffic Manager is DNS-based global routing that never proxies traffic. A global web app usually uses Front Door, a regional internal web app Application Gateway, and non-HTTP traffic Load Balancer.",
+      "keyPoints": [
+        {
+          "point": "Choose by layer (4 vs 7) and regional vs global",
+          "keywords": ["layer 4", "layer 7", "regional", "global", "l4", "l7"],
+          "weight": 3
+        },
+        {
+          "point": "Load Balancer: layer 4, regional, TCP/UDP",
+          "keywords": ["load balancer", "tcp", "udp", "layer 4"],
+          "weight": 2
+        },
+        {
+          "point": "Application Gateway: layer 7, regional, WAF, path routing",
+          "keywords": ["application gateway", "app gateway", "appgw", "waf", "path-based"],
+          "weight": 2
+        },
+        {
+          "point": "Front Door: layer 7, global, CDN, WAF, anycast",
+          "keywords": ["front door", "afd", "global", "cdn", "anycast", "edge"],
+          "weight": 2
+        },
+        {
+          "point": "Traffic Manager: DNS-based, never proxies traffic",
+          "keywords": ["traffic manager", "dns-based", "dns", "does not proxy", "never proxies"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Traffic Manager proxies requests to the closest region.",
+          "triggers": ["traffic manager proxies", "traffic manager forwards"],
+          "correction": "It only answers DNS queries; clients connect directly to the endpoint it returns."
+        },
+        {
+          "mistake": "Load Balancer can route by URL path.",
+          "triggers": ["load balancer url", "load balancer path"],
+          "correction": "That is layer 7 - Application Gateway or Front Door."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "Why would you put Application Gateway behind Front Door?",
+          "shortAnswer": "Front Door handles global entry, caching and failover between regions, while Application Gateway in each region gives private, VNet-integrated layer 7 routing to private backends and a second WAF layer close to the app.",
+          "keyPoints": [
+            {
+              "point": "Front Door for global entry and failover",
+              "keywords": ["global", "failover", "edge", "caching"],
+              "weight": 2
+            },
+            {
+              "point": "App Gateway for regional private routing to backends",
+              "keywords": ["regional", "private backends", "vnet", "internal"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "What is the difference between Front Door Standard and Premium?",
+          "shortAnswer": "Premium adds Private Link to origins and the managed WAF rule sets with bot protection; Standard has custom WAF rules and CDN. Check the current feature comparison.",
+          "keyPoints": [
+            {
+              "point": "Premium adds Private Link origins",
+              "keywords": ["private link", "private origin"],
+              "weight": 3
+            },
+            {
+              "point": "Premium adds managed WAF rules / bot protection",
+              "keywords": ["managed rules", "bot protection", "drs"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Two questions decide it: which OSI layer, and how many regions.",
+        "One of the four never sees your HTTP traffic at all.",
+        "LB = L4 regional; App Gateway = L7 regional + WAF; Front Door = L7 global + CDN/WAF; Traffic Manager = DNS-only global."
+      ],
+      "analogy": "Traffic Manager is a receptionist who tells you which office to drive to; Front Door is a valet at a global entrance who parks your car in the best office; Application Gateway is the internal concierge in one building; Load Balancer is the turnstile that just spreads people across lifts.",
+      "simpleExplanation": "Load Balancer spreads network connections in one region. Application Gateway understands web requests in one region and can protect them with a firewall. Front Door does the same globally. Traffic Manager just tells clients which region to use via DNS.",
+      "related": ["itv-aznet-17", "itv-aznet-18", "itv-aznet-19"],
+      "scenarioVariant": {
+        "question": "A company runs the same web app in UK South and West Europe and wants the lowest latency and automatic regional failover, with WAF. Which service(s)?",
+        "shortAnswer": "Azure Front Door (Premium if origins should be private) with WAF, health probes to both regional origins, and optionally Application Gateway in each region for private routing."
+      }
+    },
+    {
+      "id": "itv-aznet-17",
+      "shortAnswer": "The origin must only accept traffic that came through my Front Door profile. Best is Front Door Premium with a Private Link origin, so the app has no public endpoint at all. Otherwise I restrict the origin's network access to the AzureFrontDoor.Backend service tag and also check the X-Azure-FDID header matches my profile ID - the tag alone allows every Front Door customer. WAF goes in Prevention mode once tuned, with rate limiting.",
+      "keyPoints": [
+        {
+          "point": "Origin must only accept traffic from your Front Door profile",
+          "keywords": [
+            "only from front door",
+            "through front door",
+            "restrict origin",
+            "lock down the origin"
+          ],
+          "weight": 3
+        },
+        {
+          "point": "Premium with Private Link origin removes the public endpoint",
+          "keywords": ["private link", "premium", "private origin", "no public endpoint"],
+          "weight": 3
+        },
+        {
+          "point": "Restrict to the AzureFrontDoor.Backend service tag",
+          "keywords": ["azurefrontdoor.backend", "service tag", "front door ips"],
+          "weight": 2
+        },
+        {
+          "point": "Also check the X-Azure-FDID header for your profile",
+          "keywords": ["x-azure-fdid", "fdid", "header", "front door id"],
+          "weight": 3
+        },
+        {
+          "point": "WAF in Prevention mode, with rate limiting",
+          "keywords": ["prevention", "rate limiting", "waf", "detection first"],
+          "weight": 1
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Allowing the AzureFrontDoor.Backend service tag is enough.",
+          "triggers": ["service tag is enough", "only the service tag"],
+          "correction": "That tag covers every customer's Front Door; an attacker can create their own profile pointing at your origin. Check X-Azure-FDID too, or use Private Link."
+        },
+        {
+          "mistake": "WAF should be turned on in Prevention mode immediately.",
+          "triggers": ["prevention straight away", "prevention immediately"],
+          "correction": "Start in Detection, review logs, tune exclusions, then switch to Prevention to avoid blocking real users."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How do you tune WAF false positives safely?",
+          "shortAnswer": "Run in Detection mode, analyse the WAF logs for rules hitting legitimate traffic, add narrow exclusions or rule overrides for specific fields, then switch to Prevention and keep monitoring.",
+          "keyPoints": [
+            {
+              "point": "Start in Detection mode and read the logs",
+              "keywords": ["detection", "logs", "log analytics"],
+              "weight": 3
+            },
+            {
+              "point": "Narrow exclusions, then Prevention",
+              "keywords": ["exclusions", "override", "prevention"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "What does Private Link to the origin require?",
+          "shortAnswer": "Front Door Premium and an origin that supports Private Link (App Service, Storage, internal Load Balancer via Private Link service...); the origin owner must approve the private endpoint connection.",
+          "keyPoints": [
+            {
+              "point": "Front Door Premium",
+              "keywords": ["premium"],
+              "weight": 3
+            },
+            {
+              "point": "Origin owner approves the connection",
+              "keywords": ["approve", "approval", "pending connection"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "The attacker's trick is skipping the front door entirely. What must the origin check?",
+        "A network-level restriction alone is not unique to you. What is?",
+        "Premium + Private Link origin; or AzureFrontDoor.Backend tag + X-Azure-FDID header check; WAF Detection then Prevention."
+      ],
+      "analogy": "Front Door is the building's security desk. If the back door only checks that a visitor wears 'some security company's' badge, anyone can buy a badge - it must check for your company's badge (the FDID), or better, have no back door at all (Private Link).",
+      "simpleExplanation": "Putting Front Door in front of your app is pointless if people can still go straight to the app. Make the app only accept traffic from your own Front Door - ideally by making the app completely private.",
+      "related": ["itv-aznet-16", "itv-aznet-18"],
+      "scenarioVariant": {
+        "question": "A penetration tester reaches your App Service directly via its azurewebsites.net name, bypassing Front Door's WAF. Fix it.",
+        "shortAnswer": "Add App Service access restrictions allowing only the AzureFrontDoor.Backend service tag with the X-Azure-FDID header set to your profile ID - or move to Front Door Premium with a Private Link origin and disable public access."
+      }
+    },
+    {
+      "id": "itv-aznet-18",
+      "shortAnswer": "A 502 from Application Gateway means it could not get a valid response from any backend, so I start at Backend health in the portal, which shows each server's status and the reason. Common causes: the health probe path or host is wrong, TLS to the backend fails (certificate not trusted or name mismatch), NSGs or UDRs block the gateway subnet, backend timeouts, or DNS for an FQDN backend. Access logs then show which requests failed and why.",
+      "keyPoints": [
+        {
+          "point": "502 means no valid response from any backend",
+          "keywords": [
+            "no valid response",
+            "backend unreachable",
+            "could not get a valid response",
+            "unhealthy backend"
+          ],
+          "weight": 2
+        },
+        {
+          "point": "Start at Backend health, which gives the reason",
+          "keywords": ["backend health", "reason", "health status"],
+          "weight": 3
+        },
+        {
+          "point": "Health probe path, host or status codes",
+          "keywords": ["health probe", "probe path", "probe", "host header", "status code"],
+          "weight": 2
+        },
+        {
+          "point": "TLS to the backend: trusted certificate and name",
+          "keywords": ["tls", "certificate", "ssl", "trusted root", "cn mismatch", "sni"],
+          "weight": 2
+        },
+        {
+          "point": "NSGs/UDRs on the gateway subnet, timeouts, DNS",
+          "keywords": ["nsg", "udr", "route", "timeout", "dns"],
+          "weight": 2
+        },
+        {
+          "point": "Access logs show the failing requests",
+          "keywords": ["access logs", "logs", "diagnostic logs", "log analytics"],
+          "weight": 1
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "If the VMs are healthy, the problem is in Application Gateway itself.",
+          "triggers": ["app gateway is broken", "restart the gateway"],
+          "correction": "Healthy from the app team's view is not healthy from the gateway's view - check probes, TLS and network path from the gateway subnet."
+        },
+        {
+          "mistake": "A 502 is the same as a 504.",
+          "triggers": ["same as 504"],
+          "correction": "504 is a timeout waiting for the backend; 502 is an invalid or no response."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "What does a 504 from Application Gateway mean instead?",
+          "shortAnswer": "The backend did not respond within the request timeout (default 20 seconds), so the gateway gave up - look at slow backends or raise the timeout in the backend settings.",
+          "keyPoints": [
+            {
+              "point": "Backend did not respond in time",
+              "keywords": ["timeout", "did not respond in time", "slow"],
+              "weight": 3
+            },
+            {
+              "point": "Request timeout setting in backend settings",
+              "keywords": ["request timeout", "backend settings", "20 seconds"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "How would you monitor backend health proactively?",
+          "shortAnswer": "Alert on the Unhealthy Host Count and Healthy Host Count metrics, and on failed requests by backend, with diagnostic logs sent to Log Analytics.",
+          "keyPoints": [
+            {
+              "point": "Unhealthy Host Count metric",
+              "keywords": ["unhealthy host count", "healthy host count", "metric"],
+              "weight": 3
+            },
+            {
+              "point": "Alerts and diagnostic logs",
+              "keywords": ["alert", "log analytics", "diagnostic"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "What does Application Gateway say about each backend server?",
+        "Healthy for the app team, unhealthy for the gateway: what does the gateway test that people do not?",
+        "Backend health reason -> probe path/host, backend TLS trust, NSG/UDR on the gateway subnet, timeouts, DNS; then access logs."
+      ],
+      "analogy": "It is a courier who reports 'nobody accepted the parcel'. The shop says it was open - but the courier was knocking on the wrong door (probe path), did not recognise the shop's ID (TLS), or the road was closed (NSG).",
+      "simpleExplanation": "A 502 means the gateway could not get a proper answer from your servers. Look at the gateway's backend health page: it tells you why it thinks each server is unhealthy, which is usually a wrong health check, a certificate problem or a blocked network path.",
+      "related": ["itv-aznet-16", "itv-aznet-3"],
+      "scenarioVariant": {
+        "question": "After the app team renewed the backend certificate, Application Gateway v2 shows every backend unhealthy with 'certificate not trusted'. What changed and how do you fix it?",
+        "shortAnswer": "The new certificate is issued by a CA the gateway does not trust (or a self-signed one): add the trusted root certificate to the backend settings, or use a certificate from a well-known CA, and make sure the host name matches."
+      }
+    },
+    {
+      "id": "itv-aznet-19",
+      "shortAnswer": "Traffic Manager. It answers DNS queries with the best endpoint according to its routing method - priority, weighted, performance, geographic - and the client then connects directly to that endpoint. Because it never proxies traffic, it cannot do TLS termination, caching or WAF, and failover depends on DNS TTLs.",
+      "keyPoints": [
+        {
+          "point": "The answer is Traffic Manager",
+          "keywords": ["traffic manager"],
+          "weight": 3
+        },
+        {
+          "point": "It works by answering DNS queries",
+          "keywords": ["dns", "dns queries", "dns-based", "resolves"],
+          "weight": 3
+        },
+        {
+          "point": "Clients connect directly to the endpoint; it never proxies",
+          "keywords": ["directly", "never proxies", "not a proxy", "does not proxy"],
+          "weight": 2
+        },
+        {
+          "point": "Routing methods: priority, weighted, performance, geographic",
+          "keywords": ["priority", "weighted", "performance", "geographic"],
+          "weight": 1
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Front Door, because it is global.",
+          "triggers": ["front door"],
+          "correction": "Front Door is global but it is a reverse proxy - client traffic flows through it."
+        },
+        {
+          "mistake": "Traffic Manager can terminate TLS.",
+          "triggers": ["tls termination", "terminates tls"],
+          "correction": "It never sees the traffic, so it cannot terminate TLS or apply WAF."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "Why does a low TTL not guarantee fast failover?",
+          "shortAnswer": "Clients, operating systems and intermediate resolvers may cache DNS longer than the TTL, and existing connections stay with the old endpoint; failover also waits for health probes to notice.",
+          "keyPoints": [
+            {
+              "point": "Resolvers and clients cache beyond TTL",
+              "keywords": ["cache", "caching", "resolvers", "ignore ttl"],
+              "weight": 3
+            },
+            {
+              "point": "Probe interval adds delay",
+              "keywords": ["probe", "health check interval"],
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "question": "When would you still choose Traffic Manager over Front Door?",
+          "shortAnswer": "For non-HTTP protocols, for endpoints that must receive client connections directly, or to route between regions where a proxy is not wanted.",
+          "keyPoints": [
+            {
+              "point": "Non-HTTP protocols",
+              "keywords": ["non-http", "tcp", "udp", "protocols"],
+              "weight": 3
+            },
+            {
+              "point": "Direct client connections",
+              "keywords": ["direct", "no proxy"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Which service only ever touches DNS?",
+        "It is global, and it hands out addresses rather than carrying requests.",
+        "Traffic Manager: DNS-based global routing, clients connect directly."
+      ],
+      "analogy": "Traffic Manager is a satnav that tells you which store to drive to; it does not drive the car.",
+      "simpleExplanation": "Traffic Manager works only with DNS: when a user looks up your site, it replies with the address of the best region, and the user then connects there directly.",
+      "related": ["itv-aznet-16"],
+      "scenarioVariant": {
+        "question": "A gaming company needs global routing for UDP game servers. Front Door or Traffic Manager?",
+        "shortAnswer": "Traffic Manager (with performance routing), because Front Door only handles HTTP(S); game clients then connect to the regional endpoint directly."
+      }
+    },
+    {
+      "id": "itv-aznet-20",
+      "shortAnswer": "Domain controllers as custom DNS can only resolve private endpoint names if they forward Azure zones to Azure DNS - 168.63.129.16 from a VM in Azure, or better an Azure DNS Private Resolver inbound endpoint. I would check the forwarders on both DCs, reachability from every spoke to both DCs (one may be unreachable or overloaded, causing intermittent failures), that VMs picked up the new DNS settings via DHCP (restart or renew), and that AKS CoreDNS forwards correctly.",
+      "keyPoints": [
+        {
+          "point": "Custom DNS servers must forward Azure/privatelink zones to Azure DNS",
+          "keywords": ["forwarder", "forward", "conditional forwarder", "168.63.129.16"],
+          "weight": 3
+        },
+        {
+          "point": "Azure DNS Private Resolver inbound endpoint as the target",
+          "keywords": ["private resolver", "inbound endpoint"],
+          "weight": 2
+        },
+        {
+          "point": "Check both DCs are reachable from every spoke",
+          "keywords": ["reachability", "reachable", "both dcs", "one of the two", "nsg", "routing"],
+          "weight": 3
+        },
+        {
+          "point": "Clients only pick up DNS changes on DHCP renew or restart",
+          "keywords": ["dhcp", "renew", "restart", "reboot", "lease"],
+          "weight": 2
+        },
+        {
+          "point": "AKS CoreDNS depends on node DNS settings",
+          "keywords": ["coredns", "aks", "kube-dns", "node dns"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Point the DCs at 168.63.129.16 from on-premises.",
+          "triggers": ["on-premises to 168.63.129.16"],
+          "correction": "168.63.129.16 only works from inside Azure; use a Private Resolver inbound endpoint for on-premises."
+        },
+        {
+          "mistake": "The private DNS zones must be linked to the DCs' VNet only.",
+          "triggers": [],
+          "correction": "Linking is right, but every query must reach a resolver in a linked VNet - check the whole forwarding path."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "Why can on-premises DNS servers not forward to 168.63.129.16?",
+          "shortAnswer": "168.63.129.16 is a virtual IP only reachable from inside Azure on each host; on-premises traffic cannot reach it, so you forward to a Private Resolver inbound endpoint (or a DNS forwarder VM) instead.",
+          "keyPoints": [
+            {
+              "point": "168.63.129.16 is only reachable inside Azure",
+              "keywords": ["inside azure", "virtual ip", "host"],
+              "weight": 3
+            },
+            {
+              "point": "Use Private Resolver inbound endpoint",
+              "keywords": ["private resolver", "inbound endpoint", "forwarder vm"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "How would you make DNS highly available in this design?",
+          "shortAnswer": "Use Azure DNS Private Resolver (managed, zone-redundant) instead of VMs, or at least two DNS servers in different zones that are both reachable and monitored; configure both on the VNets.",
+          "keyPoints": [
+            {
+              "point": "Managed Private Resolver or two DNS servers in different zones",
+              "keywords": ["private resolver", "two servers", "availability zones", "redundant"],
+              "weight": 3
+            },
+            {
+              "point": "Monitor resolution",
+              "keywords": ["monitor", "alert"],
+              "weight": 1
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "What can a domain controller not know about Azure private endpoints by itself?",
+        "Intermittent failures with two DNS servers - what if one of them is the problem?",
+        "Forwarders to Azure DNS / Private Resolver; reachability of both DCs; DHCP renew; CoreDNS."
+      ],
+      "analogy": "You replaced the building's information desk with two clerks from head office. They know the company directory but not the new private room numbers - unless they phone the building's own directory (Azure DNS). And if one clerk is unreachable, every second visitor gets no answer.",
+      "simpleExplanation": "Your own DNS servers do not know Azure's private addresses unless they ask Azure DNS for them. Set up that forwarding on both servers, make sure every network can reach both, and restart or refresh the machines so they use the new settings.",
+      "related": ["itv-aznet-12", "itv-aznet-13"],
+      "scenarioVariant": {
+        "question": "After moving to custom DNS, new VMs resolve private endpoints correctly but old ones fail. Why?",
+        "shortAnswer": "Existing VMs still use their old DNS servers until their DHCP lease renews or they restart; reboot or renew, and check the VNet's DNS setting applies."
+      }
+    }
+  ]
+}

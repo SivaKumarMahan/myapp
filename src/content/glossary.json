@@ -1,0 +1,641 @@
+{
+  "$comment": "Glossary. aliases are also matched; ALL-CAPS terms and aliases (acronyms) match case-sensitively, everything else case-insensitively; autolink:false keeps everyday words from being linked inside lessons.",
+  "terms": [
+    {
+      "id": "management-group",
+      "term": "Management group",
+      "aliases": ["management groups"],
+      "category": "Governance & identity",
+      "definition": "A container above subscriptions for applying Azure Policy and RBAC to many subscriptions at once; up to six levels deep under the tenant root group."
+    },
+    {
+      "id": "subscription",
+      "term": "Subscription",
+      "aliases": ["subscriptions"],
+      "category": "Governance & identity",
+      "definition": "A billing and access boundary that holds resource groups; quotas and many limits apply per subscription.",
+      "autolink": false
+    },
+    {
+      "id": "resource-group",
+      "term": "Resource group",
+      "aliases": ["resource groups"],
+      "category": "Governance & identity",
+      "definition": "A logical container for resources that share a lifecycle; deleting it deletes everything in it."
+    },
+    {
+      "id": "azure-resource-manager",
+      "term": "Azure Resource Manager",
+      "aliases": ["ARM"],
+      "category": "Governance & identity",
+      "definition": "The deployment and management layer of Azure: every portal, CLI, PowerShell and template request goes through it."
+    },
+    {
+      "id": "rbac",
+      "term": "RBAC",
+      "aliases": ["role-based access control", "Azure RBAC"],
+      "category": "Governance & identity",
+      "definition": "Azure role-based access control: who (security principal) can do what (role definition) where (scope), through a role assignment."
+    },
+    {
+      "id": "role-assignment",
+      "term": "Role assignment",
+      "aliases": ["role assignments"],
+      "category": "Governance & identity",
+      "definition": "The binding of a role definition to a security principal at a scope; it inherits to every child scope."
+    },
+    {
+      "id": "managed-identity",
+      "term": "Managed identity",
+      "aliases": ["managed identities", "system-assigned identity", "user-assigned identity"],
+      "category": "Governance & identity",
+      "definition": "An Entra ID identity Azure manages for a resource, so code can get tokens without any stored secret. System-assigned lives and dies with the resource; user-assigned is standalone."
+    },
+    {
+      "id": "service-principal",
+      "term": "Service principal",
+      "aliases": ["service principals"],
+      "category": "Governance & identity",
+      "definition": "The identity of an application in a tenant; what a pipeline or app signs in as."
+    },
+    {
+      "id": "microsoft-entra-id",
+      "term": "Microsoft Entra ID",
+      "aliases": ["Entra ID", "Azure AD", "Azure Active Directory"],
+      "category": "Governance & identity",
+      "definition": "Microsoft's cloud identity service (formerly Azure Active Directory): users, groups, app registrations and sign-in."
+    },
+    {
+      "id": "conditional-access",
+      "term": "Conditional Access",
+      "aliases": [],
+      "category": "Governance & identity",
+      "definition": "Entra ID policies that grant, block or require MFA for sign-ins based on user, app, location, device and risk."
+    },
+    {
+      "id": "azure-policy",
+      "term": "Azure Policy",
+      "aliases": ["policy assignment", "policy definitions", "policy definition"],
+      "category": "Governance & identity",
+      "definition": "A service that evaluates resources against rules and can deny, audit, modify or deploy to enforce standards - for everyone, Owners included."
+    },
+    {
+      "id": "initiative",
+      "term": "Initiative",
+      "aliases": ["policy initiative", "policy set"],
+      "category": "Governance & identity",
+      "definition": "A group of policy definitions assigned together (a policy set), such as a compliance benchmark."
+    },
+    {
+      "id": "resource-lock",
+      "term": "Resource lock",
+      "aliases": ["resource locks", "CanNotDelete", "ReadOnly lock"],
+      "category": "Governance & identity",
+      "definition": "CanNotDelete or ReadOnly protection on a scope that overrides permissions until the lock is removed."
+    },
+    {
+      "id": "tag",
+      "term": "Tag",
+      "aliases": ["tags"],
+      "category": "Governance & identity",
+      "definition": "A name/value pair on a resource or group, used for cost allocation, automation and governance. Tags do not inherit by default.",
+      "autolink": false
+    },
+    {
+      "id": "landing-zone",
+      "term": "Landing zone",
+      "aliases": ["landing zones"],
+      "category": "Governance & identity",
+      "definition": "A pre-configured, governed environment (management groups, policies, networking, identity) that workloads are deployed into."
+    },
+    {
+      "id": "virtual-network",
+      "term": "Virtual network",
+      "aliases": ["VNet", "VNets", "virtual networks"],
+      "category": "Networking",
+      "definition": "A private network in Azure (VNet) with your own address space, split into subnets."
+    },
+    {
+      "id": "subnet",
+      "term": "Subnet",
+      "aliases": ["subnets"],
+      "category": "Networking",
+      "definition": "A range of a VNet's address space; Azure reserves 5 addresses in every subnet.",
+      "autolink": false
+    },
+    {
+      "id": "nsg",
+      "term": "NSG",
+      "aliases": ["network security group", "network security groups", "NSGs"],
+      "category": "Networking",
+      "definition": "Network security group: stateful allow/deny rules by priority, applied to subnets and NICs."
+    },
+    {
+      "id": "asg",
+      "term": "ASG",
+      "aliases": ["application security group", "application security groups"],
+      "category": "Networking",
+      "definition": "Application security group: a label for NICs so NSG rules can target roles (web, db) instead of IP addresses."
+    },
+    {
+      "id": "service-tag",
+      "term": "Service tag",
+      "aliases": ["service tags"],
+      "category": "Networking",
+      "definition": "A Microsoft-maintained group of IP prefixes (e.g. Storage, AzureLoadBalancer) usable in NSG and firewall rules."
+    },
+    {
+      "id": "vnet-peering",
+      "term": "VNet peering",
+      "aliases": ["peering", "virtual network peering"],
+      "category": "Networking",
+      "definition": "A low-latency private link between two VNets; it is not transitive."
+    },
+    {
+      "id": "private-endpoint",
+      "term": "Private endpoint",
+      "aliases": ["private endpoints", "Private Link"],
+      "category": "Networking",
+      "definition": "A NIC with a private IP in your subnet that maps to one PaaS resource; pair it with a private DNS zone."
+    },
+    {
+      "id": "service-endpoint",
+      "term": "Service endpoint",
+      "aliases": ["service endpoints"],
+      "category": "Networking",
+      "definition": "Extends a subnet's identity to a PaaS service over the Azure backbone; the service keeps its public IP."
+    },
+    {
+      "id": "private-dns-zone",
+      "term": "Private DNS zone",
+      "aliases": ["private DNS zones"],
+      "category": "Networking",
+      "definition": "An Azure DNS zone resolvable only from linked VNets, e.g. privatelink.blob.core.windows.net for private endpoints."
+    },
+    {
+      "id": "vpn-gateway",
+      "term": "VPN gateway",
+      "aliases": ["VPN Gateway"],
+      "category": "Networking",
+      "definition": "Encrypted site-to-site or point-to-site connectivity over the internet into a VNet."
+    },
+    {
+      "id": "expressroute",
+      "term": "ExpressRoute",
+      "aliases": [],
+      "category": "Networking",
+      "definition": "A private, dedicated connection from on-premises to Microsoft through a connectivity provider."
+    },
+    {
+      "id": "azure-bastion",
+      "term": "Azure Bastion",
+      "aliases": ["Bastion"],
+      "category": "Networking",
+      "definition": "Managed RDP/SSH to VMs over TLS from the portal or native client, without public IPs on the VMs."
+    },
+    {
+      "id": "load-balancer",
+      "term": "Load Balancer",
+      "aliases": ["load balancer", "Azure Load Balancer"],
+      "category": "Networking",
+      "definition": "Layer-4 (TCP/UDP) load balancing within a region; Standard SKU is zone-redundant and secure by default."
+    },
+    {
+      "id": "application-gateway",
+      "term": "Application Gateway",
+      "aliases": ["App Gateway", "Application Gateway"],
+      "category": "Networking",
+      "definition": "A regional layer-7 (HTTP) load balancer with path-based routing, TLS termination and an optional WAF."
+    },
+    {
+      "id": "waf",
+      "term": "WAF",
+      "aliases": ["web application firewall"],
+      "category": "Networking",
+      "definition": "Web application firewall: blocks common web attacks (OWASP rules) on Application Gateway or Front Door."
+    },
+    {
+      "id": "front-door",
+      "term": "Front Door",
+      "aliases": ["Azure Front Door"],
+      "category": "Networking",
+      "definition": "A global layer-7 entry point with anycast, caching, TLS and health-based failover between regions."
+    },
+    {
+      "id": "traffic-manager",
+      "term": "Traffic Manager",
+      "aliases": [],
+      "category": "Networking",
+      "definition": "DNS-based global traffic routing (priority, weighted, performance, geographic)."
+    },
+    {
+      "id": "nat-gateway",
+      "term": "NAT gateway",
+      "aliases": ["NAT Gateway"],
+      "category": "Networking",
+      "definition": "Gives a subnet's outbound traffic a fixed public IP and many SNAT ports."
+    },
+    {
+      "id": "user-defined-route",
+      "term": "User-defined route",
+      "aliases": ["UDR", "UDRs", "route table", "user-defined routes"],
+      "category": "Networking",
+      "definition": "A custom route in a route table that overrides Azure's system routes, e.g. to send traffic through a firewall."
+    },
+    {
+      "id": "storage-account",
+      "term": "Storage account",
+      "aliases": ["storage accounts"],
+      "category": "Storage & data",
+      "definition": "The container for blobs, files, queues and tables, with one redundancy and performance setting."
+    },
+    {
+      "id": "lrs",
+      "term": "LRS",
+      "aliases": ["locally redundant storage"],
+      "category": "Storage & data",
+      "definition": "Locally redundant storage: three copies in one datacentre."
+    },
+    {
+      "id": "zrs",
+      "term": "ZRS",
+      "aliases": ["zone-redundant storage"],
+      "category": "Storage & data",
+      "definition": "Zone-redundant storage: three copies across availability zones in one region."
+    },
+    {
+      "id": "grs",
+      "term": "GRS",
+      "aliases": ["geo-redundant storage", "RA-GRS", "GZRS"],
+      "category": "Storage & data",
+      "definition": "Geo-redundant storage: LRS plus an asynchronous copy in the paired region (RA-GRS lets you read it)."
+    },
+    {
+      "id": "access-tier",
+      "term": "Access tier",
+      "aliases": ["access tiers", "Archive tier", "Cool tier"],
+      "category": "Storage & data",
+      "definition": "Hot, Cool, Cold or Archive pricing for blobs: cheaper storage costs more to read."
+    },
+    {
+      "id": "sas",
+      "term": "SAS",
+      "aliases": ["shared access signature", "SAS token"],
+      "category": "Storage & data",
+      "definition": "Shared access signature: a signed URL granting limited, time-bound access to storage. Prefer user delegation SAS."
+    },
+    {
+      "id": "lifecycle-management",
+      "term": "Lifecycle management",
+      "aliases": ["lifecycle policy", "lifecycle management policy"],
+      "category": "Storage & data",
+      "definition": "Storage rules that tier or delete blobs by age automatically."
+    },
+    {
+      "id": "soft-delete",
+      "term": "Soft delete",
+      "aliases": [],
+      "category": "Storage & data",
+      "definition": "Keeps deleted blobs, containers, shares or vaults recoverable for a retention period."
+    },
+    {
+      "id": "azure-files",
+      "term": "Azure Files",
+      "aliases": ["Azure File Sync"],
+      "category": "Storage & data",
+      "definition": "Managed SMB/NFS file shares; Azure File Sync caches them on Windows servers."
+    },
+    {
+      "id": "availability-zone",
+      "term": "Availability zone",
+      "aliases": ["availability zones"],
+      "category": "Monitoring & resilience",
+      "definition": "A physically separate datacentre group within a region with its own power, cooling and network."
+    },
+    {
+      "id": "region-pair",
+      "term": "Region pair",
+      "aliases": ["paired region", "region pairs"],
+      "category": "Monitoring & resilience",
+      "definition": "Two regions in the same geography that Azure pairs for staged updates and geo-replication."
+    },
+    {
+      "id": "availability-set",
+      "term": "Availability set",
+      "aliases": ["availability sets", "fault domain", "update domain"],
+      "category": "Compute",
+      "definition": "Spreads VMs across fault and update domains in one datacentre (99.95% SLA)."
+    },
+    {
+      "id": "virtual-machine-scale-sets",
+      "term": "Virtual Machine Scale Sets",
+      "aliases": ["VM scale set", "VMSS", "scale set"],
+      "category": "Compute",
+      "definition": "Groups of identical VMs that autoscale and upgrade together."
+    },
+    {
+      "id": "app-service-plan",
+      "term": "App Service plan",
+      "aliases": ["App Service plans"],
+      "category": "Compute",
+      "definition": "The compute (SKU and instance count) that App Service apps run on."
+    },
+    {
+      "id": "deployment-slot",
+      "term": "Deployment slot",
+      "aliases": ["deployment slots", "slot swap"],
+      "category": "Compute",
+      "definition": "A live staging copy of an App Service app you can swap into production with no downtime."
+    },
+    {
+      "id": "aks",
+      "term": "AKS",
+      "aliases": ["Azure Kubernetes Service"],
+      "category": "Compute",
+      "definition": "Azure Kubernetes Service: managed Kubernetes control plane; you run node pools and workloads."
+    },
+    {
+      "id": "acr",
+      "term": "ACR",
+      "aliases": ["Azure Container Registry", "Container Registry"],
+      "category": "Compute",
+      "definition": "Azure Container Registry: private registry for container images and OCI artifacts."
+    },
+    {
+      "id": "container-apps",
+      "term": "Container Apps",
+      "aliases": ["Azure Container Apps"],
+      "category": "Compute",
+      "definition": "Serverless containers on Kubernetes with scale-to-zero, revisions and ingress, without managing a cluster."
+    },
+    {
+      "id": "azure-monitor",
+      "term": "Azure Monitor",
+      "aliases": [],
+      "category": "Monitoring & resilience",
+      "definition": "The platform for metrics, logs, alerts and insights across Azure."
+    },
+    {
+      "id": "log-analytics-workspace",
+      "term": "Log Analytics workspace",
+      "aliases": ["Log Analytics"],
+      "category": "Monitoring & resilience",
+      "definition": "Where Azure Monitor logs are stored and queried with KQL."
+    },
+    {
+      "id": "kql",
+      "term": "KQL",
+      "aliases": ["Kusto Query Language", "Kusto"],
+      "category": "Monitoring & resilience",
+      "definition": "Kusto Query Language: a pipe-based read-only query language for Log Analytics, Application Insights and Data Explorer."
+    },
+    {
+      "id": "application-insights",
+      "term": "Application Insights",
+      "aliases": ["App Insights"],
+      "category": "Monitoring & resilience",
+      "definition": "Application performance monitoring: requests, dependencies, exceptions and traces from your code."
+    },
+    {
+      "id": "diagnostic-settings",
+      "term": "Diagnostic settings",
+      "aliases": ["diagnostic setting"],
+      "category": "Monitoring & resilience",
+      "definition": "Per-resource configuration that streams platform logs and metrics to Log Analytics, storage or Event Hubs."
+    },
+    {
+      "id": "action-group",
+      "term": "Action group",
+      "aliases": ["action groups"],
+      "category": "Monitoring & resilience",
+      "definition": "Who and what an alert notifies or triggers: email, SMS, webhook, Logic App, ITSM."
+    },
+    {
+      "id": "azure-backup",
+      "term": "Azure Backup",
+      "aliases": ["Recovery Services vault", "backup vault"],
+      "category": "Monitoring & resilience",
+      "definition": "Managed backup for VMs, files, databases and blobs into a Recovery Services or Backup vault."
+    },
+    {
+      "id": "azure-site-recovery",
+      "term": "Azure Site Recovery",
+      "aliases": ["Site Recovery", "ASR"],
+      "category": "Monitoring & resilience",
+      "definition": "Replicates VMs to another region for disaster recovery failover."
+    },
+    {
+      "id": "rpo",
+      "term": "RPO",
+      "aliases": ["recovery point objective"],
+      "category": "Monitoring & resilience",
+      "definition": "Recovery point objective: how much data you can afford to lose, measured in time."
+    },
+    {
+      "id": "rto",
+      "term": "RTO",
+      "aliases": ["recovery time objective"],
+      "category": "Monitoring & resilience",
+      "definition": "Recovery time objective: how long you can afford to be down."
+    },
+    {
+      "id": "sla",
+      "term": "SLA",
+      "aliases": ["service level agreement", "composite SLA"],
+      "category": "Monitoring & resilience",
+      "definition": "Service level agreement: the availability Microsoft commits to (and credits if missed) for a service."
+    },
+    {
+      "id": "key-vault",
+      "term": "Key Vault",
+      "aliases": ["Azure Key Vault"],
+      "category": "Security",
+      "definition": "Managed store for secrets, keys and certificates; use the Azure RBAC permission model and managed identities."
+    },
+    {
+      "id": "workload-identity-federation",
+      "term": "Workload identity federation",
+      "aliases": ["OIDC", "federated credential", "federated credentials", "workload identity"],
+      "category": "Security",
+      "definition": "Trusting an external token (GitHub Actions, Kubernetes) instead of a secret: OIDC tokens are exchanged for Entra ID tokens."
+    },
+    {
+      "id": "defender-for-cloud",
+      "term": "Defender for Cloud",
+      "aliases": ["Microsoft Defender for Cloud"],
+      "category": "Security",
+      "definition": "Cloud security posture management and workload protection: secure score, recommendations and threat detection."
+    },
+    {
+      "id": "sast",
+      "term": "SAST",
+      "aliases": ["static analysis"],
+      "category": "Security",
+      "definition": "Static application security testing: scanning source code for vulnerabilities in the pipeline."
+    },
+    {
+      "id": "sca",
+      "term": "SCA",
+      "aliases": ["dependency scanning"],
+      "category": "Security",
+      "definition": "Software composition analysis: finding vulnerable or badly licensed dependencies."
+    },
+    {
+      "id": "sbom",
+      "term": "SBOM",
+      "aliases": ["software bill of materials"],
+      "category": "Security",
+      "definition": "Software bill of materials: the list of components inside a build, for supply-chain security."
+    },
+    {
+      "id": "continuous-integration",
+      "term": "Continuous integration",
+      "aliases": ["CI"],
+      "category": "DevOps",
+      "definition": "Merging and building every change automatically, with tests, so problems surface early."
+    },
+    {
+      "id": "continuous-delivery",
+      "term": "Continuous delivery",
+      "aliases": ["continuous deployment", "CD"],
+      "category": "DevOps",
+      "definition": "Every change that passes the pipeline is releasable; deployment is a button (or automatic, for continuous deployment)."
+    },
+    {
+      "id": "yaml-pipeline",
+      "term": "YAML pipeline",
+      "aliases": ["YAML pipelines", "multi-stage pipeline"],
+      "category": "DevOps",
+      "definition": "An Azure Pipelines definition kept in the repository: trigger, stages, jobs and steps."
+    },
+    {
+      "id": "agent",
+      "term": "Agent",
+      "aliases": ["agents", "self-hosted agent", "Microsoft-hosted agent"],
+      "category": "DevOps",
+      "definition": "The machine that runs pipeline jobs: Microsoft-hosted, self-hosted, scale set or Managed DevOps Pools.",
+      "autolink": false
+    },
+    {
+      "id": "service-connection",
+      "term": "Service connection",
+      "aliases": ["service connections"],
+      "category": "DevOps",
+      "definition": "Azure DevOps' stored connection to an external service such as an Azure subscription; prefer workload identity federation."
+    },
+    {
+      "id": "environment",
+      "term": "Environment",
+      "aliases": ["environments"],
+      "category": "DevOps",
+      "definition": "An Azure Pipelines target (with deployment history) where approvals and checks are configured.",
+      "autolink": false
+    },
+    {
+      "id": "approvals-and-checks",
+      "term": "Approvals and checks",
+      "aliases": ["approval", "approvals", "checks"],
+      "category": "DevOps",
+      "definition": "Gates on an environment or resource that a deployment must pass: manual approval, business hours, Azure Monitor alerts.",
+      "autolink": false
+    },
+    {
+      "id": "azure-artifacts",
+      "term": "Azure Artifacts",
+      "aliases": ["artifact feed"],
+      "category": "DevOps",
+      "definition": "Package feeds (NuGet, npm, Maven, Python, Universal) with upstream sources and views for promotion."
+    },
+    {
+      "id": "semantic-versioning",
+      "term": "Semantic versioning",
+      "aliases": ["SemVer"],
+      "category": "DevOps",
+      "definition": "MAJOR.MINOR.PATCH: breaking, feature, fix."
+    },
+    {
+      "id": "branch-policy",
+      "term": "Branch policy",
+      "aliases": ["branch policies", "branch protection"],
+      "category": "DevOps",
+      "definition": "Rules on a protected branch: required reviewers, linked work items, build validation, comment resolution."
+    },
+    {
+      "id": "pull-request",
+      "term": "Pull request",
+      "aliases": ["pull requests", "PR"],
+      "category": "DevOps",
+      "definition": "A proposed change reviewed and validated before merging into a protected branch."
+    },
+    {
+      "id": "trunk-based-development",
+      "term": "Trunk-based development",
+      "aliases": ["trunk-based"],
+      "category": "DevOps",
+      "definition": "Everyone integrates into one main branch frequently, with short-lived branches and feature flags."
+    },
+    {
+      "id": "gitflow",
+      "term": "GitFlow",
+      "aliases": ["Git Flow"],
+      "category": "DevOps",
+      "definition": "A branching model with develop, feature, release and hotfix branches around main."
+    },
+    {
+      "id": "feature-flag",
+      "term": "Feature flag",
+      "aliases": ["feature flags", "feature toggle"],
+      "category": "DevOps",
+      "definition": "A runtime switch that turns functionality on or off without a deployment."
+    },
+    {
+      "id": "blue-green-deployment",
+      "term": "Blue-green deployment",
+      "aliases": ["blue-green", "blue/green"],
+      "category": "DevOps",
+      "definition": "Two production environments; deploy to the idle one, then switch traffic."
+    },
+    {
+      "id": "canary-release",
+      "term": "Canary release",
+      "aliases": ["canary", "canary deployment"],
+      "category": "DevOps",
+      "definition": "Send a small share of real traffic to the new version and watch it before going wider."
+    },
+    {
+      "id": "infrastructure-as-code",
+      "term": "Infrastructure as code",
+      "aliases": ["IaC"],
+      "category": "DevOps",
+      "definition": "Defining infrastructure in versioned, reviewable files (Bicep, ARM, Terraform) instead of clicking."
+    },
+    {
+      "id": "bicep",
+      "term": "Bicep",
+      "aliases": [],
+      "category": "DevOps",
+      "definition": "A concise language that compiles to ARM templates, with modules, type safety and implicit dependencies."
+    },
+    {
+      "id": "terraform-state",
+      "term": "Terraform state",
+      "aliases": ["state file", "tfstate", "remote state"],
+      "category": "DevOps",
+      "definition": "Terraform's record mapping configuration to real resources; keep it in a locked remote backend."
+    },
+    {
+      "id": "drift",
+      "term": "Drift",
+      "aliases": ["configuration drift"],
+      "category": "DevOps",
+      "definition": "Differences between what IaC defines and what actually exists, usually from manual changes."
+    },
+    {
+      "id": "dora-metrics",
+      "term": "DORA metrics",
+      "aliases": ["DORA"],
+      "category": "DevOps",
+      "definition": "Deployment frequency, lead time for changes, change failure rate and time to restore - the four delivery performance measures."
+    }
+  ]
+}

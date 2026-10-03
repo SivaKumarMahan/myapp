@@ -461,7 +461,13 @@ export function DiagramFigure({ diagram }: { diagram: Diagram }) {
         <span className="diagram-kind">{KIND_LABEL[diagram.kind]}</span>
         <span className="diagram-title">{diagram.title}</span>
       </figcaption>
-      <div className="diagram-canvas" ref={ref}>
+      <div
+        className="diagram-canvas"
+        ref={ref}
+        tabIndex={0}
+        role="region"
+        aria-label={`${diagram.title} (scrolls sideways on small screens)`}
+      >
         {svg}
       </div>
       {overflows ? (

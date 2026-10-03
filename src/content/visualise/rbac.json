@@ -1,0 +1,763 @@
+{
+  "$comment": "RBAC scope explorer. Role definitions are trimmed to the actions used here; shapes and wildcards are Azure's. Deny assignments can't be created by users directly - deployment stacks (deny settings) and managed applications create them.",
+  "nodes": [
+    {
+      "id": "root",
+      "name": "Tenant root group",
+      "type": "tenant"
+    },
+    {
+      "id": "mg-contoso",
+      "name": "Contoso",
+      "type": "mg",
+      "parent": "root"
+    },
+    {
+      "id": "mg-platform",
+      "name": "Platform",
+      "type": "mg",
+      "parent": "mg-contoso"
+    },
+    {
+      "id": "sub-connectivity",
+      "name": "Connectivity",
+      "type": "subscription",
+      "parent": "mg-platform"
+    },
+    {
+      "id": "rg-hub",
+      "name": "rg-hub-network",
+      "type": "rg",
+      "parent": "sub-connectivity"
+    },
+    {
+      "id": "vnet-hub",
+      "name": "vnet-hub",
+      "type": "resource",
+      "parent": "rg-hub",
+      "resourceType": "Microsoft.Network/virtualNetworks"
+    },
+    {
+      "id": "fw-hub",
+      "name": "fw-hub",
+      "type": "resource",
+      "parent": "rg-hub",
+      "resourceType": "Microsoft.Network/azureFirewalls"
+    },
+    {
+      "id": "mg-landingzones",
+      "name": "Landing zones",
+      "type": "mg",
+      "parent": "mg-contoso"
+    },
+    {
+      "id": "mg-corp",
+      "name": "Corp",
+      "type": "mg",
+      "parent": "mg-landingzones"
+    },
+    {
+      "id": "sub-prod",
+      "name": "Payments-Prod",
+      "type": "subscription",
+      "parent": "mg-corp"
+    },
+    {
+      "id": "rg-pay-app",
+      "name": "rg-payments-app",
+      "type": "rg",
+      "parent": "sub-prod"
+    },
+    {
+      "id": "vm-pay-01",
+      "name": "vm-pay-01",
+      "type": "resource",
+      "parent": "rg-pay-app",
+      "resourceType": "Microsoft.Compute/virtualMachines"
+    },
+    {
+      "id": "st-paylogs",
+      "name": "stpaylogs",
+      "type": "resource",
+      "parent": "rg-pay-app",
+      "resourceType": "Microsoft.Storage/storageAccounts"
+    },
+    {
+      "id": "kv-pay",
+      "name": "kv-payments",
+      "type": "resource",
+      "parent": "rg-pay-app",
+      "resourceType": "Microsoft.KeyVault/vaults"
+    },
+    {
+      "id": "rg-pay-data",
+      "name": "rg-payments-data",
+      "type": "rg",
+      "parent": "sub-prod"
+    },
+    {
+      "id": "sql-pay",
+      "name": "sql-payments",
+      "type": "resource",
+      "parent": "rg-pay-data",
+      "resourceType": "Microsoft.Sql/servers"
+    },
+    {
+      "id": "mg-online",
+      "name": "Online",
+      "type": "mg",
+      "parent": "mg-landingzones"
+    },
+    {
+      "id": "sub-dev",
+      "name": "Web-Dev",
+      "type": "subscription",
+      "parent": "mg-online"
+    },
+    {
+      "id": "rg-web-dev",
+      "name": "rg-web-dev",
+      "type": "rg",
+      "parent": "sub-dev"
+    },
+    {
+      "id": "app-web-dev",
+      "name": "app-web-dev",
+      "type": "resource",
+      "parent": "rg-web-dev",
+      "resourceType": "Microsoft.Web/sites"
+    },
+    {
+      "id": "st-webdev",
+      "name": "stwebdev",
+      "type": "resource",
+      "parent": "rg-web-dev",
+      "resourceType": "Microsoft.Storage/storageAccounts"
+    },
+    {
+      "id": "mg-sandbox",
+      "name": "Sandboxes",
+      "type": "mg",
+      "parent": "mg-contoso"
+    },
+    {
+      "id": "sub-sandbox",
+      "name": "Sandbox-Dave",
+      "type": "subscription",
+      "parent": "mg-sandbox"
+    },
+    {
+      "id": "rg-sandbox",
+      "name": "rg-sandbox",
+      "type": "rg",
+      "parent": "sub-sandbox"
+    }
+  ],
+  "principals": [
+    {
+      "id": "alice",
+      "name": "Alice (developer)",
+      "kind": "user",
+      "memberOf": ["grp-devs"]
+    },
+    {
+      "id": "bob",
+      "name": "Bob (platform engineer)",
+      "kind": "user",
+      "memberOf": ["grp-platform"]
+    },
+    {
+      "id": "carol",
+      "name": "Carol (auditor)",
+      "kind": "user"
+    },
+    {
+      "id": "dave",
+      "name": "Dave (sandbox user)",
+      "kind": "user"
+    },
+    {
+      "id": "grp-devs",
+      "name": "Developers",
+      "kind": "group"
+    },
+    {
+      "id": "grp-platform",
+      "name": "Platform team",
+      "kind": "group"
+    },
+    {
+      "id": "sp-pipeline",
+      "name": "Payments deploy pipeline",
+      "kind": "servicePrincipal"
+    },
+    {
+      "id": "sp-platform",
+      "name": "Platform IaC pipeline",
+      "kind": "servicePrincipal"
+    },
+    {
+      "id": "mi-payapp",
+      "name": "vm-pay-01 managed identity",
+      "kind": "managedIdentity"
+    }
+  ],
+  "roles": [
+    {
+      "id": "owner",
+      "name": "Owner",
+      "description": "Full control, including assigning roles.",
+      "actions": ["*"]
+    },
+    {
+      "id": "contributor",
+      "name": "Contributor",
+      "description": "Full control of resources, but cannot assign roles or change Azure Policy assignments' RBAC.",
+      "actions": ["*"],
+      "notActions": [
+        "Microsoft.Authorization/*/Delete",
+        "Microsoft.Authorization/*/Write",
+        "Microsoft.Authorization/elevateAccess/Action"
+      ]
+    },
+    {
+      "id": "reader",
+      "name": "Reader",
+      "description": "View everything on the control plane; no changes, no data.",
+      "actions": ["*/read"]
+    },
+    {
+      "id": "uaa",
+      "name": "User Access Administrator",
+      "description": "Manages access (role assignments) and reads everything.",
+      "actions": ["*/read", "Microsoft.Authorization/*", "Microsoft.Support/*"]
+    },
+    {
+      "id": "rbac-admin",
+      "name": "Role Based Access Control Administrator",
+      "description": "Assigns roles (can be limited with conditions); cannot change resources.",
+      "actions": [
+        "*/read",
+        "Microsoft.Authorization/roleAssignments/write",
+        "Microsoft.Authorization/roleAssignments/delete",
+        "Microsoft.Support/*"
+      ]
+    },
+    {
+      "id": "vm-contributor",
+      "name": "Virtual Machine Contributor",
+      "description": "Manages VMs but not the VNet or storage they connect to. Note: includes listKeys on storage accounts (for boot diagnostics).",
+      "actions": [
+        "Microsoft.Compute/virtualMachines/*",
+        "Microsoft.Network/networkInterfaces/*",
+        "Microsoft.Network/virtualNetworks/read",
+        "Microsoft.Network/virtualNetworks/subnets/join/action",
+        "Microsoft.Network/publicIPAddresses/read",
+        "Microsoft.Network/publicIPAddresses/join/action",
+        "Microsoft.Resources/subscriptions/resourceGroups/read",
+        "Microsoft.Storage/storageAccounts/read",
+        "Microsoft.Storage/storageAccounts/listKeys/action"
+      ]
+    },
+    {
+      "id": "storage-contributor",
+      "name": "Storage Account Contributor",
+      "description": "Manages storage accounts, including their access keys - which give full data access.",
+      "actions": [
+        "Microsoft.Storage/storageAccounts/*",
+        "Microsoft.Resources/subscriptions/resourceGroups/read"
+      ]
+    },
+    {
+      "id": "blob-reader",
+      "name": "Storage Blob Data Reader",
+      "description": "Reads blob data (data plane).",
+      "actions": ["Microsoft.Storage/storageAccounts/blobServices/containers/read"],
+      "dataActions": ["Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read"]
+    },
+    {
+      "id": "blob-contributor",
+      "name": "Storage Blob Data Contributor",
+      "description": "Reads, writes and deletes blob data (data plane).",
+      "actions": ["Microsoft.Storage/storageAccounts/blobServices/containers/*"],
+      "dataActions": ["Microsoft.Storage/storageAccounts/blobServices/containers/blobs/*"]
+    },
+    {
+      "id": "kv-secrets-user",
+      "name": "Key Vault Secrets User",
+      "description": "Reads secret values (data plane, RBAC-mode vaults).",
+      "actions": [],
+      "dataActions": [
+        "Microsoft.KeyVault/vaults/secrets/getSecret/action",
+        "Microsoft.KeyVault/vaults/secrets/readMetadata/action"
+      ]
+    },
+    {
+      "id": "network-contributor",
+      "name": "Network Contributor",
+      "description": "Manages networks, but not access to them.",
+      "actions": ["Microsoft.Network/*", "Microsoft.Resources/subscriptions/resourceGroups/read"]
+    }
+  ],
+  "assignments": [
+    {
+      "id": "a1",
+      "principal": "grp-platform",
+      "role": "owner",
+      "scope": "mg-platform"
+    },
+    {
+      "id": "a2",
+      "principal": "grp-platform",
+      "role": "reader",
+      "scope": "mg-contoso"
+    },
+    {
+      "id": "a3",
+      "principal": "carol",
+      "role": "reader",
+      "scope": "mg-contoso"
+    },
+    {
+      "id": "a4",
+      "principal": "grp-devs",
+      "role": "contributor",
+      "scope": "sub-dev"
+    },
+    {
+      "id": "a5",
+      "principal": "grp-devs",
+      "role": "reader",
+      "scope": "sub-prod"
+    },
+    {
+      "id": "a6",
+      "principal": "alice",
+      "role": "vm-contributor",
+      "scope": "rg-pay-app"
+    },
+    {
+      "id": "a7",
+      "principal": "sp-pipeline",
+      "role": "contributor",
+      "scope": "rg-pay-app"
+    },
+    {
+      "id": "a8",
+      "principal": "mi-payapp",
+      "role": "kv-secrets-user",
+      "scope": "kv-pay"
+    },
+    {
+      "id": "a9",
+      "principal": "mi-payapp",
+      "role": "blob-contributor",
+      "scope": "st-paylogs"
+    },
+    {
+      "id": "a10",
+      "principal": "dave",
+      "role": "owner",
+      "scope": "sub-sandbox"
+    },
+    {
+      "id": "a11",
+      "principal": "sp-platform",
+      "role": "owner",
+      "scope": "mg-platform"
+    }
+  ],
+  "denyAssignments": [
+    {
+      "id": "d1",
+      "name": "hub-network stack: deny delete",
+      "scope": "rg-hub",
+      "source": "Deployment stack 'hub-network' with denySettings mode denyDelete",
+      "actions": ["*/delete"],
+      "excludePrincipals": ["sp-platform"]
+    }
+  ],
+  "policies": [
+    {
+      "id": "p1",
+      "name": "Allowed locations",
+      "scope": "mg-contoso",
+      "notScopes": ["mg-sandbox"],
+      "effect": "deny",
+      "conditions": [
+        {
+          "field": "location",
+          "exists": true
+        },
+        {
+          "field": "location",
+          "notIn": ["westeurope", "northeurope"]
+        },
+        {
+          "field": "type",
+          "notEquals": "Microsoft.Resources/subscriptions/resourceGroups"
+        }
+      ],
+      "then": "Resources may only be created in West Europe or North Europe."
+    },
+    {
+      "id": "p2",
+      "name": "Deny public IP addresses",
+      "scope": "mg-corp",
+      "effect": "deny",
+      "conditions": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Network/publicIPAddresses"
+        }
+      ],
+      "then": "Corp landing zones are private: no public IPs."
+    },
+    {
+      "id": "p3",
+      "name": "Storage accounts must not allow public blob access",
+      "scope": "mg-contoso",
+      "effect": "deny",
+      "conditions": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Storage/storageAccounts"
+        },
+        {
+          "field": "allowBlobPublicAccess",
+          "equals": true
+        }
+      ],
+      "then": "allowBlobPublicAccess must be false."
+    },
+    {
+      "id": "p4",
+      "name": "Require a costCenter tag",
+      "scope": "mg-landingzones",
+      "effect": "audit",
+      "conditions": [
+        {
+          "field": "tags.costCenter",
+          "exists": false
+        },
+        {
+          "field": "type",
+          "notEquals": "Microsoft.Authorization/roleAssignments"
+        }
+      ],
+      "then": "Created, but flagged non-compliant until it has a costCenter tag."
+    },
+    {
+      "id": "p5",
+      "name": "Add environment tag",
+      "scope": "sub-dev",
+      "effect": "modify",
+      "conditions": [
+        {
+          "field": "tags.environment",
+          "exists": false
+        },
+        {
+          "field": "type",
+          "notEquals": "Microsoft.Authorization/roleAssignments"
+        }
+      ],
+      "sets": {
+        "field": "tags.environment",
+        "value": "dev"
+      },
+      "then": "Adds the tag environment=dev to the request."
+    },
+    {
+      "id": "p6",
+      "name": "Deploy diagnostic settings for Key Vault",
+      "scope": "mg-landingzones",
+      "effect": "deployIfNotExists",
+      "conditions": [
+        {
+          "field": "type",
+          "equals": "Microsoft.KeyVault/vaults"
+        }
+      ],
+      "then": "After creation, a remediation deployment adds diagnostic settings sending logs to Log Analytics."
+    }
+  ],
+  "actions": [
+    {
+      "id": "vm-read",
+      "label": "View the VM",
+      "operation": "Microsoft.Compute/virtualMachines/read",
+      "plane": "control",
+      "targets": ["resource"],
+      "on": "Microsoft.Compute/virtualMachines"
+    },
+    {
+      "id": "vm-restart",
+      "label": "Restart the VM",
+      "operation": "Microsoft.Compute/virtualMachines/restart/action",
+      "plane": "control",
+      "targets": ["resource"],
+      "on": "Microsoft.Compute/virtualMachines"
+    },
+    {
+      "id": "vm-delete",
+      "label": "Delete the VM",
+      "operation": "Microsoft.Compute/virtualMachines/delete",
+      "plane": "control",
+      "targets": ["resource"],
+      "on": "Microsoft.Compute/virtualMachines"
+    },
+    {
+      "id": "vm-create",
+      "label": "Create a VM here",
+      "operation": "Microsoft.Compute/virtualMachines/write",
+      "plane": "control",
+      "write": true,
+      "targets": ["rg"],
+      "creates": "Microsoft.Compute/virtualMachines"
+    },
+    {
+      "id": "pip-create",
+      "label": "Create a public IP here",
+      "operation": "Microsoft.Network/publicIPAddresses/write",
+      "plane": "control",
+      "write": true,
+      "targets": ["rg"],
+      "creates": "Microsoft.Network/publicIPAddresses"
+    },
+    {
+      "id": "st-create",
+      "label": "Create a storage account here",
+      "operation": "Microsoft.Storage/storageAccounts/write",
+      "plane": "control",
+      "write": true,
+      "targets": ["rg"],
+      "creates": "Microsoft.Storage/storageAccounts"
+    },
+    {
+      "id": "kv-create",
+      "label": "Create a key vault here",
+      "operation": "Microsoft.KeyVault/vaults/write",
+      "plane": "control",
+      "write": true,
+      "targets": ["rg"],
+      "creates": "Microsoft.KeyVault/vaults"
+    },
+    {
+      "id": "st-listkeys",
+      "label": "List the storage account keys",
+      "operation": "Microsoft.Storage/storageAccounts/listKeys/action",
+      "plane": "control",
+      "targets": ["resource"],
+      "on": "Microsoft.Storage/storageAccounts"
+    },
+    {
+      "id": "blob-read",
+      "label": "Read a blob (data)",
+      "operation": "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read",
+      "plane": "data",
+      "targets": ["resource"],
+      "on": "Microsoft.Storage/storageAccounts"
+    },
+    {
+      "id": "blob-write",
+      "label": "Upload a blob (data)",
+      "operation": "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write",
+      "plane": "data",
+      "targets": ["resource"],
+      "on": "Microsoft.Storage/storageAccounts"
+    },
+    {
+      "id": "secret-get",
+      "label": "Read a secret value (data)",
+      "operation": "Microsoft.KeyVault/vaults/secrets/getSecret/action",
+      "plane": "data",
+      "targets": ["resource"],
+      "on": "Microsoft.KeyVault/vaults"
+    },
+    {
+      "id": "vnet-delete",
+      "label": "Delete the virtual network",
+      "operation": "Microsoft.Network/virtualNetworks/delete",
+      "plane": "control",
+      "targets": ["resource"],
+      "on": "Microsoft.Network/virtualNetworks"
+    },
+    {
+      "id": "rg-delete",
+      "label": "Delete the resource group",
+      "operation": "Microsoft.Resources/subscriptions/resourceGroups/delete",
+      "plane": "control",
+      "targets": ["rg"]
+    },
+    {
+      "id": "rg-create",
+      "label": "Create a resource group here",
+      "operation": "Microsoft.Resources/subscriptions/resourceGroups/write",
+      "plane": "control",
+      "write": true,
+      "targets": ["subscription"],
+      "creates": "Microsoft.Resources/subscriptions/resourceGroups"
+    },
+    {
+      "id": "role-assign",
+      "label": "Assign a role here",
+      "operation": "Microsoft.Authorization/roleAssignments/write",
+      "plane": "control",
+      "targets": ["mg", "subscription", "rg", "resource"]
+    }
+  ],
+  "exercises": [
+    {
+      "id": "carol-read",
+      "title": "An auditor looks",
+      "principal": "carol",
+      "action": "vm-read",
+      "target": "vm-pay-01",
+      "props": {},
+      "expected": "allowed",
+      "explanation": "Carol is Reader on the Contoso management group, and role assignments inherit down through every subscription, resource group and resource below it."
+    },
+    {
+      "id": "carol-restart",
+      "title": "...and tries to help",
+      "principal": "carol",
+      "action": "vm-restart",
+      "target": "vm-pay-01",
+      "props": {},
+      "expected": "denied-rbac",
+      "explanation": "Reader only matches `*/read`. Restarting is an action (`restart/action`), so the request fails with AuthorizationFailed."
+    },
+    {
+      "id": "alice-restart",
+      "title": "Developer on prod",
+      "principal": "alice",
+      "action": "vm-restart",
+      "target": "vm-pay-01",
+      "props": {},
+      "expected": "allowed",
+      "explanation": "Alice's group only gives Reader on Payments-Prod, but her own Virtual Machine Contributor assignment on rg-payments-app grants `Microsoft.Compute/virtualMachines/*`. Assignments are additive."
+    },
+    {
+      "id": "alice-blob",
+      "title": "Read the logs",
+      "principal": "alice",
+      "action": "blob-read",
+      "target": "st-paylogs",
+      "props": {},
+      "expected": "denied-rbac",
+      "explanation": "Reading blob contents is a **data action**. None of Alice's roles has `dataActions`, so Azure AD authorisation to the data fails."
+    },
+    {
+      "id": "alice-keys",
+      "title": "...or list the keys",
+      "principal": "alice",
+      "action": "st-listkeys",
+      "target": "st-paylogs",
+      "props": {},
+      "expected": "allowed",
+      "explanation": "Virtual Machine Contributor includes `Microsoft.Storage/storageAccounts/listKeys/action` (for boot diagnostics). With the key she can read all the data - which is why you disable shared-key access and prefer data roles."
+    },
+    {
+      "id": "pipeline-pip",
+      "title": "Pipeline wants a public IP",
+      "principal": "sp-pipeline",
+      "action": "pip-create",
+      "target": "rg-pay-app",
+      "props": {
+        "location": "westeurope"
+      },
+      "expected": "denied-policy",
+      "explanation": "The pipeline is Contributor on the resource group, so RBAC allows it - but the Corp management group has a Deny policy on public IPs. Policy applies to every identity."
+    },
+    {
+      "id": "pipeline-assign",
+      "title": "Pipeline grants access",
+      "principal": "sp-pipeline",
+      "action": "role-assign",
+      "target": "rg-pay-app",
+      "props": {},
+      "expected": "denied-rbac",
+      "explanation": "Contributor excludes `Microsoft.Authorization/*/Write`, so it cannot create role assignments. That needs Owner, User Access Administrator or RBAC Administrator."
+    },
+    {
+      "id": "bob-hub",
+      "title": "Owner deletes the hub VNet",
+      "principal": "bob",
+      "action": "vnet-delete",
+      "target": "vnet-hub",
+      "props": {},
+      "expected": "denied-deny",
+      "explanation": "Bob is Owner through the Platform team, but the deployment stack's deny assignment blocks `*/delete` on rg-hub-network for everyone except the platform pipeline."
+    },
+    {
+      "id": "platform-hub",
+      "title": "The stack's own pipeline",
+      "principal": "sp-platform",
+      "action": "vnet-delete",
+      "target": "vnet-hub",
+      "props": {},
+      "expected": "allowed",
+      "explanation": "The platform IaC pipeline is in the deny assignment's excluded principals, and is Owner on Platform - so it can still change and delete what the stack manages."
+    },
+    {
+      "id": "alice-eastus",
+      "title": "Wrong region",
+      "principal": "alice",
+      "action": "st-create",
+      "target": "rg-web-dev",
+      "props": {
+        "location": "eastus"
+      },
+      "expected": "denied-policy",
+      "explanation": "Developers are Contributor on Web-Dev, but the Allowed locations policy (assigned at Contoso) denies East US."
+    },
+    {
+      "id": "alice-vm-dev",
+      "title": "Untagged VM in dev",
+      "principal": "alice",
+      "action": "vm-create",
+      "target": "rg-web-dev",
+      "props": {
+        "location": "westeurope"
+      },
+      "expected": "allowed",
+      "explanation": "Allowed: the audit policy flags the missing costCenter tag as non-compliant and the modify policy adds environment=dev - neither blocks the request."
+    },
+    {
+      "id": "dave-eastus",
+      "title": "Sandbox in East US",
+      "principal": "dave",
+      "action": "vm-create",
+      "target": "rg-sandbox",
+      "props": {
+        "location": "eastus"
+      },
+      "expected": "allowed",
+      "explanation": "The Allowed locations policy excludes the Sandboxes management group (notScopes), and Dave is Owner of his sandbox subscription."
+    },
+    {
+      "id": "bob-public-blob",
+      "title": "Owner vs policy",
+      "principal": "bob",
+      "action": "st-create",
+      "target": "rg-hub",
+      "props": {
+        "location": "westeurope",
+        "allowBlobPublicAccess": true
+      },
+      "expected": "denied-policy",
+      "explanation": "Being Owner does not bypass Azure Policy: the public blob access policy denies the request with RequestDisallowedByPolicy."
+    },
+    {
+      "id": "mi-secret",
+      "title": "The app reads its secret",
+      "principal": "mi-payapp",
+      "action": "secret-get",
+      "target": "kv-pay",
+      "props": {},
+      "expected": "allowed",
+      "explanation": "The VM's managed identity has Key Vault Secrets User on the vault - a data role, exactly what reading a secret value needs, with no secret stored on the VM."
+    }
+  ]
+}

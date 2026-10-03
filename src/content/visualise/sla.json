@@ -1,0 +1,445 @@
+{
+  "$comment": "Monthly uptime SLAs from Microsoft's SLA for Online Services, as commonly quoted. Tiers and conditions matter - check the current document before quoting a number.",
+  "services": [
+    {
+      "id": "app-service",
+      "name": "App Service (Basic tier and above)",
+      "sla": 99.95
+    },
+    {
+      "id": "functions",
+      "name": "Azure Functions (Consumption / Premium)",
+      "sla": 99.95
+    },
+    {
+      "id": "container-apps",
+      "name": "Azure Container Apps",
+      "sla": 99.95
+    },
+    {
+      "id": "aks-zones",
+      "name": "AKS API server, Standard tier, availability zones",
+      "sla": 99.95,
+      "condition": "Free tier has no SLA"
+    },
+    {
+      "id": "aks-nozones",
+      "name": "AKS API server, Standard tier, no zones",
+      "sla": 99.9
+    },
+    {
+      "id": "vm-single",
+      "name": "Single VM, Premium SSD disks",
+      "sla": 99.9
+    },
+    {
+      "id": "vm-avset",
+      "name": "VMs in an availability set (2+)",
+      "sla": 99.95
+    },
+    {
+      "id": "vm-zones",
+      "name": "VMs across 2+ availability zones",
+      "sla": 99.99
+    },
+    {
+      "id": "sql-db",
+      "name": "Azure SQL Database (General Purpose / Business Critical)",
+      "sla": 99.99
+    },
+    {
+      "id": "sql-db-zr",
+      "name": "Azure SQL Database, Business Critical, zone-redundant",
+      "sla": 99.995
+    },
+    {
+      "id": "postgres-zr",
+      "name": "PostgreSQL Flexible Server, zone-redundant HA",
+      "sla": 99.99
+    },
+    {
+      "id": "postgres",
+      "name": "PostgreSQL Flexible Server, no HA",
+      "sla": 99.9
+    },
+    {
+      "id": "cosmos",
+      "name": "Cosmos DB, single region",
+      "sla": 99.99
+    },
+    {
+      "id": "cosmos-multi",
+      "name": "Cosmos DB, multi-region",
+      "sla": 99.999,
+      "condition": "Reads; writes too with multi-region writes"
+    },
+    {
+      "id": "storage-lrs",
+      "name": "Storage (LRS/ZRS, hot) read and write",
+      "sla": 99.9
+    },
+    {
+      "id": "storage-ragrs",
+      "name": "Storage RA-GRS (hot), reads",
+      "sla": 99.99
+    },
+    {
+      "id": "key-vault",
+      "name": "Key Vault",
+      "sla": 99.99
+    },
+    {
+      "id": "redis",
+      "name": "Azure Cache for Redis (Standard / Premium)",
+      "sla": 99.9
+    },
+    {
+      "id": "lb",
+      "name": "Load Balancer (Standard)",
+      "sla": 99.99
+    },
+    {
+      "id": "appgw",
+      "name": "Application Gateway v2",
+      "sla": 99.95
+    },
+    {
+      "id": "front-door",
+      "name": "Azure Front Door",
+      "sla": 99.99
+    },
+    {
+      "id": "traffic-manager",
+      "name": "Traffic Manager",
+      "sla": 99.99
+    },
+    {
+      "id": "dns",
+      "name": "Azure DNS",
+      "sla": 100
+    },
+    {
+      "id": "apim",
+      "name": "API Management (Basic / Standard)",
+      "sla": 99.95,
+      "condition": "Developer tier has no SLA"
+    },
+    {
+      "id": "apim-multi",
+      "name": "API Management Premium, multi-region",
+      "sla": 99.99
+    },
+    {
+      "id": "firewall",
+      "name": "Azure Firewall",
+      "sla": 99.95
+    },
+    {
+      "id": "firewall-zones",
+      "name": "Azure Firewall, 2+ zones",
+      "sla": 99.99
+    },
+    {
+      "id": "vpn",
+      "name": "VPN Gateway (VpnGw1 and above)",
+      "sla": 99.95
+    },
+    {
+      "id": "expressroute",
+      "name": "ExpressRoute circuit",
+      "sla": 99.95
+    },
+    {
+      "id": "entra",
+      "name": "Microsoft Entra ID",
+      "sla": 99.99
+    },
+    {
+      "id": "event-grid",
+      "name": "Event Grid",
+      "sla": 99.99
+    },
+    {
+      "id": "acr",
+      "name": "Container Registry",
+      "sla": 99.9
+    },
+    {
+      "id": "static-web-apps",
+      "name": "Static Web Apps (Standard)",
+      "sla": 99.95
+    },
+    {
+      "id": "log-analytics",
+      "name": "Log Analytics (query)",
+      "sla": 99.9
+    }
+  ],
+  "presets": [
+    {
+      "id": "web-sql",
+      "title": "Web app + SQL",
+      "tree": {
+        "kind": "series",
+        "items": [
+          {
+            "kind": "service",
+            "service": "app-service"
+          },
+          {
+            "kind": "service",
+            "service": "sql-db"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-full",
+      "title": "Front Door, web app, SQL, storage, Key Vault",
+      "tree": {
+        "kind": "series",
+        "items": [
+          {
+            "kind": "service",
+            "service": "front-door"
+          },
+          {
+            "kind": "service",
+            "service": "app-service"
+          },
+          {
+            "kind": "service",
+            "service": "sql-db"
+          },
+          {
+            "kind": "service",
+            "service": "storage-lrs"
+          },
+          {
+            "kind": "service",
+            "service": "key-vault"
+          }
+        ]
+      }
+    },
+    {
+      "id": "multi-region",
+      "title": "Two regions behind Front Door",
+      "tree": {
+        "kind": "series",
+        "items": [
+          {
+            "kind": "service",
+            "service": "front-door"
+          },
+          {
+            "kind": "parallel",
+            "items": [
+              {
+                "kind": "series",
+                "items": [
+                  {
+                    "kind": "service",
+                    "service": "app-service"
+                  },
+                  {
+                    "kind": "service",
+                    "service": "sql-db"
+                  }
+                ],
+                "label": "Region 1"
+              },
+              {
+                "kind": "series",
+                "items": [
+                  {
+                    "kind": "service",
+                    "service": "app-service"
+                  },
+                  {
+                    "kind": "service",
+                    "service": "sql-db"
+                  }
+                ],
+                "label": "Region 2"
+              }
+            ],
+            "label": "Either region"
+          }
+        ]
+      }
+    },
+    {
+      "id": "aks",
+      "title": "AKS with Redis and Cosmos DB",
+      "tree": {
+        "kind": "series",
+        "items": [
+          {
+            "kind": "service",
+            "service": "lb"
+          },
+          {
+            "kind": "service",
+            "service": "aks-zones"
+          },
+          {
+            "kind": "service",
+            "service": "redis"
+          },
+          {
+            "kind": "service",
+            "service": "cosmos"
+          }
+        ]
+      }
+    },
+    {
+      "id": "vm-tier",
+      "title": "VMs behind a load balancer",
+      "tree": {
+        "kind": "series",
+        "items": [
+          {
+            "kind": "service",
+            "service": "lb"
+          },
+          {
+            "kind": "service",
+            "service": "vm-avset"
+          },
+          {
+            "kind": "service",
+            "service": "sql-db"
+          }
+        ]
+      }
+    }
+  ],
+  "exercises": [
+    {
+      "id": "e-web-sql",
+      "question": "App Service (99.95%) calling Azure SQL Database (99.99%). What is the composite SLA?",
+      "tree": {
+        "kind": "series",
+        "items": [
+          {
+            "kind": "service",
+            "service": "app-service"
+          },
+          {
+            "kind": "service",
+            "service": "sql-db"
+          }
+        ]
+      },
+      "kind": "percent",
+      "answer": 99.94,
+      "tolerance": 0.006
+    },
+    {
+      "id": "e-front-door",
+      "question": "Put Front Door (99.99%) in front of that App Service + SQL pair. Composite SLA?",
+      "tree": {
+        "kind": "series",
+        "items": [
+          {
+            "kind": "service",
+            "service": "front-door"
+          },
+          {
+            "kind": "service",
+            "service": "app-service"
+          },
+          {
+            "kind": "service",
+            "service": "sql-db"
+          }
+        ]
+      },
+      "kind": "percent",
+      "answer": 99.93,
+      "tolerance": 0.006
+    },
+    {
+      "id": "e-two-regions",
+      "question": "Front Door in front of two regions, each App Service + SQL, either region able to serve. Composite SLA (2 decimals)?",
+      "tree": {
+        "kind": "series",
+        "items": [
+          {
+            "kind": "service",
+            "service": "front-door"
+          },
+          {
+            "kind": "parallel",
+            "items": [
+              {
+                "kind": "series",
+                "items": [
+                  {
+                    "kind": "service",
+                    "service": "app-service"
+                  },
+                  {
+                    "kind": "service",
+                    "service": "sql-db"
+                  }
+                ],
+                "label": "Region 1"
+              },
+              {
+                "kind": "series",
+                "items": [
+                  {
+                    "kind": "service",
+                    "service": "app-service"
+                  },
+                  {
+                    "kind": "service",
+                    "service": "sql-db"
+                  }
+                ],
+                "label": "Region 2"
+              }
+            ]
+          }
+        ]
+      },
+      "kind": "percent",
+      "answer": 99.99,
+      "tolerance": 0.006
+    },
+    {
+      "id": "e-downtime",
+      "question": "How many minutes of downtime a month does 99.9% allow? (average month)",
+      "kind": "minutes",
+      "answer": 43.8,
+      "tolerance": 0.6
+    },
+    {
+      "id": "e-vm",
+      "question": "Standard Load Balancer (99.99%) \u2192 VMs in an availability set (99.95%) \u2192 Storage LRS (99.9%). Composite SLA?",
+      "tree": {
+        "kind": "series",
+        "items": [
+          {
+            "kind": "service",
+            "service": "lb"
+          },
+          {
+            "kind": "service",
+            "service": "vm-avset"
+          },
+          {
+            "kind": "service",
+            "service": "storage-lrs"
+          }
+        ]
+      },
+      "kind": "percent",
+      "answer": 99.84,
+      "tolerance": 0.006
+    }
+  ]
+}

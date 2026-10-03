@@ -1,0 +1,210 @@
+{
+  "$comment": "Architecture builder: services (generic shapes, short text badges - no vendor icons), regions, and scenarios with model answers.",
+  "regions": ["West Europe", "North Europe", "UK South", "Sweden Central", "East US", "West US 2"],
+  "services": [
+    {
+      "id": "users",
+      "name": "Users / Internet",
+      "badge": "WWW",
+      "category": "entry",
+      "global": true,
+      "props": [],
+      "description": "Where public traffic comes from."
+    },
+    {
+      "id": "frontdoor",
+      "name": "Front Door",
+      "badge": "AFD",
+      "category": "edge",
+      "global": true,
+      "props": [
+        {
+          "key": "waf",
+          "label": "WAF policy",
+          "kind": "bool",
+          "default": false
+        }
+      ],
+      "description": "Global layer-7 entry point: anycast, TLS, caching, health-probed failover between regions, optional WAF."
+    },
+    {
+      "id": "appgw",
+      "name": "Application Gateway",
+      "badge": "AGW",
+      "category": "edge",
+      "props": [
+        {
+          "key": "sku",
+          "label": "SKU",
+          "kind": "select",
+          "options": ["Standard_v2", "WAF_v2"],
+          "default": "Standard_v2"
+        },
+        {
+          "key": "zones",
+          "label": "Zone-redundant",
+          "kind": "bool",
+          "default": false
+        }
+      ],
+      "description": "Regional layer-7 load balancer in your VNet; the WAF_v2 SKU adds a web application firewall."
+    },
+    {
+      "id": "vm",
+      "name": "Virtual machines",
+      "badge": "VM",
+      "category": "compute",
+      "props": [
+        {
+          "key": "instances",
+          "label": "Instances",
+          "kind": "number",
+          "min": 1,
+          "max": 10,
+          "default": 1
+        },
+        {
+          "key": "zones",
+          "label": "Spread across zones",
+          "kind": "bool",
+          "default": false
+        },
+        {
+          "key": "backup",
+          "label": "Azure Backup",
+          "kind": "bool",
+          "default": false
+        }
+      ],
+      "description": "IaaS compute: you manage the OS, patching and backup."
+    },
+    {
+      "id": "appservice",
+      "name": "App Service",
+      "badge": "APP",
+      "category": "compute",
+      "props": [
+        {
+          "key": "instances",
+          "label": "Instances",
+          "kind": "number",
+          "min": 1,
+          "max": 30,
+          "default": 1
+        },
+        {
+          "key": "zoneRedundant",
+          "label": "Zone-redundant",
+          "kind": "bool",
+          "default": false
+        }
+      ],
+      "description": "PaaS web hosting with slots, autoscale and managed patching."
+    },
+    {
+      "id": "aks",
+      "name": "AKS cluster",
+      "badge": "AKS",
+      "category": "compute",
+      "props": [
+        {
+          "key": "nodeCount",
+          "label": "Nodes",
+          "kind": "number",
+          "min": 1,
+          "max": 100,
+          "default": 3
+        },
+        {
+          "key": "zones",
+          "label": "Nodes across zones",
+          "kind": "bool",
+          "default": false
+        }
+      ],
+      "description": "Managed Kubernetes; you run the workloads and node pools."
+    },
+    {
+      "id": "sql",
+      "name": "Azure SQL Database",
+      "badge": "SQL",
+      "category": "data",
+      "props": [
+        {
+          "key": "zoneRedundant",
+          "label": "Zone-redundant",
+          "kind": "bool",
+          "default": false
+        },
+        {
+          "key": "geoReplica",
+          "label": "Failover group / geo-replica",
+          "kind": "bool",
+          "default": false
+        }
+      ],
+      "description": "PaaS relational database with automatic backups (point-in-time restore)."
+    },
+    {
+      "id": "storage",
+      "name": "Storage account",
+      "badge": "ST",
+      "category": "data",
+      "props": [
+        {
+          "key": "redundancy",
+          "label": "Redundancy",
+          "kind": "select",
+          "options": ["LRS", "ZRS", "GRS", "GZRS"],
+          "default": "LRS"
+        },
+        {
+          "key": "softDelete",
+          "label": "Soft delete + versioning",
+          "kind": "bool",
+          "default": false
+        }
+      ],
+      "description": "Blobs, files, queues and tables."
+    },
+    {
+      "id": "keyvault",
+      "name": "Key Vault",
+      "badge": "KV",
+      "category": "security",
+      "props": [],
+      "description": "Secrets, keys and certificates; apps read them with a managed identity."
+    },
+    {
+      "id": "vnet",
+      "name": "Virtual network",
+      "badge": "VNET",
+      "category": "network",
+      "props": [
+        {
+          "key": "addressSpace",
+          "label": "Address space",
+          "kind": "text",
+          "default": "10.0.0.0/16"
+        }
+      ],
+      "description": "Private network for VMs, AKS nodes, gateways and private endpoints."
+    },
+    {
+      "id": "pe",
+      "name": "Private endpoint",
+      "badge": "PE",
+      "category": "network",
+      "props": [],
+      "description": "A private IP in your subnet for one PaaS resource; pair it with a private DNS zone."
+    },
+    {
+      "id": "loganalytics",
+      "name": "Log Analytics",
+      "badge": "LA",
+      "category": "ops",
+      "props": [],
+      "description": "Workspace for logs and metrics: diagnostics, alerts, KQL."
+    }
+  ]
+}

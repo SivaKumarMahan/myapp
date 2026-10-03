@@ -110,6 +110,7 @@ export function ReviewForecast({ counts, now = Date.now() }: { counts: number[];
                   width={slot}
                   height={plotHeight}
                   tabIndex={0}
+                  role="img"
                   aria-label={`${dayLabel(offset, now)}: ${count} ${count === 1 ? 'review' : 'reviews'}`}
                   onMouseEnter={() => setActive(offset)}
                   onMouseLeave={() => setActive(null)}

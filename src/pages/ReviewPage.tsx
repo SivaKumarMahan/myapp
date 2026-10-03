@@ -149,6 +149,7 @@ function ReviewSession({ filter }: { filter: DeckFilter }) {
     if (entry) {
       body = (
         <div className="stack-sm">
+          <h2 className="visually-hidden">Card {position + 1}</h2>
           <p className="subtle" style={{ margin: 0 }}>
             <span aria-hidden="true">{entry.topic.icon} </span>
             <Link to={`/interview/${entry.topic.id}`}>{entry.topic.title}</Link>

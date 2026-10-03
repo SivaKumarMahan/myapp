@@ -333,6 +333,8 @@ export function ProgressPage() {
             ref={fileInput}
             type="file"
             accept="application/json,.json"
+            aria-label="Progress file to import"
+            tabIndex={-1}
             className="visually-hidden"
             onChange={(event) => {
               const file = event.target.files?.[0]

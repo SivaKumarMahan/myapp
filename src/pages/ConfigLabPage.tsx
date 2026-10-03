@@ -158,7 +158,6 @@ export function ConfigLabPage() {
             role="tab"
             className="chip"
             aria-selected={tab === entry.id}
-            aria-pressed={tab === entry.id}
             onClick={() => select({ tab: entry.id, exercise: null })}
           >
             {entry.label}

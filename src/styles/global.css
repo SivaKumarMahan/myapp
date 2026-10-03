@@ -22,7 +22,7 @@
   /* Text */
   --text: #131722;
   --text-muted: #4d566b;
-  --text-subtle: #66708a;
+  --text-subtle: #5f6982;
   --text-inverted: #ffffff;
 
   /* Lines */
@@ -74,7 +74,7 @@
 
   /* Syntax highlighting (light) */
   --code-text: #1f2430;
-  --code-comment: #6b7280;
+  --code-comment: #5f6672;
   --code-key: #1d4ed8;
   --code-string: #0c6b45;
   --code-number: #a4471a;

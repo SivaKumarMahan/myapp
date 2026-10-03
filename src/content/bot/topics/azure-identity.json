@@ -1,0 +1,1808 @@
+{
+  "topic": "azure-identity",
+  "questions": [
+    {
+      "id": "itv-azid-1",
+      "shortAnswer": "A Microsoft Entra ID tenant is an organisation's dedicated identity directory: its users, groups, apps and policies. Every Azure subscription trusts exactly one tenant for sign-in and RBAC, while one tenant can own many subscriptions.",
+      "keyPoints": [
+        {
+          "point": "A tenant is the organisation's identity directory",
+          "keywords": ["tenant", "directory", "entra id", "azure ad", "aad", "identity"],
+          "weight": 3
+        },
+        {
+          "point": "It holds users, groups, apps and policies",
+          "keywords": ["users", "groups", "applications", "app registrations", "policies"],
+          "weight": 2
+        },
+        {
+          "point": "A subscription trusts exactly one tenant",
+          "keywords": ["one tenant", "exactly one", "trusts", "associated with a tenant"],
+          "weight": 3
+        },
+        {
+          "point": "A tenant can have many subscriptions",
+          "keywords": ["many subscriptions", "multiple subscriptions", "one-to-many"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "A subscription can trust several tenants.",
+          "triggers": ["several tenants", "multiple tenants per subscription"],
+          "correction": "A subscription trusts one tenant at a time; it can be moved, which resets RBAC."
+        },
+        {
+          "mistake": "The tenant and the subscription are the same thing.",
+          "triggers": ["same thing", "tenant is the subscription"],
+          "correction": "The tenant is identity; the subscription is a billing and resource boundary that trusts a tenant."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "What breaks when you transfer a subscription to another tenant?",
+          "shortAnswer": "All Azure RBAC role assignments and custom roles are removed, managed identities must be recreated or reassigned, and Key Vault access policies and tenant IDs in apps need updating.",
+          "keyPoints": [
+            {
+              "point": "RBAC role assignments are removed",
+              "keywords": ["role assignments", "rbac", "removed", "lost"],
+              "weight": 3
+            },
+            {
+              "point": "Managed identities and Key Vault need fixing",
+              "keywords": ["managed identities", "key vault", "tenant id"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "Why might a company run more than one tenant?",
+          "shortAnswer": "To separate production from testing of identity features, after mergers, for strict regulatory isolation, or for customer identity (External ID). Each extra tenant adds management overhead.",
+          "keyPoints": [
+            {
+              "point": "Isolation for test, regulation or mergers",
+              "keywords": ["isolation", "test tenant", "merger", "acquisition", "regulatory"],
+              "weight": 3
+            },
+            {
+              "point": "More tenants means more overhead",
+              "keywords": ["overhead", "harder to manage"],
+              "weight": 1
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Separate identity from billing and resources.",
+        "One of them is a directory, the other trusts it.",
+        "Tenant = Entra ID directory; each subscription trusts exactly one tenant; a tenant has many subscriptions."
+      ],
+      "analogy": "The tenant is a company's staff register and badge office; subscriptions are the company's buildings. Every building checks badges against exactly one badge office.",
+      "simpleExplanation": "A tenant is where your organisation's user accounts live. Azure subscriptions, where your resources and bills are, each rely on one tenant to know who is allowed in.",
+      "related": ["itv-azid-6", "itv-azid-2"],
+      "scenarioVariant": {
+        "question": "A subsidiary's subscription must move into the parent company's tenant. What do you plan for?",
+        "shortAnswer": "Inventory and export role assignments, custom roles, managed identities and Key Vault access; move the subscription; then recreate RBAC with the parent's groups and fix identities and tenant IDs in apps."
+      }
+    },
+    {
+      "id": "itv-azid-2",
+      "shortAnswer": "At scale you grant access to groups, never to individual users. Security groups are for access to resources and apps; Microsoft 365 groups add a mailbox, Teams and SharePoint. Membership is assigned by hand or dynamic, computed from user attributes such as department, and many organisations synchronise users and groups from on-premises Active Directory with Entra Connect.",
+      "keyPoints": [
+        {
+          "point": "Grant access to groups, not individual users",
+          "keywords": ["groups not users", "assign to groups", "group-based", "never individual"],
+          "weight": 3
+        },
+        {
+          "point": "Security groups for access; Microsoft 365 groups for collaboration",
+          "keywords": ["security group", "microsoft 365 group", "m365 group", "teams", "mailbox"],
+          "weight": 2
+        },
+        {
+          "point": "Assigned vs dynamic membership",
+          "keywords": ["assigned", "dynamic", "membership rule", "attribute"],
+          "weight": 3
+        },
+        {
+          "point": "Dynamic groups use user or device attributes",
+          "keywords": ["department", "attributes", "rule", "user.department"],
+          "weight": 1
+        },
+        {
+          "point": "Sync from on-premises AD with Entra Connect",
+          "keywords": ["entra connect", "azure ad connect", "sync", "on-premises", "cloud sync"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Give the user the role directly - it is quicker.",
+          "triggers": ["assign directly", "individual user", "directly to the user"],
+          "correction": "Direct assignments do not scale and are not cleaned up when people move; use groups."
+        },
+        {
+          "mistake": "Dynamic groups are free and instant.",
+          "triggers": ["dynamic groups are free", "instant"],
+          "correction": "Dynamic membership needs Entra ID P1 and updates are processed asynchronously."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "What are role-assignable groups, and why are they special?",
+          "shortAnswer": "Groups created with the 'can be assigned Entra roles' setting, so they can hold directory roles. Only Privileged Role Administrators or Global Admins can manage their membership, which stops group owners escalating privileges.",
+          "keyPoints": [
+            {
+              "point": "Groups that can be assigned Entra roles",
+              "keywords": ["entra roles", "directory roles", "role-assignable"],
+              "weight": 3
+            },
+            {
+              "point": "Membership protected to prevent escalation",
+              "keywords": ["protected", "escalation", "privileged role administrator"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "How do guest users appear in the directory?",
+          "shortAnswer": "As user objects with userType Guest, usually with an #EXT# UPN, invited through B2B collaboration; they sign in with their home identity.",
+          "keyPoints": [
+            {
+              "point": "userType Guest",
+              "keywords": ["guest", "usertype"],
+              "weight": 3
+            },
+            {
+              "point": "Invited via B2B, home identity",
+              "keywords": ["b2b", "invited", "home tenant", "#ext#"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Who should hold permissions - people or something else?",
+        "Two kinds of group and two ways membership is decided.",
+        "Groups not users; security vs M365 groups; assigned vs dynamic; Entra Connect sync."
+      ],
+      "analogy": "Instead of giving each employee their own key, you give keys to teams; who is on a team is either decided by a manager (assigned) or automatically by their job title (dynamic).",
+      "simpleExplanation": "Put people into groups and give the groups access. Some groups you fill by hand; dynamic groups fill themselves based on details like a person's department.",
+      "related": ["itv-azid-19", "itv-azid-6"],
+      "scenarioVariant": {
+        "question": "HR moves 200 people between departments every quarter and access keeps going stale. What do you change?",
+        "shortAnswer": "Use dynamic security groups based on the department attribute (synced from HR or AD), assign access to those groups, and add access reviews for anything granted manually."
+      }
+    },
+    {
+      "id": "itv-azid-3",
+      "shortAnswer": "An app registration is the global definition of an application - its application object, credentials and requested permissions - in its home tenant. A service principal is the app's local identity inside a particular tenant, created when the app is used there; the portal's Enterprise applications blade lists service principals, and that is where you control who can sign in, admin consent and Azure RBAC.",
+      "keyPoints": [
+        {
+          "point": "App registration = the application object (the definition)",
+          "keywords": ["app registration", "application object", "definition", "blueprint"],
+          "weight": 3
+        },
+        {
+          "point": "Credentials and requested permissions live on the registration",
+          "keywords": ["credentials", "secrets", "certificates", "permissions", "api permissions"],
+          "weight": 2
+        },
+        {
+          "point": "Service principal = local identity in a tenant",
+          "keywords": ["service principal", "local identity", "instance", "sp"],
+          "weight": 3
+        },
+        {
+          "point": "Enterprise applications blade shows service principals",
+          "keywords": ["enterprise application", "enterprise applications"],
+          "weight": 2
+        },
+        {
+          "point": "Access, consent and RBAC are granted to the service principal",
+          "keywords": ["consent", "who can sign in", "rbac", "role assignment"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Assign Azure roles to the app registration.",
+          "triggers": ["role to the app registration", "assign the registration"],
+          "correction": "Roles are assigned to the service principal (enterprise application) object, whose object ID differs from the application object ID."
+        },
+        {
+          "mistake": "A multi-tenant app has one service principal everywhere.",
+          "triggers": ["one service principal everywhere"],
+          "correction": "Each tenant that uses it gets its own service principal."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "What happens in a customer tenant when they consent to your multi-tenant app?",
+          "shortAnswer": "A service principal for your app is created in their tenant, and the consented permissions are recorded there; they control it locally.",
+          "keyPoints": [
+            {
+              "point": "A service principal is created in their tenant",
+              "keywords": ["service principal created", "in their tenant"],
+              "weight": 3
+            },
+            {
+              "point": "Consent is recorded locally",
+              "keywords": ["consent", "permissions granted"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "Where do you see sign-in logs for a service principal?",
+          "shortAnswer": "In Entra ID sign-in logs under 'Service principal sign-ins' (and managed identity sign-ins), not in the interactive user sign-ins.",
+          "keyPoints": [
+            {
+              "point": "Service principal sign-ins tab",
+              "keywords": ["service principal sign-ins", "non-interactive"],
+              "weight": 3
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "One is global, the other exists per tenant.",
+        "Which object do you grant access to?",
+        "App registration = application object; service principal = per-tenant identity (enterprise app) that gets consent and RBAC."
+      ],
+      "analogy": "The app registration is the recipe; a service principal is the dish served in each restaurant (tenant). Health inspections and permissions apply to the dish in that restaurant.",
+      "simpleExplanation": "When you register an app you create its definition. When it is used in a tenant, a service principal is created there - that is the account you give permissions to.",
+      "related": ["itv-azid-4", "itv-azid-10", "itv-azid-16"],
+      "scenarioVariant": {
+        "question": "A role assignment script fails with 'principal not found' using the app's client ID. Why?",
+        "shortAnswer": "Role assignments need the service principal's object ID, not the application (client) ID or the app object ID; look it up with az ad sp show --id <clientId>."
+      }
+    },
+    {
+      "id": "itv-azid-4",
+      "shortAnswer": "A managed identity is an Entra identity Azure creates and rotates for a resource, so code gets tokens without any secret in configuration. A system-assigned identity is tied to one resource and deleted with it; a user-assigned identity is a standalone resource you can share and create before the resources that use it - useful when role assignments must exist before the resource is created. Either way you grant it access with Azure RBAC role assignments.",
+      "keyPoints": [
+        {
+          "point": "No secret ever exists in your configuration",
+          "keywords": ["no secret", "no credentials", "secretless", "azure rotates", "no password"],
+          "weight": 3
+        },
+        {
+          "point": "System-assigned: tied to one resource, deleted with it",
+          "keywords": ["system-assigned", "system assigned", "deleted with", "lifecycle"],
+          "weight": 3
+        },
+        {
+          "point": "User-assigned: standalone, shareable, independent lifecycle",
+          "keywords": ["user-assigned", "user assigned", "shared", "standalone", "reuse"],
+          "weight": 3
+        },
+        {
+          "point": "User-assigned lets role assignments exist before the resource",
+          "keywords": ["before the resource", "pre-create", "ahead of time"],
+          "weight": 1
+        },
+        {
+          "point": "Access is granted with Azure RBAC role assignments",
+          "keywords": ["rbac", "role assignment", "grant access"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Managed identities store a secret you must rotate.",
+          "triggers": ["rotate the secret", "managed identity secret"],
+          "correction": "Azure handles the credential; you never see or rotate it."
+        },
+        {
+          "mistake": "Managed identities work from anywhere, like on a laptop.",
+          "triggers": ["works locally", "on-premises managed identity"],
+          "correction": "They work for Azure resources (and Arc-enabled servers); locally use developer credentials via DefaultAzureCredential."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How does DefaultAzureCredential pick a credential locally versus in Azure?",
+          "shortAnswer": "It tries a chain: environment variables, workload identity, managed identity, then developer tools such as the Azure CLI or Visual Studio sign-in. In Azure the managed identity answers; on a laptop your CLI login does.",
+          "keyPoints": [
+            {
+              "point": "It tries a chain of credentials",
+              "keywords": ["chain", "in order", "tries"],
+              "weight": 3
+            },
+            {
+              "point": "Managed identity in Azure, CLI/IDE login locally",
+              "keywords": ["managed identity", "azure cli", "visual studio", "developer"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "Why can a role assignment on a just-created identity fail?",
+          "shortAnswer": "The new service principal may not have replicated across Entra ID yet; pass principalType ServicePrincipal (in Bicep/CLI) and retry, or wait.",
+          "keyPoints": [
+            {
+              "point": "Replication delay of the new principal",
+              "keywords": ["replication", "propagation", "not found yet"],
+              "weight": 3
+            },
+            {
+              "point": "Set principalType",
+              "keywords": ["principaltype", "serviceprincipal"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "What problem do managed identities remove from your config files?",
+        "Two types differ in lifecycle and sharing.",
+        "No secrets; system-assigned dies with the resource; user-assigned is standalone and shareable; grant via RBAC."
+      ],
+      "analogy": "A managed identity is like a staff badge printed by the building for each machine: nobody has to carry or copy a password. A system-assigned badge is for one machine and destroyed with it; a user-assigned badge can be handed to several machines.",
+      "simpleExplanation": "A managed identity lets an Azure resource prove who it is without any password in your code. You then give that identity permission to use other services, like Key Vault or Storage.",
+      "related": ["itv-azid-5", "itv-azid-16", "itv-azid-20"],
+      "scenarioVariant": {
+        "question": "Ten Function Apps need the same access to Storage and Service Bus. System- or user-assigned identities?",
+        "shortAnswer": "One user-assigned identity granted the roles once and attached to all ten - fewer role assignments, and they can exist before the apps are deployed."
+      }
+    },
+    {
+      "id": "itv-azid-5",
+      "shortAnswer": "Give the VM a managed identity and grant it the Key Vault Secrets User role on the vault (or the specific secrets). The app asks the VM's identity endpoint for a token and reads the secret - nothing is stored on the VM or in configuration.",
+      "keyPoints": [
+        {
+          "point": "Use a managed identity on the VM",
+          "keywords": ["managed identity", "system-assigned", "user-assigned"],
+          "weight": 3
+        },
+        {
+          "point": "Grant Key Vault Secrets User via RBAC",
+          "keywords": ["key vault secrets user", "secrets user", "rbac", "role"],
+          "weight": 3
+        },
+        {
+          "point": "The code gets a token from the instance metadata endpoint (IMDS), e.g. via DefaultAzureCredential",
+          "keywords": [
+            "imds",
+            "instance metadata",
+            "169.254.169.254",
+            "defaultazurecredential",
+            "managedidentitycredential",
+            "get a token"
+          ],
+          "weight": 2
+        },
+        {
+          "point": "No secret stored on the VM or in config",
+          "keywords": ["no secret", "nothing stored", "no credentials"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Store a client secret in an environment variable.",
+          "triggers": ["environment variable", "client secret", "config file"],
+          "correction": "That is still a stored secret; a managed identity removes it."
+        },
+        {
+          "mistake": "Give the identity Key Vault Contributor.",
+          "triggers": ["key vault contributor", "contributor"],
+          "correction": "Contributor manages the vault itself and does not grant data access to secrets; use Key Vault Secrets User."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "What would you do if the same code must also run on-premises?",
+          "shortAnswer": "Use DefaultAzureCredential in code; on-premises, Arc-enable the server so it has a managed identity, or use a certificate-based service principal - still no plain secret.",
+          "keyPoints": [
+            {
+              "point": "DefaultAzureCredential in code",
+              "keywords": ["defaultazurecredential"],
+              "weight": 2
+            },
+            {
+              "point": "Azure Arc managed identity or certificate",
+              "keywords": ["azure arc", "arc", "certificate"],
+              "weight": 3
+            }
+          ]
+        },
+        {
+          "question": "Access policies or RBAC on the vault?",
+          "shortAnswer": "RBAC (the Azure RBAC permission model) for new vaults: least privilege per secret, auditable, managed with the same role assignments as everything else.",
+          "keyPoints": [
+            {
+              "point": "Prefer the RBAC permission model",
+              "keywords": ["rbac", "azure rbac permission model"],
+              "weight": 3
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "The VM itself can have an identity.",
+        "Which built-in role reads secrets but does not manage the vault?",
+        "Managed identity + Key Vault Secrets User role."
+      ],
+      "analogy": "Instead of taping the vault key under the desk, you give the VM its own staff badge, and the vault lets that badge read the secrets it needs.",
+      "simpleExplanation": "Turn on a managed identity for the VM and allow that identity to read secrets from Key Vault. Then the app can get secrets without anyone storing a password on the VM.",
+      "related": ["itv-azid-4", "itv-azid-17"],
+      "scenarioVariant": {
+        "question": "An AKS pod needs a Key Vault secret without secrets in Kubernetes. What do you use?",
+        "shortAnswer": "Workload identity: a user-assigned managed identity federated with the pod's service account, granted Key Vault Secrets User, plus the Secrets Store CSI driver or SDK."
+      }
+    },
+    {
+      "id": "itv-azid-6",
+      "shortAnswer": "Azure RBAC roles control access to Azure resources - VMs, storage, subscriptions - at a scope such as a management group, subscription, resource group or resource. Entra roles control the directory and Microsoft 365: users, groups, app registrations, Conditional Access. They are independent: a Global Administrator has no Azure resource access by default, though they can elevate to User Access Administrator at root.",
+      "keyPoints": [
+        {
+          "point": "Azure RBAC roles control Azure resources",
+          "keywords": [
+            "azure rbac",
+            "azure resources",
+            "resources",
+            "owner",
+            "contributor",
+            "reader"
+          ],
+          "weight": 3
+        },
+        {
+          "point": "RBAC is assigned at a scope",
+          "keywords": ["scope", "management group", "subscription", "resource group"],
+          "weight": 2
+        },
+        {
+          "point": "Entra roles control the directory and Microsoft 365",
+          "keywords": [
+            "entra roles",
+            "directory roles",
+            "global administrator",
+            "user administrator",
+            "microsoft 365"
+          ],
+          "weight": 3
+        },
+        {
+          "point": "The two are independent",
+          "keywords": ["independent", "separate", "different systems"],
+          "weight": 2
+        },
+        {
+          "point": "Global Admin can elevate to manage Azure",
+          "keywords": ["elevate", "elevated access", "user access administrator at root"],
+          "weight": 1
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Global Administrators automatically own every subscription.",
+          "triggers": ["global admin owns", "automatically owner"],
+          "correction": "Not by default - they must deliberately elevate access."
+        },
+        {
+          "mistake": "Owner on a subscription can create users in Entra ID.",
+          "triggers": ["owner can create users"],
+          "correction": "Creating users needs an Entra role such as User Administrator."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How does a Global Administrator regain access to an orphaned subscription?",
+          "shortAnswer": "Enable 'Access management for Azure resources' to become User Access Administrator at the root scope, assign themselves or a group the needed role, then remove the elevation.",
+          "keyPoints": [
+            {
+              "point": "Elevate access to root User Access Administrator",
+              "keywords": ["elevate", "access management for azure resources", "root scope"],
+              "weight": 3
+            },
+            {
+              "point": "Remove the elevation afterwards",
+              "keywords": ["remove", "turn off"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "What is an administrative unit?",
+          "shortAnswer": "A container in Entra ID that limits an Entra role's scope to a subset of users or groups, for example letting a regional helpdesk reset passwords only for its region.",
+          "keyPoints": [
+            {
+              "point": "Scopes Entra roles to a subset of users/groups",
+              "keywords": ["subset", "scope", "region", "limit"],
+              "weight": 3
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Two systems: one for resources, one for the directory.",
+        "Does the top directory role automatically control resources?",
+        "RBAC = resources at scopes; Entra roles = directory/M365; independent; Global Admin must elevate."
+      ],
+      "analogy": "Entra roles are HR's powers over the staff list; Azure RBAC roles are the facilities team's keys to the buildings. Being head of HR does not give you the building keys.",
+      "simpleExplanation": "There are two kinds of admin roles. Entra roles manage users and directory settings. Azure RBAC roles manage cloud resources like VMs. Having one does not give you the other.",
+      "related": ["itv-azid-7", "itv-azid-9", "itv-azid-1"],
+      "scenarioVariant": {
+        "question": "A new helpdesk team must reset passwords but must not touch any Azure resources. Which roles?",
+        "shortAnswer": "The Entra role Helpdesk Administrator (or Password Administrator), possibly scoped to an administrative unit - and no Azure RBAC roles at all."
+      }
+    },
+    {
+      "id": "itv-azid-7",
+      "shortAnswer": "A role definition is a list of permissions - Actions and NotActions for the control plane, DataActions and NotDataActions for data - plus assignable scopes. NotActions only subtracts from that role's Actions; it is not a deny, because another role can still grant the permission, and effective access is the union of all assignments. I write a custom role only when no built-in role fits, starting from the closest built-in and keeping assignable scopes as broad as needed, usually a management group.",
+      "keyPoints": [
+        {
+          "point": "Permissions as Actions/NotActions and DataActions/NotDataActions",
+          "keywords": ["actions", "notactions", "dataactions", "permissions"],
+          "weight": 3
+        },
+        {
+          "point": "Assignable scopes define where the role can be used",
+          "keywords": ["assignable scopes", "assignablescopes", "where it can be assigned"],
+          "weight": 2
+        },
+        {
+          "point": "NotActions is not a deny",
+          "keywords": ["not a deny", "notactions is not deny", "subtracts", "exclusion"],
+          "weight": 3
+        },
+        {
+          "point": "Effective access is the union of all role assignments",
+          "keywords": ["union", "additive", "combined", "sum of roles"],
+          "weight": 2
+        },
+        {
+          "point": "Only explicit deny assignments can block",
+          "keywords": ["deny assignment", "deny assignments", "blueprints", "deployment stacks"],
+          "weight": 1
+        },
+        {
+          "point": "Write custom roles only when built-ins do not fit",
+          "keywords": ["built-in", "custom role", "closest built-in", "least privilege"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "NotActions denies the permission even if another role grants it.",
+          "triggers": ["notactions denies", "notactions blocks"],
+          "correction": "NotActions only removes it from that role; any other role assignment can still grant it."
+        },
+        {
+          "mistake": "Create a custom role for every team.",
+          "triggers": ["custom role for each team"],
+          "correction": "Prefer built-in roles and scoping; custom roles add maintenance and have limits per tenant."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How do deny assignments differ from NotActions?",
+          "shortAnswer": "Deny assignments explicitly block actions for principals at a scope, overriding any role assignment; you cannot create them directly - they come from features like deployment stacks or managed applications.",
+          "keyPoints": [
+            {
+              "point": "Deny assignments override role assignments",
+              "keywords": ["override", "block", "explicit deny"],
+              "weight": 3
+            },
+            {
+              "point": "Created by platform features, not directly",
+              "keywords": ["deployment stacks", "managed applications", "cannot create directly"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "What limits apply to custom roles, and why prefer management group assignable scopes?",
+          "shortAnswer": "A tenant can have up to 5,000 custom roles; assigning at a management group lets one definition serve many subscriptions instead of duplicates. Check current limits.",
+          "keyPoints": [
+            {
+              "point": "Limit on custom roles per tenant",
+              "keywords": ["5000", "limit", "per tenant"],
+              "weight": 2
+            },
+            {
+              "point": "One definition reused across subscriptions",
+              "keywords": ["reuse", "many subscriptions", "management group"],
+              "weight": 3
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "A role definition has two main parts.",
+        "What does NotActions really do if a second role grants the same action?",
+        "Actions/NotActions/DataActions + assignable scopes; NotActions is not a deny; union of assignments."
+      ],
+      "analogy": "A role is a keyring. NotActions is taking one key off this keyring - but if you also hold another keyring with that key, you can still open the door. Only a deny assignment is a lock that ignores all keyrings.",
+      "simpleExplanation": "A role is a list of allowed actions and where it may be used. Excluding an action in one role does not stop another role from allowing it - permissions from all your roles add up.",
+      "related": ["itv-azid-6", "itv-azid-9", "itv-azid-10"],
+      "scenarioVariant": {
+        "question": "You gave a team Contributor plus a custom role whose NotActions excludes deleting VMs, but they can still delete VMs. Why?",
+        "shortAnswer": "Contributor grants delete; NotActions in the custom role does not take it away from Contributor. Remove Contributor and give a single custom role without delete (or use a resource lock)."
+      }
+    },
+    {
+      "id": "itv-azid-8",
+      "shortAnswer": "Privileged Identity Management gives just-in-time privileged access: people are eligible for a role and activate it for a limited time, with MFA, a justification and optionally approval, instead of holding it permanently. For a platform team I give permanent read access, eligible Contributor on production through groups, keep Owner and User Access Administrator very restricted with approval, keep Global Administrator to a few eligible people plus break-glass accounts, and run regular access reviews.",
+      "keyPoints": [
+        {
+          "point": "PIM = just-in-time privileged access",
+          "keywords": ["pim", "privileged identity management", "just-in-time", "jit"],
+          "weight": 3
+        },
+        {
+          "point": "Users are eligible and activate for a limited time",
+          "keywords": ["eligible", "activate", "time-limited", "expire"],
+          "weight": 3
+        },
+        {
+          "point": "Activation requires MFA, justification, optionally approval",
+          "keywords": ["mfa", "justification", "approval", "ticket"],
+          "weight": 2
+        },
+        {
+          "point": "Permanent read access, eligible write access to production",
+          "keywords": ["permanent read", "reader", "eligible contributor", "production"],
+          "weight": 2
+        },
+        {
+          "point": "Owner / User Access Administrator / Global Admin tightly restricted",
+          "keywords": ["owner", "user access administrator", "global administrator", "approval"],
+          "weight": 2
+        },
+        {
+          "point": "Assign through groups and run access reviews",
+          "keywords": ["groups", "pim for groups", "access reviews"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Give the platform team permanent Owner on production for convenience.",
+          "triggers": ["permanent owner", "always owner"],
+          "correction": "Standing privilege is the risk PIM removes; make it eligible and time-bound."
+        },
+        {
+          "mistake": "PIM means nobody can act in an emergency.",
+          "triggers": ["no emergency access"],
+          "correction": "Keep break-glass accounts and approvers in more than one timezone."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How would you handle an incident at 3am if the approver is unavailable?",
+          "shortAnswer": "Have several approvers across timezones or no approval for the on-call role (MFA and justification only), and keep monitored break-glass accounts for true emergencies.",
+          "keyPoints": [
+            {
+              "point": "Multiple approvers / on-call role without approval",
+              "keywords": ["multiple approvers", "on-call", "no approval"],
+              "weight": 3
+            },
+            {
+              "point": "Break-glass accounts",
+              "keywords": ["break-glass", "emergency access"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "What is PIM for Groups and when is it better than role eligibility?",
+          "shortAnswer": "PIM can make membership or ownership of a group eligible; one activation then grants all the group's roles across Azure and Entra - simpler than activating many roles one by one.",
+          "keyPoints": [
+            {
+              "point": "Eligible group membership",
+              "keywords": ["group membership", "eligible member"],
+              "weight": 3
+            },
+            {
+              "point": "One activation grants many roles",
+              "keywords": ["many roles", "bundle", "one activation"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "The opposite of standing access.",
+        "Two states a role can be in, and what activation needs.",
+        "PIM: eligible vs active, time-limited activation with MFA/justification/approval, groups, access reviews."
+      ],
+      "analogy": "PIM is like a hotel master key kept at reception: staff are allowed to borrow it, must sign for it with a reason, and it automatically stops working after an hour.",
+      "simpleExplanation": "With PIM, admins do not have powerful access all the time. They request it when needed, for a short time, with a reason and extra checks, and it switches off by itself.",
+      "related": ["itv-azid-19", "itv-azid-6"],
+      "scenarioVariant": {
+        "question": "An audit finds 35 permanent Owners on production subscriptions. What is your plan?",
+        "shortAnswer": "Make them eligible via PIM (through a group), require approval for Owner, give everyday Reader/eligible Contributor instead, and set access reviews to remove the leftovers."
+      }
+    },
+    {
+      "id": "itv-azid-9",
+      "shortAnswer": "User Access Administrator: it can manage role assignments - grant others access - but cannot create or modify resources. Owner can do both; Contributor can manage resources but not grant access.",
+      "keyPoints": [
+        {
+          "point": "User Access Administrator is the answer",
+          "keywords": ["user access administrator", "uaa"],
+          "weight": 3
+        },
+        {
+          "point": "It manages access (role assignments) only",
+          "keywords": ["manage access", "role assignments", "grant access"],
+          "weight": 2
+        },
+        {
+          "point": "Owner can manage resources and access",
+          "keywords": ["owner"],
+          "weight": 1
+        },
+        {
+          "point": "Contributor manages resources but cannot grant access",
+          "keywords": ["contributor", "cannot grant"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Owner is the least-privilege answer.",
+          "triggers": ["owner"],
+          "correction": "Owner also has full resource control; User Access Administrator only manages access."
+        },
+        {
+          "mistake": "Security Administrator.",
+          "triggers": ["security administrator"],
+          "correction": "That is an Entra/Defender role, not an Azure RBAC role for granting resource access."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "A Bicep deployment creates role assignments. What is the least-privilege role for its pipeline?",
+          "shortAnswer": "Contributor for the resources plus Role Based Access Control Administrator with a condition limiting which roles it may assign - not Owner.",
+          "keyPoints": [
+            {
+              "point": "Role Based Access Control Administrator with conditions",
+              "keywords": [
+                "role based access control administrator",
+                "rbac administrator",
+                "condition"
+              ],
+              "weight": 3
+            },
+            {
+              "point": "Not Owner",
+              "keywords": ["not owner", "avoid owner"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "What is the difference between User Access Administrator and Role Based Access Control Administrator?",
+          "shortAnswer": "Both manage role assignments; RBAC Administrator cannot manage access via other means and supports conditions that restrict which roles and principals it can assign.",
+          "keyPoints": [
+            {
+              "point": "RBAC Administrator supports conditions",
+              "keywords": ["condition", "constrained", "restrict roles"],
+              "weight": 3
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "You want access management without resource management.",
+        "Not Owner - something narrower.",
+        "User Access Administrator."
+      ],
+      "analogy": "It is the locksmith who can cut keys for others but has no job running the building.",
+      "simpleExplanation": "User Access Administrator can give or take away people's access, but cannot create or change the resources themselves.",
+      "related": ["itv-azid-7", "itv-azid-19"],
+      "scenarioVariant": {
+        "question": "A security team must review and remove excess access across subscriptions but never change resources. Which role?",
+        "shortAnswer": "User Access Administrator (or RBAC Administrator with conditions) plus Reader, ideally eligible through PIM."
+      }
+    },
+    {
+      "id": "itv-azid-10",
+      "shortAnswer": "I start by reading the error precisely: it names the client object ID, the action and the scope. Then I check what that object ID actually holds at that scope - often Contributor is on a different resource group or subscription, the team is looking at the application object ID instead of the service principal, the assignment has not propagated yet, the action needs more than Contributor (role assignments, Key Vault data), or a deny assignment applies.",
+      "keyPoints": [
+        {
+          "point": "Read the error: object ID, action and scope",
+          "keywords": ["read the error", "object id", "action", "scope"],
+          "weight": 3
+        },
+        {
+          "point": "Check the actual assignments for that object ID at that scope",
+          "keywords": [
+            "role assignment list",
+            "check assignments",
+            "at that scope",
+            "what it holds"
+          ],
+          "weight": 3
+        },
+        {
+          "point": "Contributor may be on a different scope",
+          "keywords": ["different resource group", "different subscription", "wrong scope"],
+          "weight": 2
+        },
+        {
+          "point": "Application object ID vs service principal object ID",
+          "keywords": [
+            "application object id",
+            "service principal object id",
+            "client id",
+            "wrong id"
+          ],
+          "weight": 2
+        },
+        {
+          "point": "Propagation delay, actions Contributor lacks, or deny assignments",
+          "keywords": [
+            "propagation",
+            "not propagated",
+            "microsoft.authorization",
+            "deny assignment",
+            "data plane"
+          ],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Just make it Owner.",
+          "triggers": ["make it owner", "give owner"],
+          "correction": "That hides the cause and grants far more than needed."
+        },
+        {
+          "mistake": "Contributor can do everything.",
+          "triggers": ["contributor can do everything"],
+          "correction": "Contributor cannot create role assignments and does not include data-plane actions like reading Key Vault secrets."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How would you let a pipeline create role assignments without making it Owner?",
+          "shortAnswer": "Give it Role Based Access Control Administrator with a condition restricting which roles (and principals) it can assign, at the narrowest scope.",
+          "keyPoints": [
+            {
+              "point": "RBAC Administrator with a condition",
+              "keywords": ["role based access control administrator", "condition"],
+              "weight": 3
+            },
+            {
+              "point": "Narrow scope",
+              "keywords": ["narrow scope", "resource group"],
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "question": "How do you tell an RBAC failure from a policy denial?",
+          "shortAnswer": "RBAC errors say AuthorizationFailed; Azure Policy denials say RequestDisallowedByPolicy and name the policy assignment.",
+          "keyPoints": [
+            {
+              "point": "AuthorizationFailed vs RequestDisallowedByPolicy",
+              "keywords": ["authorizationfailed", "requestdisallowedbypolicy", "policy"],
+              "weight": 3
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "The error message already tells you three things.",
+        "Check what that exact principal has at that exact scope.",
+        "Object ID, action, scope -> az role assignment list; wrong scope, wrong ID, propagation, missing action, deny assignment."
+      ],
+      "analogy": "The guard says 'badge 4417 is not allowed on floor 6'. Before arguing, check whose badge 4417 is and which floors it opens - maybe your Contributor badge opens floor 5.",
+      "simpleExplanation": "The error tells you exactly which identity, which action and which place were refused. Check that this identity really has a suitable role at that place - it is usually a mismatch, not a bug.",
+      "related": ["itv-azid-7", "itv-azid-3", "itv-azid-9"],
+      "scenarioVariant": {
+        "question": "A deployment fails with AuthorizationFailed for Microsoft.Authorization/roleAssignments/write although the pipeline is Contributor. Why?",
+        "shortAnswer": "Contributor explicitly excludes Microsoft.Authorization/*/write. Grant RBAC Administrator with a condition (or User Access Administrator) at that scope."
+      }
+    },
+    {
+      "id": "itv-azid-11",
+      "shortAnswer": "Conditional Access is an if-then engine evaluated at sign-in: if the user, app, device, location or risk matches, then grant (require MFA, a compliant device...) or block. Policies apply together. My baseline: require MFA for all users, phishing-resistant MFA for admin roles, block legacy authentication, require MFA for Azure management, require compliant or hybrid-joined devices for sensitive apps, and risk-based policies - with break-glass accounts excluded and changes tested in report-only first.",
+      "keyPoints": [
+        {
+          "point": "If-then policies evaluated at sign-in",
+          "keywords": ["if-then", "if then", "at sign-in", "conditions", "signals"],
+          "weight": 3
+        },
+        {
+          "point": "Conditions: users, apps, device, location, risk",
+          "keywords": ["user", "app", "device", "location", "risk", "sign-in risk"],
+          "weight": 2
+        },
+        {
+          "point": "All matching policies apply together",
+          "keywords": ["together", "all apply", "combined", "every policy"],
+          "weight": 2
+        },
+        {
+          "point": "Require MFA for all users",
+          "keywords": ["mfa for all", "require mfa", "multi-factor"],
+          "weight": 2
+        },
+        {
+          "point": "Phishing-resistant MFA for admins",
+          "keywords": ["phishing-resistant", "admins", "authentication strength", "fido2"],
+          "weight": 2
+        },
+        {
+          "point": "Block legacy authentication",
+          "keywords": ["legacy authentication", "legacy auth", "basic auth"],
+          "weight": 2
+        },
+        {
+          "point": "Exclude break-glass accounts; test in report-only",
+          "keywords": ["break-glass", "report-only", "emergency accounts"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "The first matching policy wins.",
+          "triggers": ["first policy wins", "first match"],
+          "correction": "Every matching policy applies; all grant controls must be satisfied, and any block wins."
+        },
+        {
+          "mistake": "Apply new policies straight to all users.",
+          "triggers": ["straight to all users", "enable immediately"],
+          "correction": "Use report-only mode first and exclude break-glass accounts."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How is Conditional Access different from security defaults?",
+          "shortAnswer": "Security defaults are a free, fixed baseline (MFA registration, block legacy auth) you switch on or off; Conditional Access (Entra ID P1) lets you write targeted policies - and you cannot use both.",
+          "keyPoints": [
+            {
+              "point": "Security defaults are fixed and free",
+              "keywords": ["fixed", "free", "baseline", "on or off"],
+              "weight": 3
+            },
+            {
+              "point": "Conditional Access is configurable, needs P1",
+              "keywords": ["configurable", "p1", "custom policies"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "What is an authentication strength?",
+          "shortAnswer": "A Conditional Access grant control that requires specific MFA methods, such as phishing-resistant ones (FIDO2, Windows Hello, certificate-based).",
+          "keyPoints": [
+            {
+              "point": "Requires specific MFA methods",
+              "keywords": ["specific methods", "phishing-resistant", "fido2"],
+              "weight": 3
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Think of it as a rule engine at sign-in time.",
+        "What happens when two policies both match? Which policies would every tenant have?",
+        "If-then at sign-in; all policies apply; MFA all, phishing-resistant admins, block legacy auth, report-only, break-glass excluded."
+      ],
+      "analogy": "Conditional Access is a set of airport security rules: if you fly internationally, show your passport; if you carry liquids, extra screening. Every rule that applies to you must be satisfied before you board.",
+      "simpleExplanation": "Conditional Access checks each sign-in against your rules - who, from where, on which device, how risky - and then allows it, asks for MFA, or blocks it.",
+      "related": ["itv-azid-12", "itv-azid-14"],
+      "scenarioVariant": {
+        "question": "Attackers are password-spraying your tenant using IMAP. Which Conditional Access policy stops this first?",
+        "shortAnswer": "Block legacy authentication for all users (IMAP/POP/SMTP basic auth cannot do MFA), then require MFA for all users."
+      }
+    },
+    {
+      "id": "itv-azid-12",
+      "shortAnswer": "FIDO2 security keys and passkeys, Windows Hello for Business, and certificate-based authentication are phishing-resistant, because the credential is bound to the real sign-in site. SMS codes and push approvals are not - a fake site can relay them.",
+      "keyPoints": [
+        {
+          "point": "FIDO2 security keys and passkeys",
+          "keywords": ["fido2", "passkey", "passkeys", "security key"],
+          "weight": 3
+        },
+        {
+          "point": "Windows Hello for Business",
+          "keywords": ["windows hello", "whfb"],
+          "weight": 3
+        },
+        {
+          "point": "Certificate-based authentication",
+          "keywords": ["certificate-based", "cba", "smart card", "certificate"],
+          "weight": 2
+        },
+        {
+          "point": "SMS and push approvals are not phishing-resistant",
+          "keywords": ["sms", "push", "not phishing-resistant", "relay"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Authenticator push with number matching is phishing-resistant.",
+          "triggers": ["push is phishing-resistant", "number matching"],
+          "correction": "Number matching reduces MFA fatigue but a real-time phishing proxy can still relay it."
+        },
+        {
+          "mistake": "SMS is phishing-resistant because it uses a phone.",
+          "triggers": ["sms is phishing-resistant"],
+          "correction": "SMS codes can be typed into a fake site and are vulnerable to SIM swap."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How would you migrate admins to phishing-resistant MFA without locking them out?",
+          "shortAnswer": "Issue keys or enable passkeys first, let admins register, use a Temporary Access Pass for bootstrap, enforce an authentication strength in report-only, then enable it - break-glass accounts excluded.",
+          "keyPoints": [
+            {
+              "point": "Register methods first, Temporary Access Pass",
+              "keywords": ["register first", "temporary access pass", "tap"],
+              "weight": 3
+            },
+            {
+              "point": "Report-only then enforce",
+              "keywords": ["report-only", "then enforce"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "Why are these methods phishing-resistant?",
+          "shortAnswer": "They use public-key cryptography bound to the origin of the real site, so a credential produced for a lookalike domain is useless.",
+          "keyPoints": [
+            {
+              "point": "Bound to the real site's origin",
+              "keywords": ["origin", "domain bound", "public key"],
+              "weight": 3
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Which methods cannot be typed into a fake site?",
+        "Hardware keys and something built into Windows are two of them.",
+        "FIDO2/passkeys, Windows Hello for Business, certificate-based auth."
+      ],
+      "analogy": "A phishing-resistant key is like a car key that only works in your own car: copying it at a fake garage gets the thief nothing. A code sent by SMS is a note you can be tricked into reading out loud.",
+      "simpleExplanation": "Some sign-in methods only work with the real website, so a fake one cannot steal them. Security keys, passkeys, Windows Hello and certificates do that; texted codes and push prompts do not.",
+      "related": ["itv-azid-11"],
+      "scenarioVariant": {
+        "question": "A real-time phishing kit stole a session from a user who approved a push notification. What should you roll out?",
+        "shortAnswer": "Passkeys/FIDO2 or Windows Hello with an authentication strength requiring phishing-resistant MFA, starting with admins, plus token protection and risk-based policies."
+      }
+    },
+    {
+      "id": "itv-azid-13",
+      "shortAnswer": "B2B collaboration brings partners, contractors and suppliers into your tenant as guest users who sign in with their own identity, governed by cross-tenant access settings. Customer identity - formerly Azure AD B2C, now Microsoft Entra External ID in an external tenant - is for millions of consumers signing up to your app, with branded sign-up and social logins. B2B for people who work with you, customer identity for people who buy from you.",
+      "keyPoints": [
+        {
+          "point": "B2B is for partners, contractors and suppliers",
+          "keywords": ["b2b", "partners", "contractors", "suppliers", "collaboration"],
+          "weight": 3
+        },
+        {
+          "point": "B2B users are guests signing in with their own identity",
+          "keywords": ["guest", "guests", "own identity", "home tenant"],
+          "weight": 2
+        },
+        {
+          "point": "Cross-tenant access settings govern B2B trust",
+          "keywords": ["cross-tenant access", "trust mfa", "inbound", "outbound"],
+          "weight": 2
+        },
+        {
+          "point": "Customer identity is for consumers of your app",
+          "keywords": ["customers", "consumers", "ciam", "sign-up", "social login"],
+          "weight": 3
+        },
+        {
+          "point": "Azure AD B2C is now Entra External ID (external tenant)",
+          "keywords": ["external id", "azure ad b2c", "b2c", "external tenant"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Use B2B guest accounts for public customers.",
+          "triggers": ["guests for customers", "b2b for customers"],
+          "correction": "B2B is not built for millions of consumer sign-ups or branded self-service; use customer identity."
+        },
+        {
+          "mistake": "Azure AD B2C is the current product for new customer identity projects.",
+          "triggers": ["start with b2c", "new b2c"],
+          "correction": "Microsoft directs new customer identity work to Entra External ID; check current guidance."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How do cross-tenant access settings let you trust a partner's MFA?",
+          "shortAnswer": "Inbound trust settings can accept MFA (and compliant device claims) from the partner's tenant, so guests are not asked to register MFA again in yours.",
+          "keyPoints": [
+            {
+              "point": "Inbound trust of the partner's MFA",
+              "keywords": ["trust mfa", "inbound trust", "accept mfa"],
+              "weight": 3
+            }
+          ]
+        },
+        {
+          "question": "How would you clean up stale guest accounts?",
+          "shortAnswer": "Use access reviews on guests (and groups they belong to) with automatic removal, and report on last sign-in.",
+          "keyPoints": [
+            {
+              "point": "Access reviews for guests",
+              "keywords": ["access reviews"],
+              "weight": 3
+            },
+            {
+              "point": "Last sign-in reports",
+              "keywords": ["last sign-in", "inactive"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Who are the users in each case?",
+        "One brings people into your tenant, the other gives your app a public sign-up.",
+        "B2B = partners as guests + cross-tenant settings; customer identity = consumers, External ID (formerly B2C)."
+      ],
+      "analogy": "B2B is giving visiting contractors a visitor badge for your office. Customer identity is running a membership desk for a shop with a million customers.",
+      "simpleExplanation": "B2B lets people from other companies use your apps with their own work accounts. Customer identity lets members of the public create accounts for your app.",
+      "related": ["itv-azid-2", "itv-azid-11"],
+      "scenarioVariant": {
+        "question": "A bank wants a mobile app where customers sign up with email or Apple ID, and an auditor firm to access internal reports. Which identity products?",
+        "shortAnswer": "Entra External ID (customer tenant) for the app's customers, and B2B guest access with cross-tenant settings and access reviews for the auditors."
+      }
+    },
+    {
+      "id": "itv-azid-14",
+      "shortAnswer": "First regain control: sign in with a break-glass account excluded from the policy, set the policy to report-only or narrow its scope, and confirm admins can sign in. Then scope the impact with sign-in logs and the What If tool. The nightly job failed because it uses a user account; I would move it to a service principal or managed identity, which device-based policies do not apply to in the same way, and re-roll the policy gradually with report-only first.",
+      "keyPoints": [
+        {
+          "point": "Regain control first",
+          "keywords": ["regain control", "first", "stop the bleeding", "restore access"],
+          "weight": 3
+        },
+        {
+          "point": "Use break-glass accounts excluded from CA",
+          "keywords": ["break-glass", "emergency access", "excluded"],
+          "weight": 3
+        },
+        {
+          "point": "Switch the policy to report-only or narrow its scope",
+          "keywords": ["report-only", "disable the policy", "narrow scope", "exclude"],
+          "weight": 3
+        },
+        {
+          "point": "Investigate with sign-in logs and What If",
+          "keywords": ["sign-in logs", "what if", "logs", "impact"],
+          "weight": 2
+        },
+        {
+          "point": "The nightly job uses a user account; move it to a workload identity",
+          "keywords": [
+            "service principal",
+            "managed identity",
+            "workload identity",
+            "user account"
+          ],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Delete the policy and move on.",
+          "triggers": ["delete the policy"],
+          "correction": "Regain control, then fix and re-roll it properly - the requirement still matters."
+        },
+        {
+          "mistake": "Exclude all admins from Conditional Access permanently.",
+          "triggers": ["exclude all admins"],
+          "correction": "Only break-glass accounts should be excluded, and they must be monitored."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How would you test a CA policy change before enabling it?",
+          "shortAnswer": "Report-only mode with workbook/sign-in log review, the What If tool for specific users, and a pilot group before all users.",
+          "keyPoints": [
+            {
+              "point": "Report-only mode",
+              "keywords": ["report-only"],
+              "weight": 3
+            },
+            {
+              "point": "What If tool and pilot group",
+              "keywords": ["what if", "pilot"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "How do you monitor break-glass accounts?",
+          "shortAnswer": "Alert on any sign-in by them (Log Analytics/Sentinel rule), store credentials securely, and test them on a schedule.",
+          "keyPoints": [
+            {
+              "point": "Alert on every sign-in",
+              "keywords": ["alert", "any sign-in", "sentinel", "log analytics"],
+              "weight": 3
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "What comes before root cause when admins are locked out?",
+        "Which accounts exist exactly for this situation?",
+        "Break-glass -> report-only/narrow scope -> sign-in logs/What If -> move job to a workload identity -> re-roll gradually."
+      ],
+      "analogy": "Someone locked every door including the security office. You use the emergency key kept in a safe (break-glass), prop the doors open (report-only), and only then work out which lock was set wrong.",
+      "simpleExplanation": "When a sign-in rule locks people out, first get back in with emergency accounts and switch the rule to 'report only'. Then look at the sign-in logs to see who it affected and fix the rule before turning it back on.",
+      "related": ["itv-azid-11", "itv-azid-8"],
+      "scenarioVariant": {
+        "question": "A new 'block access outside the UK' policy is about to go live and the CEO travels next week. How do you roll it out safely?",
+        "shortAnswer": "Report-only first, review sign-ins, use named locations, add a documented exception group with expiry for travellers, exclude break-glass accounts, then enable."
+      }
+    },
+    {
+      "id": "itv-azid-15",
+      "shortAnswer": "OAuth 2.0 is for authorisation: an app gets an access token to call an API on someone's behalf or as itself. OpenID Connect sits on top for authentication: an ID token tells the app who signed in. A server-side web app uses the authorization code flow, a single-page app the authorization code flow with PKCE, a daemon the client credentials flow, and a CLI tool the device code flow (or authorization code with PKCE and a local redirect).",
+      "keyPoints": [
+        {
+          "point": "OAuth 2.0 is authorisation with access tokens",
+          "keywords": ["oauth", "authorisation", "authorization", "access token"],
+          "weight": 3
+        },
+        {
+          "point": "OpenID Connect is authentication with ID tokens",
+          "keywords": ["openid connect", "oidc", "authentication", "id token"],
+          "weight": 3
+        },
+        {
+          "point": "Web app: authorization code flow",
+          "keywords": ["authorization code", "auth code", "code flow"],
+          "weight": 2
+        },
+        {
+          "point": "SPA: authorization code with PKCE",
+          "keywords": ["pkce", "single-page", "spa"],
+          "weight": 2
+        },
+        {
+          "point": "Daemon: client credentials flow",
+          "keywords": ["client credentials", "daemon", "app-only"],
+          "weight": 2
+        },
+        {
+          "point": "CLI: device code flow",
+          "keywords": ["device code", "device flow", "cli"],
+          "weight": 1
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Use the implicit flow for SPAs.",
+          "triggers": ["implicit flow"],
+          "correction": "Implicit is deprecated; use authorization code with PKCE."
+        },
+        {
+          "mistake": "An access token tells the app who the user is.",
+          "triggers": ["access token identifies the user"],
+          "correction": "Access tokens are for the API; the ID token is what tells the client who signed in."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "What is the difference between delegated and application permissions?",
+          "shortAnswer": "Delegated permissions let an app act as the signed-in user, limited to what the user can do; application permissions let it act as itself with no user, and need admin consent.",
+          "keyPoints": [
+            {
+              "point": "Delegated = on behalf of a user",
+              "keywords": ["delegated", "on behalf of", "signed-in user"],
+              "weight": 3
+            },
+            {
+              "point": "Application = as itself, admin consent",
+              "keywords": ["application permission", "app-only", "admin consent"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "Which claims must an API validate?",
+          "shortAnswer": "Signature, issuer (iss), audience (aud), expiry (exp/nbf), and the scopes (scp) or roles it requires; for multi-tenant apps also the tenant.",
+          "keyPoints": [
+            {
+              "point": "Signature, issuer, audience, expiry",
+              "keywords": ["signature", "iss", "aud", "exp", "issuer", "audience"],
+              "weight": 3
+            },
+            {
+              "point": "Scopes or roles",
+              "keywords": ["scp", "scopes", "roles"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "One protocol is about access, the other about identity.",
+        "Name the token each one produces, then pick a flow per client type.",
+        "OAuth access token vs OIDC ID token; auth code / PKCE / client credentials / device code."
+      ],
+      "analogy": "OAuth is a valet key that lets the valet drive your car but not open the boot; OpenID Connect is the name badge that tells the hotel who you are.",
+      "simpleExplanation": "OAuth lets an app get permission to call another service. OpenID Connect adds a way to know who logged in. Different kinds of apps use different 'flows' to get those tokens safely.",
+      "related": ["itv-azid-16", "itv-azid-3"],
+      "scenarioVariant": {
+        "question": "A nightly job calls Microsoft Graph to read all users. Which flow and permission type?",
+        "shortAnswer": "Client credentials flow with application permission User.Read.All (admin consent), ideally using a managed identity or certificate instead of a secret."
+      }
+    },
+    {
+      "id": "itv-azid-16",
+      "shortAnswer": "Workload identity federation lets Entra ID trust tokens issued by an external identity provider, such as GitHub's or Azure DevOps' OIDC issuer. You add a federated credential to an app registration or user-assigned managed identity, matching the issuer, subject and audience; the pipeline presents its OIDC token and exchanges it for an Azure access token, so no secret exists anywhere. Keep the subject narrow - a specific repo and environment or branch - and in Azure DevOps use a workload identity federation service connection.",
+      "keyPoints": [
+        {
+          "point": "Entra trusts tokens from an external identity provider",
+          "keywords": [
+            "trust",
+            "external identity provider",
+            "external idp",
+            "github",
+            "azure devops",
+            "oidc issuer"
+          ],
+          "weight": 3
+        },
+        {
+          "point": "A federated credential matches issuer, subject and audience",
+          "keywords": ["federated credential", "issuer", "subject", "audience"],
+          "weight": 3
+        },
+        {
+          "point": "The OIDC token is exchanged for an Azure access token",
+          "keywords": ["oidc token", "exchange", "access token", "token exchange"],
+          "weight": 2
+        },
+        {
+          "point": "No secret exists anywhere",
+          "keywords": ["no secret", "secretless", "no client secret", "nothing to rotate"],
+          "weight": 3
+        },
+        {
+          "point": "Keep the subject narrow (repo + environment/branch)",
+          "keywords": ["narrow", "environment", "branch", "specific repo", "subject claim"],
+          "weight": 2
+        },
+        {
+          "point": "Azure DevOps uses a workload identity federation service connection",
+          "keywords": ["service connection", "azure devops"],
+          "weight": 1
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Federation still needs a client secret as a fallback.",
+          "triggers": ["secret as fallback"],
+          "correction": "No secret is needed; the trust is the federated credential."
+        },
+        {
+          "mistake": "Use a wildcard subject for all branches.",
+          "triggers": ["wildcard subject", "any branch"],
+          "correction": "Wildcards are not supported in the classic subject match and broad trust is risky; use flexible federated credentials carefully, scoped to protected refs/environments."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "What exactly is in the subject claim for a pull request run?",
+          "shortAnswer": "repo:<org>/<repo>:pull_request - so a federated credential for main or an environment does not match PR runs.",
+          "keyPoints": [
+            {
+              "point": "repo:org/repo:pull_request",
+              "keywords": ["pull_request", "repo:"],
+              "weight": 3
+            }
+          ]
+        },
+        {
+          "question": "How would you convert an existing secret-based Azure DevOps service connection?",
+          "shortAnswer": "Azure DevOps offers a 'convert' action on Azure Resource Manager service connections that creates the federated credential and switches to workload identity federation; then delete the old secret.",
+          "keyPoints": [
+            {
+              "point": "Convert action on the service connection",
+              "keywords": ["convert", "service connection"],
+              "weight": 3
+            },
+            {
+              "point": "Delete the old secret",
+              "keywords": ["delete the secret", "remove secret"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "The pipeline already has a token from its own platform.",
+        "What does Entra need to compare before trusting it?",
+        "Federated credential on app/UAMI matching issuer/subject/audience; OIDC exchange; no secret; narrow subject."
+      ],
+      "analogy": "It is like a partner company's ID card being accepted at your gate because you agreed in advance which company, which department and which badge type you trust - no spare key under the mat.",
+      "simpleExplanation": "Instead of storing a password in GitHub or Azure DevOps, you tell Azure to trust the login token those platforms already give each pipeline run, but only for the exact repository and branch you choose.",
+      "related": ["itv-azid-18", "itv-azid-4", "itv-azid-15"],
+      "scenarioVariant": {
+        "question": "A security review bans long-lived secrets in CI. Your GitHub Actions deploys use AZURE_CREDENTIALS with a client secret. What do you change?",
+        "shortAnswer": "Add a federated credential (repo + environment) to the app registration or a user-assigned identity, switch azure/login to client-id/tenant-id/subscription-id with id-token: write, and delete the secret."
+      }
+    },
+    {
+      "id": "itv-azid-17",
+      "shortAnswer": "I use the Azure RBAC permission model: data roles like Key Vault Secrets User, Key Vault Crypto User and Key Vault Secrets Officer, assignable down to an individual secret, managed and audited like every other role. Access policies are a vault property, all-or-nothing per vault, and anyone with Contributor can edit them. On a production vault I also enable soft delete and purge protection, private endpoints with public access disabled, diagnostic logs, and expiry alerts for secrets and certificates.",
+      "keyPoints": [
+        {
+          "point": "Prefer the Azure RBAC permission model",
+          "keywords": ["azure rbac", "rbac permission model", "rbac"],
+          "weight": 3
+        },
+        {
+          "point": "Data roles: Secrets User, Crypto User, Secrets Officer",
+          "keywords": ["key vault secrets user", "secrets user", "crypto user", "secrets officer"],
+          "weight": 2
+        },
+        {
+          "point": "RBAC can scope to an individual secret",
+          "keywords": ["individual secret", "per secret", "secret scope"],
+          "weight": 2
+        },
+        {
+          "point": "Access policies are a control-plane vault property editable by Contributor",
+          "keywords": [
+            "access policies",
+            "contributor can edit",
+            "control plane",
+            "vault property"
+          ],
+          "weight": 2
+        },
+        {
+          "point": "Soft delete and purge protection",
+          "keywords": ["soft delete", "purge protection"],
+          "weight": 3
+        },
+        {
+          "point": "Private endpoint, logs and expiry monitoring",
+          "keywords": ["private endpoint", "diagnostic logs", "expiry", "expiration", "alerts"],
+          "weight": 2
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Key Vault Contributor lets an app read secrets.",
+          "triggers": ["key vault contributor reads secrets"],
+          "correction": "Key Vault Contributor manages the vault; it has no data-plane access."
+        },
+        {
+          "mistake": "Soft delete is enough protection.",
+          "triggers": ["soft delete is enough"],
+          "correction": "Without purge protection an admin (or attacker) can purge deleted secrets permanently."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How do you migrate a vault from access policies to RBAC safely?",
+          "shortAnswer": "Map each access policy to equivalent role assignments first, assign them, test, then switch the vault's permission model - the switch instantly stops access policies from working.",
+          "keyPoints": [
+            {
+              "point": "Create equivalent role assignments first",
+              "keywords": ["equivalent role assignments", "map", "assign first"],
+              "weight": 3
+            },
+            {
+              "point": "Then switch the permission model",
+              "keywords": ["switch", "permission model"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "How does an App Service reference a Key Vault secret without code changes?",
+          "shortAnswer": "With a Key Vault reference in an app setting, @Microsoft.KeyVault(SecretUri=...), resolved using the app's managed identity, which needs Key Vault Secrets User.",
+          "keyPoints": [
+            {
+              "point": "Key Vault reference in app settings",
+              "keywords": ["key vault reference", "@microsoft.keyvault", "app setting"],
+              "weight": 3
+            },
+            {
+              "point": "Uses the app's managed identity",
+              "keywords": ["managed identity", "secrets user"],
+              "weight": 2
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "One model is a vault setting, the other is the same system as all Azure roles.",
+        "Which roles read secrets? What stops permanent deletion?",
+        "RBAC model with data roles (Secrets User...), per-secret scope; soft delete + purge protection; private endpoint; logs; expiry alerts."
+      ],
+      "analogy": "Access policies are a handwritten guest list taped to the vault door that anyone with a building key can edit. RBAC is the central badge system, with locks on individual drawers.",
+      "simpleExplanation": "Control Key Vault access with normal Azure roles, which can even be given per secret. And turn on protection so deleted secrets cannot be wiped permanently.",
+      "related": ["itv-azid-5", "itv-azid-20"],
+      "scenarioVariant": {
+        "question": "A developer with Contributor on the resource group granted themselves access to production secrets. How did that happen and how do you stop it?",
+        "shortAnswer": "The vault uses access policies, which Contributor can edit. Switch to the RBAC permission model so data access needs a data role that Contributor cannot grant, and restrict who has role-assignment rights."
+      }
+    },
+    {
+      "id": "itv-azid-18",
+      "shortAnswer": "Adding environment: production changes the subject claim in the job's OIDC token from repo:org/repo:ref:refs/heads/main to repo:org/repo:environment:production. The federated credential still expects the branch subject, so Entra finds no match - add a federated credential for the environment subject.",
+      "keyPoints": [
+        {
+          "point": "The environment changes the subject claim",
+          "keywords": ["subject claim", "subject", "changes the subject"],
+          "weight": 3
+        },
+        {
+          "point": "New subject is repo:org/repo:environment:production",
+          "keywords": ["environment:production", "environment subject"],
+          "weight": 2
+        },
+        {
+          "point": "The federated credential no longer matches",
+          "keywords": ["no match", "does not match", "federated credential"],
+          "weight": 2
+        },
+        {
+          "point": "Add a federated credential for the environment",
+          "keywords": ["add a federated credential", "new federated credential", "environment"],
+          "weight": 3
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "The client secret expired.",
+          "triggers": ["secret expired", "client secret"],
+          "correction": "There is no secret in federation; AADSTS700213 means the subject/issuer/audience did not match."
+        },
+        {
+          "mistake": "The production environment needs extra RBAC roles.",
+          "triggers": ["rbac", "role assignment"],
+          "correction": "The failure is at token exchange, before any RBAC check."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "What subject does a pull_request-triggered run present?",
+          "shortAnswer": "repo:<org>/<repo>:pull_request.",
+          "keyPoints": [
+            {
+              "point": "repo:org/repo:pull_request",
+              "keywords": ["pull_request"],
+              "weight": 3
+            }
+          ]
+        },
+        {
+          "question": "How can you see the exact subject a run presents?",
+          "shortAnswer": "Decode the OIDC token in a debug step (never print it in shared logs) or check the AADSTS error, which includes the presented subject.",
+          "keyPoints": [
+            {
+              "point": "Error message shows the presented subject",
+              "keywords": ["error shows", "presented subject", "aadsts"],
+              "weight": 3
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "The job's identity token is built from its context.",
+        "What part of the token did the environment change?",
+        "Subject claim switches to environment:production; add a matching federated credential."
+      ],
+      "analogy": "Your gate pass says 'staff from the main office'; today you arrive as 'production team'. Same person, different description on the badge, so the guard's list no longer matches.",
+      "simpleExplanation": "Using a GitHub environment changes how the job describes itself to Azure. Azure was told to trust only the 'main branch' description, so you need to also trust the 'production environment' one.",
+      "related": ["itv-azid-16"],
+      "scenarioVariant": {
+        "question": "Deploys work for main but fail for tags like v1.2.0 with AADSTS700213. Why?",
+        "shortAnswer": "Tag runs present repo:org/repo:ref:refs/tags/v1.2.0; add a federated credential for tags (or deploy via an environment and trust that subject)."
+      }
+    },
+    {
+      "id": "itv-azid-19",
+      "shortAnswer": "I design around scope and groups: each team gets Entra security groups, Reader in production, Contributor in non-production on their own resource groups or subscriptions, and changes to production only through pipelines running as managed identities or federated service principals. Elevated production access is eligible through PIM; role-assignment rights are delegated with Role Based Access Control Administrator under a condition, and access reviews clean up regularly.",
+      "keyPoints": [
+        {
+          "point": "Design around scopes and Entra security groups",
+          "keywords": [
+            "scope",
+            "groups",
+            "security groups",
+            "management groups",
+            "subscriptions per team"
+          ],
+          "weight": 3
+        },
+        {
+          "point": "Reader in production, Contributor in non-production",
+          "keywords": [
+            "reader in production",
+            "contributor in non-production",
+            "reader",
+            "contributor"
+          ],
+          "weight": 3
+        },
+        {
+          "point": "Production changes through pipelines with workload identities",
+          "keywords": ["pipelines", "managed identity", "federated", "service principal"],
+          "weight": 2
+        },
+        {
+          "point": "PIM for elevated access",
+          "keywords": ["pim", "eligible", "just-in-time"],
+          "weight": 2
+        },
+        {
+          "point": "Delegate role assignment with RBAC Administrator + condition",
+          "keywords": ["role based access control administrator", "condition", "delegate"],
+          "weight": 2
+        },
+        {
+          "point": "Access reviews",
+          "keywords": ["access reviews", "recertification"],
+          "weight": 1
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Give each team Owner on its subscription so it is self-sufficient.",
+          "triggers": ["owner on its subscription", "team owner"],
+          "correction": "Owner lets them grant anyone anything; use Contributor plus constrained RBAC Administrator."
+        },
+        {
+          "mistake": "Assign roles to individuals for speed.",
+          "triggers": ["individuals", "per user"],
+          "correction": "Use groups so joiners, movers and leavers are handled once."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How would you audit who has Owner anywhere in the estate?",
+          "shortAnswer": "Use Azure Resource Graph (authorizationresources) or az role assignment list across management groups, filtered on the Owner role definition ID, including inherited assignments.",
+          "keyPoints": [
+            {
+              "point": "Azure Resource Graph authorizationresources",
+              "keywords": ["resource graph", "authorizationresources"],
+              "weight": 3
+            },
+            {
+              "point": "Include inherited assignments",
+              "keywords": ["inherited", "management group"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "What can Azure Policy do that RBAC cannot?",
+          "shortAnswer": "Policy controls what is deployed and how (allowed regions, SKUs, required tags, deny public IPs), regardless of who deploys it; RBAC only controls who can act.",
+          "keyPoints": [
+            {
+              "point": "Policy governs what/how, RBAC who",
+              "keywords": ["what is deployed", "who", "allowed regions", "tags"],
+              "weight": 3
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Start with where access is granted, and to what kind of principal.",
+        "Different access in production and non-production, and who actually changes production.",
+        "Scopes + groups; Reader prod / Contributor non-prod; pipelines with workload identities; PIM; RBAC Admin with conditions; access reviews."
+      ],
+      "analogy": "Each team gets keys to its own workshop (non-prod) and a viewing window into the showroom (prod). Only the delivery robots (pipelines) move things into the showroom, and showroom keys are lent out on request.",
+      "simpleExplanation": "Give teams full control of their test areas, read-only access to production, and let automated pipelines make production changes. Powerful access is borrowed when needed, and everything is granted to groups.",
+      "related": ["itv-azid-8", "itv-azid-9", "itv-azid-2"],
+      "scenarioVariant": {
+        "question": "A team asks for Owner on their production subscription 'to manage access themselves'. What do you offer instead?",
+        "shortAnswer": "Role Based Access Control Administrator with a condition limiting assignable roles (e.g. Reader, their app roles) and principals (their groups), plus PIM-eligible Contributor."
+      }
+    },
+    {
+      "id": "itv-azid-20",
+      "shortAnswer": "Fix now: add a new secret alongside the expired one, update the app's configuration (ideally in Key Vault) and restart, then remove the old secret. Then make it never happen again: stop using a client secret - use a managed identity, workload identity federation or at least a certificate - add detection for expiring credentials, and enforce app management policies that limit secret lifetime or block new secrets.",
+      "keyPoints": [
+        {
+          "point": "Add a new secret alongside, deploy it, then remove the old",
+          "keywords": ["new secret", "alongside", "rotate", "update config"],
+          "weight": 3
+        },
+        {
+          "point": "Store it in Key Vault and restart/refresh the app",
+          "keywords": ["key vault", "restart", "app settings", "refresh"],
+          "weight": 1
+        },
+        {
+          "point": "Stop using client secrets",
+          "keywords": ["stop using secrets", "no secret", "secretless"],
+          "weight": 3
+        },
+        {
+          "point": "Managed identity or workload identity federation, or a certificate",
+          "keywords": [
+            "managed identity",
+            "workload identity federation",
+            "federated",
+            "certificate"
+          ],
+          "weight": 3
+        },
+        {
+          "point": "Detect expiring credentials",
+          "keywords": ["detection", "alert", "expiry report", "expiring"],
+          "weight": 2
+        },
+        {
+          "point": "App management policies limit secret lifetime",
+          "keywords": ["app management policies", "credential policy", "lifetime"],
+          "weight": 1
+        }
+      ],
+      "commonMistakes": [
+        {
+          "mistake": "Create a secret that never expires.",
+          "triggers": ["never expires", "no expiry", "100 years"],
+          "correction": "Long-lived secrets are the risk; remove secrets or keep lifetimes short with automated rotation."
+        },
+        {
+          "mistake": "Delete the old secret first, then add a new one.",
+          "triggers": ["delete first"],
+          "correction": "Add the new one first so there is no gap; remove the old after the switch."
+        }
+      ],
+      "followUps": [
+        {
+          "question": "How would you rotate a secret used by several applications with zero downtime?",
+          "shortAnswer": "Two valid secrets overlap: add the new one, update each app (or the Key Vault secret they read) one by one, verify, then remove the old secret.",
+          "keyPoints": [
+            {
+              "point": "Overlap two valid secrets",
+              "keywords": ["two secrets", "overlap", "both valid"],
+              "weight": 3
+            },
+            {
+              "point": "Update consumers then remove the old",
+              "keywords": ["update each", "then remove"],
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "question": "How do Key Vault references in App Service pick up a new secret version?",
+          "shortAnswer": "References without a version refresh periodically (within about a day) or on restart; reference a version for pinning, or restart after rotation.",
+          "keyPoints": [
+            {
+              "point": "Unversioned references refresh periodically or on restart",
+              "keywords": ["refresh", "restart", "unversioned", "24 hours"],
+              "weight": 3
+            }
+          ]
+        }
+      ],
+      "hints": [
+        "Production first: how do you rotate without a gap?",
+        "Then remove the cause, not just the symptom.",
+        "New secret alongside -> update -> remove old; move to managed identity/federation/certificate; expiry alerts; app management policies."
+      ],
+      "analogy": "The office key expired and staff are locked out. You cut a new key and hand it out before retiring the old one - and then you switch to badge readers, so keys can never expire on you again.",
+      "simpleExplanation": "Create a new secret, give it to the app, and only then remove the old one. Then switch the app to an identity that needs no secret, and set up alerts so expiring credentials never surprise you.",
+      "related": ["itv-azid-4", "itv-azid-16", "itv-azid-17"],
+      "scenarioVariant": {
+        "question": "You manage 400 app registrations. How do you find every secret expiring in the next 30 days?",
+        "shortAnswer": "Query Microsoft Graph (applications passwordCredentials endDateTime) or use a workbook/Entra recommendations report, alert owners automatically, and enforce app management policies for new credentials."
+      }
+    }
+  ]
+}

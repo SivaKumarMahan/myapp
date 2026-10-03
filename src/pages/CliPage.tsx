@@ -341,7 +341,7 @@ export function CliPage() {
           </div>
         </section>
 
-        <aside className="cli-side stack">
+        <aside className="cli-side stack" aria-label="Simulated resources and missions">
           <section className="card stack-sm" aria-labelledby="missions-heading">
             <div className="row" style={{ justifyContent: 'space-between' }}>
               <h2 id="missions-heading" className="card__title" style={{ margin: 0 }}>

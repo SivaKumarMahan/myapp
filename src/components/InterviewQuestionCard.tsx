@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { InterviewQuestion } from '../content/types'
 import type { InterviewStatus } from '../lib/storage'
 import { levelLabel } from '../lib/interview-stats'
@@ -8,6 +9,7 @@ import { CodeBlock } from './ui/CodeBlock'
 import { DiagramList } from './ui/Diagram'
 import { RichAnswer, RichList, RichText } from './ui/RichText'
 import { NextReview, RatingButtons } from './SrsControls'
+import { QuestionTags } from './QuestionTags'
 import type { Rating, SrsCard } from '../lib/srs'
 
 const levelTone: Record<InterviewQuestion['level'], BadgeTone> = {
@@ -72,7 +74,7 @@ export function InterviewQuestionCard({
   }
 
   return (
-    <article className="itv-card" aria-labelledby={`${question.id}-prompt`}>
+    <article className="itv-card" id={question.id} aria-labelledby={`${question.id}-prompt`}>
       <header className="itv-card__head">
         <span className="itv-card__number" aria-hidden="true">
           {index}
@@ -261,7 +263,14 @@ export function InterviewQuestionCard({
             >
               ↻ Needs review
             </button>
+            <Link
+              className="btn btn--sm btn--ghost"
+              to={`/bot?say=${encodeURIComponent(`/practise ${question.id}`)}`}
+            >
+              🤖 Practise with the bot
+            </Link>
           </div>
+          <QuestionTags questionId={question.id} />
         </footer>
       )}
     </article>

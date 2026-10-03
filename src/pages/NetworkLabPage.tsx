@@ -31,7 +31,6 @@ export function NetworkLabPage() {
             role="tab"
             className="chip"
             aria-selected={tab === active}
-            aria-pressed={tab === active}
             onClick={() => setParams({ tab: tab.id }, { replace: true })}
           >
             {tab.label}

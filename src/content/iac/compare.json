@@ -1,0 +1,305 @@
+{
+  "$comment": "IaC compare: the same resource in ARM JSON, Bicep and Terraform (azurerm 4.x). Each concept lists substrings that mark its lines in each language.",
+  "resources": [
+    {
+      "id": "storage",
+      "title": "Storage account",
+      "summary": "A hardened StorageV2 account: TLS 1.2, HTTPS only, no anonymous blob access.",
+      "arm": "{\n  \"$schema\": \"https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#\",\n  \"contentVersion\": \"1.0.0.0\",\n  \"parameters\": {\n    \"storageName\": { \"type\": \"string\" },\n    \"location\": { \"type\": \"string\", \"defaultValue\": \"[resourceGroup().location]\" }\n  },\n  \"resources\": [\n    {\n      \"type\": \"Microsoft.Storage/storageAccounts\",\n      \"apiVersion\": \"2023-05-01\",\n      \"name\": \"[parameters('storageName')]\",\n      \"location\": \"[parameters('location')]\",\n      \"sku\": { \"name\": \"Standard_LRS\" },\n      \"kind\": \"StorageV2\",\n      \"properties\": {\n        \"accessTier\": \"Hot\",\n        \"minimumTlsVersion\": \"TLS1_2\",\n        \"allowBlobPublicAccess\": false,\n        \"supportsHttpsTrafficOnly\": true\n      }\n    }\n  ]\n}",
+      "bicep": "param storageName string\nparam location string = resourceGroup().location\n\nresource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {\n  name: storageName\n  location: location\n  sku: {\n    name: 'Standard_LRS'\n  }\n  kind: 'StorageV2'\n  properties: {\n    accessTier: 'Hot'\n    minimumTlsVersion: 'TLS1_2'\n    allowBlobPublicAccess: false\n    supportsHttpsTrafficOnly: true\n  }\n}",
+      "terraform": "variable \"storage_name\" {\n  type = string\n}\n\nresource \"azurerm_storage_account\" \"storage\" {\n  name                            = var.storage_name\n  resource_group_name             = azurerm_resource_group.rg.name\n  location                        = azurerm_resource_group.rg.location\n  account_tier                    = \"Standard\"\n  account_replication_type        = \"LRS\"\n  account_kind                    = \"StorageV2\"\n  access_tier                     = \"Hot\"\n  min_tls_version                 = \"TLS1_2\"\n  allow_nested_items_to_be_public = false\n  https_traffic_only_enabled      = true\n}",
+      "concepts": [
+        {
+          "id": "type",
+          "label": "Resource type and version",
+          "note": "ARM and Bicep name the Azure resource provider type and pin an API version; Terraform uses the azurerm provider's resource name, and the version is the provider version (in required_providers).",
+          "match": {
+            "arm": ["Microsoft.Storage/storageAccounts", "apiVersion"],
+            "bicep": ["Microsoft.Storage/storageAccounts@"],
+            "terraform": ["azurerm_storage_account"]
+          }
+        },
+        {
+          "id": "inputs",
+          "label": "Inputs",
+          "note": "ARM parameters are JSON objects referenced with [parameters('x')]; Bicep has param; Terraform has variable blocks referenced as var.x.",
+          "match": {
+            "arm": ["\"parameters\"", "storageName\": {", "parameters('storageName')"],
+            "bicep": ["param storageName"],
+            "terraform": ["variable \"storage_name\"", "var.storage_name"]
+          }
+        },
+        {
+          "id": "location",
+          "label": "Location and resource group",
+          "note": "ARM/Bicep deploy into the resource group of the deployment, so only location is set (defaulting to the group's). Terraform must name the resource group explicitly.",
+          "match": {
+            "arm": ["location"],
+            "bicep": ["location"],
+            "terraform": ["location", "resource_group_name"]
+          }
+        },
+        {
+          "id": "sku",
+          "label": "SKU and redundancy",
+          "note": "One SKU name in ARM/Bicep (Standard_LRS); Terraform splits it into account_tier and account_replication_type.",
+          "match": {
+            "arm": ["Standard_LRS"],
+            "bicep": ["Standard_LRS"],
+            "terraform": ["account_tier", "account_replication_type"]
+          }
+        },
+        {
+          "id": "kind",
+          "label": "Kind and access tier",
+          "note": "Same values, different casing: camelCase properties in ARM/Bicep, snake_case attributes in Terraform.",
+          "match": {
+            "arm": ["\"kind\"", "accessTier"],
+            "bicep": ["kind:", "accessTier"],
+            "terraform": ["account_kind", "access_tier"]
+          }
+        },
+        {
+          "id": "tls",
+          "label": "Minimum TLS",
+          "note": "minimumTlsVersion vs min_tls_version - same setting.",
+          "match": {
+            "arm": ["minimumTlsVersion"],
+            "bicep": ["minimumTlsVersion"],
+            "terraform": ["min_tls_version"]
+          }
+        },
+        {
+          "id": "public",
+          "label": "Anonymous blob access",
+          "note": "allowBlobPublicAccess in the REST API is allow_nested_items_to_be_public in azurerm - the naming most often trips people up.",
+          "match": {
+            "arm": ["allowBlobPublicAccess"],
+            "bicep": ["allowBlobPublicAccess"],
+            "terraform": ["allow_nested_items_to_be_public"]
+          }
+        },
+        {
+          "id": "https",
+          "label": "HTTPS only",
+          "note": "supportsHttpsTrafficOnly vs https_traffic_only_enabled (named enable_https_traffic_only before azurerm 4.0).",
+          "match": {
+            "arm": ["supportsHttpsTrafficOnly"],
+            "bicep": ["supportsHttpsTrafficOnly"],
+            "terraform": ["https_traffic_only_enabled"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "vnet",
+      "title": "Virtual network with a subnet",
+      "summary": "A VNet with one subnet - inline in ARM/Bicep, a separate resource in Terraform.",
+      "arm": "{\n  \"$schema\": \"https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#\",\n  \"contentVersion\": \"1.0.0.0\",\n  \"resources\": [\n    {\n      \"type\": \"Microsoft.Network/virtualNetworks\",\n      \"apiVersion\": \"2024-05-01\",\n      \"name\": \"vnet-app\",\n      \"location\": \"[resourceGroup().location]\",\n      \"properties\": {\n        \"addressSpace\": {\n          \"addressPrefixes\": [ \"10.0.0.0/16\" ]\n        },\n        \"subnets\": [\n          {\n            \"name\": \"snet-web\",\n            \"properties\": { \"addressPrefix\": \"10.0.1.0/24\" }\n          }\n        ]\n      }\n    }\n  ]\n}",
+      "bicep": "resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' = {\n  name: 'vnet-app'\n  location: resourceGroup().location\n  properties: {\n    addressSpace: {\n      addressPrefixes: [\n        '10.0.0.0/16'\n      ]\n    }\n    subnets: [\n      {\n        name: 'snet-web'\n        properties: {\n          addressPrefix: '10.0.1.0/24'\n        }\n      }\n    ]\n  }\n}\n\noutput subnetId string = vnet.properties.subnets[0].id",
+      "terraform": "resource \"azurerm_virtual_network\" \"vnet\" {\n  name                = \"vnet-app\"\n  resource_group_name = azurerm_resource_group.rg.name\n  location            = azurerm_resource_group.rg.location\n  address_space       = [\"10.0.0.0/16\"]\n}\n\nresource \"azurerm_subnet\" \"web\" {\n  name                 = \"snet-web\"\n  resource_group_name  = azurerm_resource_group.rg.name\n  virtual_network_name = azurerm_virtual_network.vnet.name\n  address_prefixes     = [\"10.0.1.0/24\"]\n}\n\noutput \"subnet_id\" {\n  value = azurerm_subnet.web.id\n}",
+      "concepts": [
+        {
+          "id": "type",
+          "label": "Resource type and version",
+          "note": "Network resources have their own frequent API versions in ARM/Bicep; Terraform pins the provider instead.",
+          "match": {
+            "arm": ["Microsoft.Network/virtualNetworks", "apiVersion"],
+            "bicep": ["Microsoft.Network/virtualNetworks@"],
+            "terraform": ["azurerm_virtual_network", "azurerm_subnet\" \""]
+          }
+        },
+        {
+          "id": "space",
+          "label": "Address space",
+          "note": "An object with addressPrefixes in ARM/Bicep; a plain list in Terraform.",
+          "match": {
+            "arm": ["addressSpace", "addressPrefixes", "10.0.0.0/16"],
+            "bicep": ["addressSpace", "addressPrefixes", "10.0.0.0/16"],
+            "terraform": ["address_space"]
+          }
+        },
+        {
+          "id": "subnet",
+          "label": "Subnets",
+          "note": "Inline in the VNet in ARM/Bicep. Terraform's azurerm_subnet is a separate resource - don't mix inline subnet blocks and azurerm_subnet for the same VNet, or they fight on every apply.",
+          "match": {
+            "arm": ["\"subnets\"", "snet-web", "addressPrefix\""],
+            "bicep": ["subnets:", "snet-web", "addressPrefix:"],
+            "terraform": ["azurerm_subnet", "snet-web", "address_prefixes"]
+          }
+        },
+        {
+          "id": "dependency",
+          "label": "Dependencies",
+          "note": "Inline subnets need no dependency. Terraform infers order from the reference to azurerm_virtual_network.vnet.name; in ARM a separate subnet resource would need dependsOn.",
+          "match": {
+            "arm": ["\"subnets\""],
+            "bicep": ["subnets:"],
+            "terraform": ["virtual_network_name"]
+          }
+        },
+        {
+          "id": "output",
+          "label": "Outputs",
+          "note": "Bicep and Terraform make returning an ID easy; in ARM you'd add an outputs section with reference() or resourceId().",
+          "match": {
+            "arm": [],
+            "bicep": ["output subnetId"],
+            "terraform": ["output \"subnet_id\"", "azurerm_subnet.web.id"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "appservice",
+      "title": "App Service plan and Linux web app",
+      "summary": "A B1 Linux plan with a Node.js web app: HTTPS only, TLS 1.2, FTPS off, managed identity.",
+      "arm": "{\n  \"$schema\": \"https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#\",\n  \"contentVersion\": \"1.0.0.0\",\n  \"parameters\": { \"appName\": { \"type\": \"string\" } },\n  \"resources\": [\n    {\n      \"type\": \"Microsoft.Web/serverfarms\",\n      \"apiVersion\": \"2023-12-01\",\n      \"name\": \"[concat('plan-', parameters('appName'))]\",\n      \"location\": \"[resourceGroup().location]\",\n      \"sku\": { \"name\": \"B1\" },\n      \"kind\": \"linux\",\n      \"properties\": { \"reserved\": true }\n    },\n    {\n      \"type\": \"Microsoft.Web/sites\",\n      \"apiVersion\": \"2023-12-01\",\n      \"name\": \"[parameters('appName')]\",\n      \"location\": \"[resourceGroup().location]\",\n      \"kind\": \"app,linux\",\n      \"identity\": { \"type\": \"SystemAssigned\" },\n      \"dependsOn\": [\n        \"[resourceId('Microsoft.Web/serverfarms', concat('plan-', parameters('appName')))]\"\n      ],\n      \"properties\": {\n        \"serverFarmId\": \"[resourceId('Microsoft.Web/serverfarms', concat('plan-', parameters('appName')))]\",\n        \"httpsOnly\": true,\n        \"siteConfig\": {\n          \"linuxFxVersion\": \"NODE|20-lts\",\n          \"minTlsVersion\": \"1.2\",\n          \"ftpsState\": \"Disabled\"\n        }\n      }\n    }\n  ]\n}",
+      "bicep": "param appName string\n\nresource plan 'Microsoft.Web/serverfarms@2023-12-01' = {\n  name: 'plan-${appName}'\n  location: resourceGroup().location\n  sku: {\n    name: 'B1'\n  }\n  kind: 'linux'\n  properties: {\n    reserved: true\n  }\n}\n\nresource app 'Microsoft.Web/sites@2023-12-01' = {\n  name: appName\n  location: resourceGroup().location\n  kind: 'app,linux'\n  identity: {\n    type: 'SystemAssigned'\n  }\n  properties: {\n    serverFarmId: plan.id\n    httpsOnly: true\n    siteConfig: {\n      linuxFxVersion: 'NODE|20-lts'\n      minTlsVersion: '1.2'\n      ftpsState: 'Disabled'\n    }\n  }\n}",
+      "terraform": "variable \"app_name\" {\n  type = string\n}\n\nresource \"azurerm_service_plan\" \"plan\" {\n  name                = \"plan-${var.app_name}\"\n  resource_group_name = azurerm_resource_group.rg.name\n  location            = azurerm_resource_group.rg.location\n  os_type             = \"Linux\"\n  sku_name            = \"B1\"\n}\n\nresource \"azurerm_linux_web_app\" \"app\" {\n  name                = var.app_name\n  resource_group_name = azurerm_resource_group.rg.name\n  location            = azurerm_resource_group.rg.location\n  service_plan_id     = azurerm_service_plan.plan.id\n  https_only          = true\n\n  identity {\n    type = \"SystemAssigned\"\n  }\n\n  site_config {\n    minimum_tls_version = \"1.2\"\n    ftps_state          = \"Disabled\"\n    application_stack {\n      node_version = \"20-lts\"\n    }\n  }\n}",
+      "concepts": [
+        {
+          "id": "plan",
+          "label": "The plan",
+          "note": "serverfarms is the API name for an App Service plan. Terraform calls it azurerm_service_plan.",
+          "match": {
+            "arm": ["Microsoft.Web/serverfarms\"", "\"sku\": { \"name\": \"B1\" }"],
+            "bicep": ["Microsoft.Web/serverfarms@", "name: 'B1'"],
+            "terraform": ["azurerm_service_plan\" \"plan", "sku_name"]
+          }
+        },
+        {
+          "id": "linux",
+          "label": "Linux",
+          "note": "A quirk of the API: a Linux plan is kind 'linux' plus reserved: true. Terraform says os_type = \"Linux\" and uses a separate azurerm_linux_web_app resource.",
+          "match": {
+            "arm": ["\"kind\": \"linux\"", "reserved", "app,linux"],
+            "bicep": ["kind: 'linux'", "reserved", "app,linux"],
+            "terraform": ["os_type", "azurerm_linux_web_app"]
+          }
+        },
+        {
+          "id": "link",
+          "label": "Linking app to plan",
+          "note": "ARM needs resourceId() plus dependsOn; Bicep's plan.id creates the dependency implicitly; Terraform's reference does the same.",
+          "match": {
+            "arm": ["serverFarmId", "dependsOn", "resourceId("],
+            "bicep": ["serverFarmId: plan.id"],
+            "terraform": ["service_plan_id"]
+          }
+        },
+        {
+          "id": "runtime",
+          "label": "Runtime stack",
+          "note": "linuxFxVersion 'NODE|20-lts' in ARM/Bicep; an application_stack block in Terraform.",
+          "match": {
+            "arm": ["linuxFxVersion"],
+            "bicep": ["linuxFxVersion"],
+            "terraform": ["application_stack", "node_version"]
+          }
+        },
+        {
+          "id": "security",
+          "label": "HTTPS, TLS and FTPS",
+          "note": "Same three settings, different names: httpsOnly/https_only, minTlsVersion/minimum_tls_version, ftpsState/ftps_state.",
+          "match": {
+            "arm": ["httpsOnly", "minTlsVersion", "ftpsState"],
+            "bicep": ["httpsOnly", "minTlsVersion", "ftpsState"],
+            "terraform": ["https_only", "minimum_tls_version", "ftps_state"]
+          }
+        },
+        {
+          "id": "identity",
+          "label": "Managed identity",
+          "note": "An identity object in ARM/Bicep; an identity block in Terraform.",
+          "match": {
+            "arm": ["\"identity\""],
+            "bicep": ["identity:", "SystemAssigned"],
+            "terraform": ["identity {", "SystemAssigned"]
+          }
+        },
+        {
+          "id": "names",
+          "label": "Names from inputs",
+          "note": "concat() in ARM, string interpolation '${}' in Bicep and Terraform.",
+          "match": {
+            "arm": ["concat("],
+            "bicep": ["'plan-${appName}'"],
+            "terraform": ["\"plan-${var.app_name}\""]
+          }
+        }
+      ]
+    },
+    {
+      "id": "keyvault",
+      "title": "Key Vault",
+      "summary": "An RBAC-mode vault with purge protection and public network access disabled.",
+      "arm": "{\n  \"$schema\": \"https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#\",\n  \"contentVersion\": \"1.0.0.0\",\n  \"parameters\": { \"vaultName\": { \"type\": \"string\" } },\n  \"resources\": [\n    {\n      \"type\": \"Microsoft.KeyVault/vaults\",\n      \"apiVersion\": \"2023-07-01\",\n      \"name\": \"[parameters('vaultName')]\",\n      \"location\": \"[resourceGroup().location]\",\n      \"properties\": {\n        \"tenantId\": \"[subscription().tenantId]\",\n        \"sku\": { \"family\": \"A\", \"name\": \"standard\" },\n        \"enableRbacAuthorization\": true,\n        \"enableSoftDelete\": true,\n        \"softDeleteRetentionInDays\": 90,\n        \"enablePurgeProtection\": true,\n        \"publicNetworkAccess\": \"Disabled\"\n      }\n    }\n  ]\n}",
+      "bicep": "param vaultName string\n\nresource vault 'Microsoft.KeyVault/vaults@2023-07-01' = {\n  name: vaultName\n  location: resourceGroup().location\n  properties: {\n    tenantId: subscription().tenantId\n    sku: {\n      family: 'A'\n      name: 'standard'\n    }\n    enableRbacAuthorization: true\n    enableSoftDelete: true\n    softDeleteRetentionInDays: 90\n    enablePurgeProtection: true\n    publicNetworkAccess: 'Disabled'\n  }\n}",
+      "terraform": "variable \"vault_name\" {\n  type = string\n}\n\ndata \"azurerm_client_config\" \"current\" {}\n\nresource \"azurerm_key_vault\" \"vault\" {\n  name                          = var.vault_name\n  resource_group_name           = azurerm_resource_group.rg.name\n  location                      = azurerm_resource_group.rg.location\n  tenant_id                     = data.azurerm_client_config.current.tenant_id\n  sku_name                      = \"standard\"\n  enable_rbac_authorization     = true\n  soft_delete_retention_days    = 90\n  purge_protection_enabled      = true\n  public_network_access_enabled = false\n}",
+      "concepts": [
+        {
+          "id": "tenant",
+          "label": "Tenant",
+          "note": "ARM/Bicep read it from subscription().tenantId; Terraform reads it from the azurerm_client_config data source.",
+          "match": {
+            "arm": ["tenantId"],
+            "bicep": ["tenantId"],
+            "terraform": ["tenant_id", "azurerm_client_config"]
+          }
+        },
+        {
+          "id": "sku",
+          "label": "SKU",
+          "note": "An object with family 'A' and a name in ARM/Bicep; just sku_name in Terraform.",
+          "match": {
+            "arm": ["\"sku\""],
+            "bicep": ["sku:", "family", "name: 'standard'"],
+            "terraform": ["sku_name"]
+          }
+        },
+        {
+          "id": "rbac",
+          "label": "Permission model",
+          "note": "enableRbacAuthorization: true switches from access policies to Azure RBAC. Terraform: enable_rbac_authorization - newer azurerm 4.x releases rename it rbac_authorization_enabled, so check your provider version.",
+          "match": {
+            "arm": ["enableRbacAuthorization"],
+            "bicep": ["enableRbacAuthorization"],
+            "terraform": ["enable_rbac_authorization"]
+          }
+        },
+        {
+          "id": "softdelete",
+          "label": "Soft delete",
+          "note": "Soft delete is always on now. ARM/Bicep still show enableSoftDelete; Terraform has no switch, only the retention days.",
+          "match": {
+            "arm": ["enableSoftDelete", "softDeleteRetentionInDays"],
+            "bicep": ["enableSoftDelete", "softDeleteRetentionInDays"],
+            "terraform": ["soft_delete_retention_days"]
+          }
+        },
+        {
+          "id": "purge",
+          "label": "Purge protection",
+          "note": "Once on, it cannot be turned off - deleted vaults stay recoverable for the retention period.",
+          "match": {
+            "arm": ["enablePurgeProtection"],
+            "bicep": ["enablePurgeProtection"],
+            "terraform": ["purge_protection_enabled"]
+          }
+        },
+        {
+          "id": "network",
+          "label": "Public network access",
+          "note": "'Disabled' string in ARM/Bicep vs a boolean in Terraform - reach it through a private endpoint.",
+          "match": {
+            "arm": ["publicNetworkAccess"],
+            "bicep": ["publicNetworkAccess"],
+            "terraform": ["public_network_access_enabled"]
+          }
+        }
+      ]
+    }
+  ]
+}

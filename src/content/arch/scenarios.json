@@ -1,0 +1,981 @@
+{
+  "scenarios": [
+    {
+      "id": "ha-web",
+      "title": "Highly available web app (99.99%)",
+      "prompt": "Design a public web app with a relational database that must meet a **99.99%** availability target and survive the loss of a whole region.",
+      "requirements": [
+        {
+          "kind": "hasType",
+          "type": "frontdoor",
+          "min": 1,
+          "text": "A global entry point that can fail over between regions"
+        },
+        {
+          "kind": "propOn",
+          "type": "frontdoor",
+          "key": "waf",
+          "value": true,
+          "text": "A WAF on the public entry"
+        },
+        {
+          "kind": "regions",
+          "min": 2,
+          "text": "The app and data in at least two regions"
+        },
+        {
+          "kind": "noFindings",
+          "rules": ["geo-data"],
+          "text": "A copy of the data in every region that serves traffic"
+        },
+        {
+          "kind": "noFindings",
+          "rules": [
+            "waf",
+            "data-public",
+            "private-endpoint",
+            "secrets",
+            "monitoring",
+            "single-instance",
+            "backup"
+          ],
+          "text": "No security, secret, monitoring or redundancy problems"
+        }
+      ],
+      "accepts": [],
+      "model": {
+        "id": "model-ha-web",
+        "name": "Model answer",
+        "scenarioId": "ha-web",
+        "nodes": [
+          {
+            "id": "users",
+            "type": "users",
+            "label": "Users",
+            "x": 20,
+            "y": 300,
+            "props": {}
+          },
+          {
+            "id": "fd",
+            "type": "frontdoor",
+            "label": "Front Door + WAF",
+            "x": 200,
+            "y": 300,
+            "props": {
+              "waf": true
+            }
+          },
+          {
+            "id": "app1",
+            "type": "appservice",
+            "label": "Web app (WE)",
+            "x": 400,
+            "y": 100,
+            "props": {
+              "instances": 3,
+              "zoneRedundant": true
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "app2",
+            "type": "appservice",
+            "label": "Web app (NE)",
+            "x": 400,
+            "y": 500,
+            "props": {
+              "instances": 3,
+              "zoneRedundant": true
+            },
+            "region": "North Europe"
+          },
+          {
+            "id": "sql1",
+            "type": "sql",
+            "label": "SQL primary",
+            "x": 620,
+            "y": 40,
+            "props": {
+              "zoneRedundant": true,
+              "geoReplica": true
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "sql2",
+            "type": "sql",
+            "label": "SQL secondary",
+            "x": 620,
+            "y": 440,
+            "props": {
+              "zoneRedundant": true,
+              "geoReplica": true
+            },
+            "region": "North Europe"
+          },
+          {
+            "id": "kv1",
+            "type": "keyvault",
+            "label": "Key Vault (WE)",
+            "x": 620,
+            "y": 160,
+            "props": {},
+            "region": "West Europe"
+          },
+          {
+            "id": "kv2",
+            "type": "keyvault",
+            "label": "Key Vault (NE)",
+            "x": 620,
+            "y": 560,
+            "props": {},
+            "region": "North Europe"
+          },
+          {
+            "id": "pe1",
+            "type": "pe",
+            "label": "PE sql",
+            "x": 840,
+            "y": 40,
+            "props": {},
+            "region": "West Europe"
+          },
+          {
+            "id": "pe2",
+            "type": "pe",
+            "label": "PE kv",
+            "x": 840,
+            "y": 160,
+            "props": {},
+            "region": "West Europe"
+          },
+          {
+            "id": "pe3",
+            "type": "pe",
+            "label": "PE sql",
+            "x": 840,
+            "y": 440,
+            "props": {},
+            "region": "North Europe"
+          },
+          {
+            "id": "pe4",
+            "type": "pe",
+            "label": "PE kv",
+            "x": 840,
+            "y": 560,
+            "props": {},
+            "region": "North Europe"
+          },
+          {
+            "id": "vnet1",
+            "type": "vnet",
+            "label": "VNet (WE)",
+            "x": 1040,
+            "y": 100,
+            "props": {
+              "addressSpace": "10.1.0.0/16"
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "vnet2",
+            "type": "vnet",
+            "label": "VNet (NE)",
+            "x": 1040,
+            "y": 500,
+            "props": {
+              "addressSpace": "10.2.0.0/16"
+            },
+            "region": "North Europe"
+          },
+          {
+            "id": "la",
+            "type": "loganalytics",
+            "label": "Log Analytics",
+            "x": 620,
+            "y": 300,
+            "props": {},
+            "region": "West Europe"
+          }
+        ],
+        "edges": [
+          {
+            "id": "e0",
+            "from": "users",
+            "to": "fd"
+          },
+          {
+            "id": "e1",
+            "from": "fd",
+            "to": "app1"
+          },
+          {
+            "id": "e2",
+            "from": "fd",
+            "to": "app2"
+          },
+          {
+            "id": "e3",
+            "from": "app1",
+            "to": "sql1"
+          },
+          {
+            "id": "e4",
+            "from": "app1",
+            "to": "kv1"
+          },
+          {
+            "id": "e5",
+            "from": "app1",
+            "to": "vnet1"
+          },
+          {
+            "id": "e6",
+            "from": "app2",
+            "to": "sql2"
+          },
+          {
+            "id": "e7",
+            "from": "app2",
+            "to": "kv2"
+          },
+          {
+            "id": "e8",
+            "from": "app2",
+            "to": "vnet2"
+          },
+          {
+            "id": "e9",
+            "from": "sql1",
+            "to": "pe1"
+          },
+          {
+            "id": "e10",
+            "from": "kv1",
+            "to": "pe2"
+          },
+          {
+            "id": "e11",
+            "from": "sql2",
+            "to": "pe3"
+          },
+          {
+            "id": "e12",
+            "from": "kv2",
+            "to": "pe4"
+          },
+          {
+            "id": "e13",
+            "from": "pe1",
+            "to": "vnet1"
+          },
+          {
+            "id": "e14",
+            "from": "pe2",
+            "to": "vnet1"
+          },
+          {
+            "id": "e15",
+            "from": "pe3",
+            "to": "vnet2"
+          },
+          {
+            "id": "e16",
+            "from": "pe4",
+            "to": "vnet2"
+          },
+          {
+            "id": "e17",
+            "from": "fd",
+            "to": "la"
+          },
+          {
+            "id": "e18",
+            "from": "app1",
+            "to": "la"
+          },
+          {
+            "id": "e19",
+            "from": "app2",
+            "to": "la"
+          },
+          {
+            "id": "e20",
+            "from": "sql1",
+            "to": "la"
+          },
+          {
+            "id": "e21",
+            "from": "sql2",
+            "to": "la"
+          },
+          {
+            "id": "e22",
+            "from": "kv1",
+            "to": "la"
+          },
+          {
+            "id": "e23",
+            "from": "kv2",
+            "to": "la"
+          }
+        ],
+        "updatedAt": 0
+      },
+      "explanation": "Front Door (with WAF) sends users to the nearest healthy region and fails over on its own. Each region runs a zone-redundant App Service plan with several instances; Azure SQL is zone-redundant with a failover group to the other region. Apps read secrets from a regional Key Vault with a managed identity, data services are reached only through private endpoints, and everything sends diagnostics to Log Analytics. Single-region App Service + SQL is about 99.94%; two regions behind Front Door gets to about 99.99%."
+    },
+    {
+      "id": "internal-api",
+      "title": "Partner API on AKS (99.95%)",
+      "prompt": "Partners call your REST API over the internet. It runs on **AKS**, stores orders in SQL, and must survive a **zone** failure. One region is acceptable.",
+      "requirements": [
+        {
+          "kind": "propOn",
+          "type": "appgw",
+          "key": "sku",
+          "value": "WAF_v2",
+          "text": "Application Gateway with the WAF_v2 SKU in front"
+        },
+        {
+          "kind": "propOn",
+          "type": "aks",
+          "key": "zones",
+          "value": true,
+          "text": "AKS nodes spread across availability zones"
+        },
+        {
+          "kind": "noFindings",
+          "rules": [
+            "waf",
+            "data-public",
+            "private-endpoint",
+            "secrets",
+            "monitoring",
+            "single-instance"
+          ],
+          "text": "No security, secret, monitoring or redundancy problems"
+        }
+      ],
+      "accepts": ["single-region"],
+      "model": {
+        "id": "model-internal-api",
+        "name": "Model answer",
+        "scenarioId": "internal-api",
+        "nodes": [
+          {
+            "id": "users",
+            "type": "users",
+            "label": "Partners",
+            "x": 20,
+            "y": 300,
+            "props": {}
+          },
+          {
+            "id": "agw",
+            "type": "appgw",
+            "label": "App Gateway WAF",
+            "x": 220,
+            "y": 300,
+            "props": {
+              "sku": "WAF_v2",
+              "zones": true
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "aks",
+            "type": "aks",
+            "label": "AKS (3 zones)",
+            "x": 440,
+            "y": 300,
+            "props": {
+              "nodeCount": 3,
+              "zones": true
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "sql",
+            "type": "sql",
+            "label": "Orders DB",
+            "x": 680,
+            "y": 180,
+            "props": {
+              "zoneRedundant": true
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "kv",
+            "type": "keyvault",
+            "label": "Key Vault",
+            "x": 680,
+            "y": 420,
+            "props": {},
+            "region": "West Europe"
+          },
+          {
+            "id": "pe1",
+            "type": "pe",
+            "label": "PE sql",
+            "x": 900,
+            "y": 180,
+            "props": {},
+            "region": "West Europe"
+          },
+          {
+            "id": "pe2",
+            "type": "pe",
+            "label": "PE kv",
+            "x": 900,
+            "y": 420,
+            "props": {},
+            "region": "West Europe"
+          },
+          {
+            "id": "vnet",
+            "type": "vnet",
+            "label": "Spoke VNet",
+            "x": 900,
+            "y": 300,
+            "props": {
+              "addressSpace": "10.10.0.0/16"
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "la",
+            "type": "loganalytics",
+            "label": "Log Analytics",
+            "x": 440,
+            "y": 520,
+            "props": {},
+            "region": "West Europe"
+          }
+        ],
+        "edges": [
+          {
+            "id": "e0",
+            "from": "users",
+            "to": "agw"
+          },
+          {
+            "id": "e1",
+            "from": "agw",
+            "to": "aks"
+          },
+          {
+            "id": "e2",
+            "from": "aks",
+            "to": "sql"
+          },
+          {
+            "id": "e3",
+            "from": "aks",
+            "to": "kv"
+          },
+          {
+            "id": "e4",
+            "from": "sql",
+            "to": "pe1"
+          },
+          {
+            "id": "e5",
+            "from": "kv",
+            "to": "pe2"
+          },
+          {
+            "id": "e6",
+            "from": "pe1",
+            "to": "vnet"
+          },
+          {
+            "id": "e7",
+            "from": "pe2",
+            "to": "vnet"
+          },
+          {
+            "id": "e8",
+            "from": "aks",
+            "to": "vnet"
+          },
+          {
+            "id": "e9",
+            "from": "agw",
+            "to": "vnet"
+          },
+          {
+            "id": "e10",
+            "from": "agw",
+            "to": "la"
+          },
+          {
+            "id": "e11",
+            "from": "aks",
+            "to": "la"
+          },
+          {
+            "id": "e12",
+            "from": "sql",
+            "to": "la"
+          },
+          {
+            "id": "e13",
+            "from": "kv",
+            "to": "la"
+          }
+        ],
+        "updatedAt": 0
+      },
+      "explanation": "Application Gateway WAF_v2 is the only public entry; it forwards to an ingress on a zone-spread AKS cluster in the same VNet. Pods use workload identity for Key Vault and SQL, both behind private endpoints. Container insights and diagnostics go to Log Analytics. One region with zones meets 99.95%; add a second region only if the target rises."
+    },
+    {
+      "id": "lift-shift",
+      "title": "Lift-and-shift a 3-tier VM app",
+      "prompt": "Move a web + application tier running on VMs to Azure, and move the SQL Server database to **Azure SQL**. It must survive a **zone** failure and be recoverable if a VM is deleted.",
+      "requirements": [
+        {
+          "kind": "hasType",
+          "type": "vm",
+          "min": 2,
+          "text": "Separate web and app tiers on VMs"
+        },
+        {
+          "kind": "propOn",
+          "type": "vm",
+          "key": "zones",
+          "value": true,
+          "text": "Every VM tier spread across zones"
+        },
+        {
+          "kind": "propOn",
+          "type": "vm",
+          "key": "backup",
+          "value": true,
+          "text": "Every VM tier backed up"
+        },
+        {
+          "kind": "noFindings",
+          "rules": [
+            "waf",
+            "data-public",
+            "private-endpoint",
+            "secrets",
+            "monitoring",
+            "single-instance",
+            "backup"
+          ],
+          "text": "No security, secret, monitoring or redundancy problems"
+        }
+      ],
+      "accepts": ["single-region"],
+      "model": {
+        "id": "model-lift-shift",
+        "name": "Model answer",
+        "scenarioId": "lift-shift",
+        "nodes": [
+          {
+            "id": "users",
+            "type": "users",
+            "label": "Users",
+            "x": 20,
+            "y": 300,
+            "props": {}
+          },
+          {
+            "id": "agw",
+            "type": "appgw",
+            "label": "App Gateway WAF",
+            "x": 200,
+            "y": 300,
+            "props": {
+              "sku": "WAF_v2",
+              "zones": true
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "web",
+            "type": "vm",
+            "label": "Web tier VMs",
+            "x": 400,
+            "y": 180,
+            "props": {
+              "instances": 2,
+              "zones": true,
+              "backup": true
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "appvm",
+            "type": "vm",
+            "label": "App tier VMs",
+            "x": 400,
+            "y": 420,
+            "props": {
+              "instances": 2,
+              "zones": true,
+              "backup": true
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "sql",
+            "type": "sql",
+            "label": "Azure SQL",
+            "x": 640,
+            "y": 420,
+            "props": {
+              "zoneRedundant": true
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "kv",
+            "type": "keyvault",
+            "label": "Key Vault",
+            "x": 640,
+            "y": 180,
+            "props": {},
+            "region": "West Europe"
+          },
+          {
+            "id": "pe1",
+            "type": "pe",
+            "label": "PE sql",
+            "x": 860,
+            "y": 420,
+            "props": {},
+            "region": "West Europe"
+          },
+          {
+            "id": "pe2",
+            "type": "pe",
+            "label": "PE kv",
+            "x": 860,
+            "y": 180,
+            "props": {},
+            "region": "West Europe"
+          },
+          {
+            "id": "vnet",
+            "type": "vnet",
+            "label": "VNet",
+            "x": 1040,
+            "y": 300,
+            "props": {
+              "addressSpace": "10.20.0.0/16"
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "la",
+            "type": "loganalytics",
+            "label": "Log Analytics",
+            "x": 640,
+            "y": 600,
+            "props": {},
+            "region": "West Europe"
+          }
+        ],
+        "edges": [
+          {
+            "id": "e0",
+            "from": "users",
+            "to": "agw"
+          },
+          {
+            "id": "e1",
+            "from": "agw",
+            "to": "web"
+          },
+          {
+            "id": "e2",
+            "from": "web",
+            "to": "appvm"
+          },
+          {
+            "id": "e3",
+            "from": "appvm",
+            "to": "sql"
+          },
+          {
+            "id": "e4",
+            "from": "appvm",
+            "to": "kv"
+          },
+          {
+            "id": "e5",
+            "from": "web",
+            "to": "kv"
+          },
+          {
+            "id": "e6",
+            "from": "sql",
+            "to": "pe1"
+          },
+          {
+            "id": "e7",
+            "from": "kv",
+            "to": "pe2"
+          },
+          {
+            "id": "e8",
+            "from": "pe1",
+            "to": "vnet"
+          },
+          {
+            "id": "e9",
+            "from": "pe2",
+            "to": "vnet"
+          },
+          {
+            "id": "e10",
+            "from": "web",
+            "to": "vnet"
+          },
+          {
+            "id": "e11",
+            "from": "appvm",
+            "to": "vnet"
+          },
+          {
+            "id": "e12",
+            "from": "agw",
+            "to": "vnet"
+          },
+          {
+            "id": "e13",
+            "from": "agw",
+            "to": "la"
+          },
+          {
+            "id": "e14",
+            "from": "web",
+            "to": "la"
+          },
+          {
+            "id": "e15",
+            "from": "appvm",
+            "to": "la"
+          },
+          {
+            "id": "e16",
+            "from": "sql",
+            "to": "la"
+          },
+          {
+            "id": "e17",
+            "from": "kv",
+            "to": "la"
+          }
+        ],
+        "updatedAt": 0
+      },
+      "explanation": "Users reach the web tier only through Application Gateway WAF_v2. Web and app tiers each run two or more VMs across zones, protected by Azure Backup. The database moves to zone-redundant Azure SQL behind a private endpoint, and connection secrets live in Key Vault. Admins use Bastion, never public RDP."
+    },
+    {
+      "id": "documents",
+      "title": "Secure document uploads",
+      "prompt": "Customers upload documents through a web app. Documents must **never be public**, must be **recoverable after accidental deletion**, and must survive a regional disaster (the app can be rebuilt elsewhere).",
+      "requirements": [
+        {
+          "kind": "propOn",
+          "type": "storage",
+          "key": "softDelete",
+          "value": true,
+          "text": "Soft delete and versioning on the storage account"
+        },
+        {
+          "kind": "propOn",
+          "type": "storage",
+          "key": "redundancy",
+          "value": "GZRS",
+          "text": "Geo-zone-redundant storage (GZRS)"
+        },
+        {
+          "kind": "noFindings",
+          "rules": [
+            "waf",
+            "data-public",
+            "private-endpoint",
+            "secrets",
+            "monitoring",
+            "single-instance",
+            "backup"
+          ],
+          "text": "No security, secret, monitoring or redundancy problems"
+        }
+      ],
+      "accepts": ["single-region"],
+      "model": {
+        "id": "model-documents",
+        "name": "Model answer",
+        "scenarioId": "documents",
+        "nodes": [
+          {
+            "id": "users",
+            "type": "users",
+            "label": "Customers",
+            "x": 20,
+            "y": 300,
+            "props": {}
+          },
+          {
+            "id": "fd",
+            "type": "frontdoor",
+            "label": "Front Door + WAF",
+            "x": 200,
+            "y": 300,
+            "props": {
+              "waf": true
+            }
+          },
+          {
+            "id": "app",
+            "type": "appservice",
+            "label": "Upload app",
+            "x": 420,
+            "y": 300,
+            "props": {
+              "instances": 2,
+              "zoneRedundant": true
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "st",
+            "type": "storage",
+            "label": "Documents",
+            "x": 660,
+            "y": 180,
+            "props": {
+              "redundancy": "GZRS",
+              "softDelete": true
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "kv",
+            "type": "keyvault",
+            "label": "Key Vault",
+            "x": 660,
+            "y": 420,
+            "props": {},
+            "region": "West Europe"
+          },
+          {
+            "id": "pe1",
+            "type": "pe",
+            "label": "PE blob",
+            "x": 880,
+            "y": 180,
+            "props": {},
+            "region": "West Europe"
+          },
+          {
+            "id": "pe2",
+            "type": "pe",
+            "label": "PE kv",
+            "x": 880,
+            "y": 420,
+            "props": {},
+            "region": "West Europe"
+          },
+          {
+            "id": "vnet",
+            "type": "vnet",
+            "label": "VNet",
+            "x": 1040,
+            "y": 300,
+            "props": {
+              "addressSpace": "10.30.0.0/16"
+            },
+            "region": "West Europe"
+          },
+          {
+            "id": "la",
+            "type": "loganalytics",
+            "label": "Log Analytics",
+            "x": 420,
+            "y": 520,
+            "props": {},
+            "region": "West Europe"
+          }
+        ],
+        "edges": [
+          {
+            "id": "e0",
+            "from": "users",
+            "to": "fd"
+          },
+          {
+            "id": "e1",
+            "from": "fd",
+            "to": "app"
+          },
+          {
+            "id": "e2",
+            "from": "app",
+            "to": "st"
+          },
+          {
+            "id": "e3",
+            "from": "app",
+            "to": "kv"
+          },
+          {
+            "id": "e4",
+            "from": "app",
+            "to": "vnet"
+          },
+          {
+            "id": "e5",
+            "from": "st",
+            "to": "pe1"
+          },
+          {
+            "id": "e6",
+            "from": "kv",
+            "to": "pe2"
+          },
+          {
+            "id": "e7",
+            "from": "pe1",
+            "to": "vnet"
+          },
+          {
+            "id": "e8",
+            "from": "pe2",
+            "to": "vnet"
+          },
+          {
+            "id": "e9",
+            "from": "fd",
+            "to": "la"
+          },
+          {
+            "id": "e10",
+            "from": "app",
+            "to": "la"
+          },
+          {
+            "id": "e11",
+            "from": "st",
+            "to": "la"
+          },
+          {
+            "id": "e12",
+            "from": "kv",
+            "to": "la"
+          }
+        ],
+        "updatedAt": 0
+      },
+      "explanation": "Front Door with WAF fronts a zone-redundant App Service. Documents go to a GZRS storage account with soft delete and versioning, reachable only through a private endpoint, using the app's managed identity (no account keys). Key Vault holds any remaining secrets, and Log Analytics collects diagnostics."
+    }
+  ]
+}

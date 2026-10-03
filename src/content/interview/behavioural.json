@@ -1,0 +1,124 @@
+{
+  "questions": [
+    {
+      "id": "incident",
+      "question": "Tell me about a production incident you handled.",
+      "theme": "Incidents",
+      "tip": "Show calm triage, communication, the fix and the follow-up that stopped it recurring."
+    },
+    {
+      "id": "mistake",
+      "question": "Tell me about a mistake you made.",
+      "theme": "Ownership",
+      "tip": "Own it plainly, show the fix, and what you changed so nobody repeats it."
+    },
+    {
+      "id": "conflict",
+      "question": "Tell me about a disagreement with a colleague and how you resolved it.",
+      "theme": "Collaboration",
+      "tip": "Disagree on the idea, not the person; show data and the outcome you both accepted."
+    },
+    {
+      "id": "deadline",
+      "question": "Describe a time you delivered under a tight deadline.",
+      "theme": "Delivery",
+      "tip": "What you cut, what you protected (quality, safety), and how you kept people informed."
+    },
+    {
+      "id": "automation",
+      "question": "Tell me about a process you automated or improved.",
+      "theme": "Improvement",
+      "tip": "Before and after numbers: time saved, errors removed, people unblocked."
+    },
+    {
+      "id": "lead-no-authority",
+      "question": "Tell me about a time you led without formal authority.",
+      "theme": "Leadership",
+      "tip": "How you got buy-in: a pilot, data, listening to objections."
+    },
+    {
+      "id": "learn-fast",
+      "question": "Tell me about something you had to learn quickly.",
+      "theme": "Learning",
+      "tip": "How you learned (docs, labs, experts) and how you proved you'd got it."
+    },
+    {
+      "id": "beyond-role",
+      "question": "Tell me about a time you went beyond your role.",
+      "theme": "Ownership",
+      "tip": "Why it mattered to the business, and how you avoided stepping on toes."
+    },
+    {
+      "id": "stakeholder",
+      "question": "Tell me about a difficult stakeholder.",
+      "theme": "Communication",
+      "tip": "Understand their goal, set expectations, show progress early."
+    },
+    {
+      "id": "prioritise",
+      "question": "How did you prioritise when everything was urgent?",
+      "theme": "Prioritisation",
+      "tip": "A clear rule (impact, risk, deadlines), saying no or not-yet, and agreement from the people affected."
+    },
+    {
+      "id": "feedback",
+      "question": "Tell me about feedback you received and acted on.",
+      "theme": "Growth",
+      "tip": "Specific feedback, what you changed, and the evidence it worked."
+    },
+    {
+      "id": "adoption",
+      "question": "Tell me how you got a team to adopt a new tool or practice.",
+      "theme": "Influence",
+      "tip": "Start small, measure, make the new way the easy way."
+    },
+    {
+      "id": "security-risk",
+      "question": "Tell me about a time you found a security risk.",
+      "theme": "Security",
+      "tip": "How you found it, how you assessed severity, and the fix plus the guardrail added."
+    },
+    {
+      "id": "cost",
+      "question": "Tell me about a time you reduced cloud cost.",
+      "theme": "Cost",
+      "tip": "The number saved, how you found the waste, and how you kept it from coming back."
+    },
+    {
+      "id": "ambiguity",
+      "question": "Describe a project with unclear requirements.",
+      "theme": "Ambiguity",
+      "tip": "Questions you asked, assumptions you wrote down, and how you iterated."
+    },
+    {
+      "id": "mentoring",
+      "question": "Tell me about helping a teammate grow.",
+      "theme": "Mentoring",
+      "tip": "What they could do afterwards that they could not before."
+    },
+    {
+      "id": "decision-regret",
+      "question": "Tell me about a technical decision you would make differently now.",
+      "theme": "Judgement",
+      "tip": "The context at the time, what you learned, and what you'd do now."
+    },
+    {
+      "id": "migration",
+      "question": "Tell me about a large migration you were part of.",
+      "theme": "Delivery",
+      "tip": "Planning, waves, rollback, and how you kept users unaffected."
+    },
+    {
+      "id": "proud",
+      "question": "What achievement are you most proud of?",
+      "theme": "Achievement",
+      "tip": "Your part (I, not we), the impact in numbers, and why it mattered."
+    },
+    {
+      "id": "broke-prod",
+      "question": "Tell me about a change you made that broke something.",
+      "theme": "Incidents",
+      "tip": "Detection, rollback, communication, and the pipeline or test you added afterwards."
+    }
+  ]
+}

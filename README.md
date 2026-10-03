@@ -157,6 +157,206 @@ All 2,584 interview questions and every auto-marked practice question are flashc
 - **Study calendar and daily goal.** A GitHub-style year of activity: questions answered, lessons completed, and minutes the app was open and in use. Set a goal in questions or minutes; meeting it counts the day towards your streak.
 - **Exam-day countdown.** Set an exam date per course to see lessons, new cards and reviews needed per day. It warns if your new-card limit is too low to finish, and can raise it for you.
 
+## Study bot
+
+`/bot` (🤖 in the sidebar, on Home, and **Practise with the bot** on every interview question) is an offline interview coach. It runs on rules and your question bank, and makes no AI calls: nothing you type leaves the device.
+
+- **Mock interview.** "Interview me on AKS", `/mock senior` or `/mock due` starts a round of 6 questions, due cards first. Each typed answer is scored against the question's key points. Matching allows typos, word forms and synonyms. You get:
+  - the key points you covered and missed;
+  - any common mistake it spotted;
+  - a suggested Again/Hard/Good/Easy rating, which feeds Due today;
+  - a follow-up question;
+  - a report at the end.
+
+  If you said a point in other words, tick it on the checklist and re-score.
+
+- **Tutor.** With a question open, ask for a **hint** (three levels), the **short** or **long** answer, **simpler**, an **analogy**, **related** questions, **mistakes**, **follow-ups** or a **what if** variant.
+- **Search.** Anything that is not a command is searched across all 2,584 questions, with their 30-second answers.
+- **Coach.** "What should I study today?" reads your progress:
+  - reviews due;
+  - your weakest interview topics;
+  - exam readiness and the next domain to study;
+  - the mistake notebook;
+  - your exam-date plan.
+- **Rapid-fire.** 8 timed questions (25 seconds each) on the cards you are most likely to have forgotten.
+- **Troubleshooting.** Six branching incidents (ACR 403, CrashLoopBackOff, a 502 after a slot swap, a private endpoint, a Terraform state lock, a cost spike), scored at the root cause.
+- **Smart search** (optional, in Settings) adds on-device semantic search, so "my pods keep restarting" finds the CrashLoopBackOff answer. It is a one-time download of about 30 MB, then it works offline.
+- **Voice input** 🎙️ uses the browser's speech recognition, which usually needs the internet.
+
+How it works, the content schema and how to add a topic: [docs/STUDY_BOT.md](docs/STUDY_BOT.md).
+
+## Roles & skills
+
+`/roles` (🧭 in the sidebar and on Home) maps ten in-demand DevOps and cloud roles to the skills and tools they need, and links each skill to the content in this app. The roles are DevOps, SRE, Cloud Engineer, Platform, DevSecOps, Cloud/Solutions Architect, Kubernetes Platform, MLOps, Build & Release, and FinOps.
+
+- **Roles.** Each role has a card showing its top tools and **coverage**: how much of the role's core skills your progress covers. A skill counts as covered by whichever is best of these:
+  - you ticked it in My fit;
+  - your progress in the content it links to (interview recall, lessons completed, challenges solved).
+- **Role page.** Each role has its own page with:
+  - focus, day in the life and tools at a glance;
+  - skills by area with importance (core, important or nice to have), each with links into the app and **Ask the bot**;
+  - certifications, marked recommended or optional;
+  - what interviewers probe;
+  - a learning path as a stepper, with **Practise this** buttons;
+  - overlapping roles.
+- **Skills matrix.** Roles against skill areas as a heatmap. The first column is sticky so it reads on a phone. Tap a cell for the skills and tools behind it.
+- **Compare.** Pick two or three roles to see shared skills and what is unique to each.
+- **My fit.** Tick what you know to see your match per role and the top 5 gaps to learn next. Each gap is linked to content or marked "no content yet". Ticks are saved in your progress record (schema v5), so they are included in **Progress & data → Export** and merged on import.
+- **Tool lookup.** Search for a tool (Prometheus, Helm, KQL) to see which roles need it and how much.
+
+All of it is data in `src/content/roles/roles.json`:
+
+- `areas`: the skill areas.
+- `skills`: shared skills, each with `appLinks` to `itv:<topic>`, `lesson:<lesson>`, `course:<course>` or `tool:<page>`. A skill with no links is marked `gap: true`.
+- `roles`: each role references skills by id.
+
+The content is vendor-neutral, with Azure and AWS names side by side. It leaves out salaries and market figures on purpose. Tests check that every link resolves and every reference exists. To refresh the data when the job market moves, use prompt R2 from `role-skills-map-prompt.md`, which keeps the same schema and ids.
+
+## Search everything, settings, sync and accessibility
+
+- **Command palette.** Press **Ctrl+K** (**⌘K** on a Mac), or the 🔎 in the top bar, from any page. It searches:
+  - pages;
+  - lessons;
+  - all 2,584 interview questions;
+  - command-reference entries;
+  - SQL/KQL/Python challenges, CLI missions and config-lab exercises;
+  - incident and guided labs;
+  - glossary terms;
+  - roles.
+
+  Matching is fuzzy and prefix-aware: "privat endpont" still finds private endpoints. Use ↑/↓, Enter and Esc. It is a proper combobox/listbox dialog with a focus trap, and focus returns where it was when it closes. The index is built on first open only.
+
+- **Settings** (`/settings`, ⚙️). In one place:
+  - daily goal (questions or minutes);
+  - new flashcards per day;
+  - exam dates;
+  - theme;
+  - GitHub Gist sync;
+  - data reset (type RESET to confirm).
+
+  Export and import stay on **Progress & data**.
+
+- **GitHub Gist sync** (optional). Paste a personal access token with only the `gist` scope. The app keeps your progress in a **secret gist** in your account. Each sync downloads it, keeps the **newest copy of every item**, and uploads the result. Newest-per-item covers lesson status, practice answers, interview recall, flashcards, mistakes, stories, designs and skill ticks; other records are combined, and settings come from whichever side saved last. The first sync on a new device finds the existing gist by itself. You can also have it sync automatically when the app opens.
+  - The token is stored only in this browser, for your sign-in. It is never written into the progress record or its export.
+  - Secret gists are unlisted, not private: anyone with the URL can read them.
+  - Deletions are not tracked, so something deleted on one device can come back from another.
+- **Accessibility.**
+  - axe-core runs in the tests on the main pages.
+  - `src/styles/contrast.test.ts` checks every text/background token pair against WCAG AA (4.5:1) in both themes.
+  - A real-browser axe pass over 35 routes in both themes, and at phone width, came back with no violations. Fixes included:
+    - darker subtle text and code comments in the light theme;
+    - dark text on light buttons in the dark theme;
+    - tabs that use `aria-selected` instead of `aria-pressed`;
+    - labelled landmarks and file inputs;
+    - keyboard-reachable scroll areas (code panes, graphs, diagrams);
+    - a correct heading order.
+- **Offline and updates.** The build now fails if any page, script, style, wasm or icon is missing from the service worker's precache (only the optional Smart-search runtime is cached on first use instead). When a new version is deployed, the existing "update available" banner offers a reload.
+
+## Guided labs, IaC compare, glossary and cheat sheets
+
+- **Guided labs** (`/guided-labs`, 🛠️). Five AZ-104 labs:
+  - a hardened storage account with data roles and lifecycle rules;
+  - a VNet, NSG and private VM;
+  - a custom RBAC role;
+  - Azure Policy with a visible deny;
+  - diagnostic settings to Log Analytics, with KQL.
+
+  Five AZ-400 labs:
+  - GitHub Actions to App Service with OIDC;
+  - a multi-stage Azure Pipeline with an approval;
+  - Azure Artifacts versioning;
+  - pipeline secrets from Key Vault;
+  - ACR build to Container Apps with a managed identity.
+
+  Every lab has:
+  - goals and prerequisites;
+  - an **estimated cost**;
+  - steps with copyable Cloud Shell (Bash) commands;
+  - **verify** steps: paste the output and the app checks it against the expected patterns, with an example of the expected output;
+  - a checklist;
+  - a **required cleanup**.
+
+  Starting a lab and not confirming its cleanup shows a "resources may still be running" warning on the lab and on Home. A lab counts as complete when the checklist is ticked and cleanup is confirmed. Progress is saved in your progress record (schema v8). Content: `src/content/labs/guided.json`. Tests check that every example output passes its own verify patterns.
+
+- **IaC compare** (`/iac`, 📐). A storage account, VNet + subnet, App Service plan + web app, and Key Vault, each in **ARM JSON, Bicep and Terraform** (azurerm 4.x) side by side. Tap a concept (SKU, TLS, dependencies, identity and so on) to highlight its lines in all three, with a note on how they differ. Content: `src/content/iac/compare.json`.
+- **Glossary** (`/glossary`, 📖). 90 Azure and DevOps terms with search and categories. Open a term to see the lessons that use it and the closest interview questions. In **lessons, terms are linked automatically**: the first mention per paragraph is underlined, and hovering, focusing or tapping it shows the definition and related lessons (on phones, as a sheet above the tab bar). Acronyms match case-sensitively, and everyday words such as "tag" or "stage" are not auto-linked. Content: `src/content/glossary.json`.
+- **Cheat sheets** (`/<course>/cheatsheet`, 🖨️ in the course tools). One printable page per exam domain, built from each lesson's one-liner, summary, first exam tip and key commands. Use **Print / save as PDF** to get a two-column A4 sheet with the app's navigation hidden. Choose "All domains" to get one page each.
+
+## Interview practice: mock interviews, STAR stories, incident labs, prep packs
+
+These are linked from the Interview preparation page. Incident labs also have a sidebar entry (🚨).
+
+- **Mock interview** (`/interview/mock`).
+  - **Set up:** choose a level, topics or a prep pack, how many questions, the time per answer (1-5 minutes) and 0-2 follow-ups.
+  - **Answer:** each question runs on a clock. Answer out loud: it is **recorded** with MediaRecorder and, where the browser supports the Web Speech API, **transcribed** live (that may use the internet). You can also just type key words.
+  - **Self-score:** a checklist of the model answer's key points, pre-ticked from your transcript by the Study bot's matcher, plus any common mistakes it spotted. A suggested Again/Hard/Good/Easy rating feeds Due today.
+  - **Follow-ups:** the question's own follow-ups, plus probes such as "why that approach?", "what at 10x scale?" and "how would you know it works?" (`src/content/interview/mock.json`).
+  - **Recordings** are kept per user in IndexedDB with play and delete. They stay on the device and are **not** part of the progress export.
+- **STAR stories** (`/interview/stories`). Write each story as Situation, Task, Action, Result and What I learned, with prompts and a word count (aim for about two minutes spoken).
+  - Tag stories to the 20 common behavioural questions in `src/content/interview/behavioural.json`.
+  - **Coverage** shows which questions have no story yet.
+  - **Quick review** walks through the questions: say it aloud, then reveal your story.
+  - Stories are saved in your progress record and included in export.
+- **Incident labs** (`/incidents`). Ten branching production incidents (from `src/content/bot/scenarios.json`, shared with the Study bot), including:
+  - intermittent 403s from ACR;
+  - CrashLoopBackOff;
+  - ImagePullBackOff after ACR went private;
+  - 502s after a slot swap or a backend certificate renewal;
+  - a private endpoint storage outage;
+  - a Terraform state lock;
+  - a cost spike;
+  - SQL timeouts after a release;
+  - Key Vault references failing after an RBAC switch.
+
+  Each step reveals new evidence. Some endings are wrong conclusions (`"correct": false`). The score is 50% diagnosis points, 20% efficiency (fewest steps compared with yours) and 30% for the right root cause.
+
+- **Prep packs** (`/interview/packs`). Every real interview-round topic is a company pack. Add your own tags to any question with **🏷 Tag** on its card (for example "Microsoft" or "Round 2 - system design") and each tag becomes a pack. You can revise a pack, start a mock interview from it, or delete the tag. Tags are saved in your progress record.
+
+## Architecture builder
+
+`/architecture` (🏗️ in the sidebar) is a canvas for drawing Azure designs. The services are Users / Internet, Front Door, Application Gateway, VMs, App Service, AKS, Azure SQL, Storage, Key Vault, VNet, Private Endpoint and Log Analytics. They are drawn as generic shapes with short text badges, not Microsoft's icons.
+
+- **Draw.** Tap a service to add it in the chosen region. Drag it with a mouse or finger, or tab to it and use the arrow keys. Use **Connect** to join two services, tapping the source and then the target. The inspector edits each service's settings: instances, zones, WAF SKU, backup, redundancy, soft delete, geo-replica and so on.
+- **Design review**, live as you draw. Tapping a finding highlights the services it is about. It checks for:
+  - no WAF on a public entry;
+  - data reachable from the internet;
+  - PaaS without a private endpoint;
+  - a private endpoint outside a VNet;
+  - secrets not in Key Vault;
+  - no monitoring or unmonitored resources;
+  - no backup or soft delete;
+  - a single region;
+  - a second region without a copy of the data;
+  - single instances;
+  - unconnected services.
+- **Scenarios.** Four briefs, each with a live checklist:
+  - a 99.99% highly available web app;
+  - a partner API on AKS;
+  - lifting and shifting a 3-tier VM app;
+  - secure document uploads.
+
+  **Compare with the model answer** shows the model diagram, its explanation, and what it has that yours doesn't. You can open a copy of it to edit.
+
+- **Saved locally.** Designs save automatically into your progress record (schema v6). They are included in **Progress & data → Export**, and on import the most recently edited copy wins.
+- **Export** a design as SVG, or as a 2x PNG.
+
+Content: `src/content/arch/services.json` holds the palette, regions and property definitions; `src/content/arch/scenarios.json` holds the briefs and model answers. Tests check that every model answer passes its own review and brief.
+
+## Visualise
+
+`/visualise` (🔭 in the sidebar) has four interactive models. Each loads as its own small chunk only when you open it, and its exercises count as challenges on Home.
+
+- **RBAC & Policy.** A management group → subscription → resource group → resource tree. Pick a principal to see the roles it holds and inherits. Tap a scope to see three panels side by side: role assignments, deny assignments and Azure Policy. Assign a role anywhere to highlight everything it reaches.
+  - **Evaluate a request** walks through Azure's order: deny assignments, then role assignments, then Policy on create/update. Along the way it shows:
+    - data actions vs control-plane roles;
+    - `notActions`;
+    - Policy `notScopes`;
+    - why being Owner does not get you past Policy.
+  - 14 "predict the outcome" exercises are in `src/content/visualise/rbac.json`.
+- **Deployment strategies.** Animated blue-green, canary, rolling and ring-based releases. Step through or play, move the traffic slider (canary, blue-green), break v2 on purpose, and roll back to see how fast each strategy recovers. Each strategy explains its pros, its risks and how to do it in Azure. A 6-question quiz asks which strategy fits a scenario.
+- **Git branching.** Type `commit`, `branch`, `checkout`/`switch`, `merge` (`--no-ff`, `--squash`), `rebase`, `cherry-pick`, `revert`, `reset`, `tag` and `log`, and watch an SVG commit graph update. Unreachable commits fade out after rebase or reset. There are 13 exercises with live checklists: basics, GitFlow (feature, release, hotfix) and trunk-based (short-lived branches, patching a release branch). A table compares GitFlow and trunk-based development.
+- **Composite SLA.** Chain services in series and redundant groups in parallel. You get the composite SLA, the nines, and the downtime it allows per day, week, month and year. It includes presets (such as two regions behind Front Door), 5 calculation exercises, and published SLA values in `sla.json` (check Microsoft's current SLA document before you quote one).
+
 ## Networking lab
 
 `/network` (🌐 in the sidebar) is hands-on AZ-104 networking, with Azure's real rules, in three tools.

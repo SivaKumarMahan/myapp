@@ -24,6 +24,12 @@ import { pythonChallengeKey, pythonChallenges } from '../content/python'
 import { missionKey, missions } from '../content/azcli'
 import { labExerciseKey, labExercises } from '../content/configlab'
 import { allNetKeys } from '../content/netlab'
+import { allVizKeys } from '../content/visualise'
+import { allArchKeys } from '../content/arch'
+import { allIncidentKeys } from '../lib/incident'
+import { allGuidedLabKeys, guidedLabById, isRunning } from '../content/labs'
+import { roles } from '../content/roles'
+import { roleMatch } from '../lib/roles'
 
 const readinessTone: Record<ReadinessLevel, BadgeTone> = {
   'just-starting': 'neutral',
@@ -84,7 +90,18 @@ export function HomePage() {
     (exercise) => state.challenges[labExerciseKey(exercise.id)]?.solvedAt,
   ).length
   const netDone = allNetKeys.filter((key) => state.challenges[key]?.solvedAt).length
+  const vizDone = allVizKeys.filter((key) => state.challenges[key]?.solvedAt).length
+  const archDone = allArchKeys.filter((key) => state.challenges[key]?.solvedAt).length
+  const incidentsDone = allIncidentKeys.filter((key) => state.challenges[key]?.solvedAt).length
+  const labsDone = allGuidedLabKeys.filter((key) => state.challenges[key]?.solvedAt).length
+  const runningLabs = Object.entries(state.guidedLabs)
+    .filter(([, progress]) => isRunning(progress))
+    .map(([id]) => guidedLabById.get(id))
+    .filter((lab) => lab !== undefined)
   const mistakes = mistakeCount(state)
+  const bestFit = roles
+    .map((role) => ({ role, match: roleMatch(role, state) }))
+    .sort((a, b) => b.match - a.match)[0]
   const bestScore = state.exams.reduce((best, attempt) => Math.max(best, attempt.scorePercent), 0)
 
   const continueTo = state.lastVisitedTopicId
@@ -146,6 +163,19 @@ export function HomePage() {
        * One card covering BOTH sections, because the app has two of them and a
        * summary that only counted lessons would understate half the work.
        */}
+      {runningLabs.length > 0 && (
+        <div className="lab-alert" role="alert">
+          ⚠ Azure resources may still be running from{' '}
+          {runningLabs.map((lab, index) => (
+            <span key={lab.id}>
+              {index > 0 ? ', ' : ''}
+              <Link to={`/guided-labs/${lab.id}#lab-cleanup`}>{lab.title}</Link>
+            </span>
+          ))}
+          . Run the cleanup so they stop costing money.
+        </div>
+      )}
+
       <section aria-labelledby="overall-progress" className="card stack">
         <div className="row">
           <h2 id="overall-progress" className="card__title" style={{ flex: '1 1 auto' }}>
@@ -178,19 +208,35 @@ export function HomePage() {
           </div>
           <div className="stat">
             <div className="stat__value">
-              {sqlSolved + kqlSolved + pySolved + missionsDone + labDone + netDone}/
+              {sqlSolved +
+                kqlSolved +
+                pySolved +
+                missionsDone +
+                labDone +
+                netDone +
+                vizDone +
+                archDone +
+                incidentsDone +
+                labsDone}
+              /
               {sqlChallenges.length +
                 kqlChallenges.length +
                 pythonChallenges.length +
                 missions.length +
                 labExercises.length +
-                allNetKeys.length}
+                allNetKeys.length +
+                allVizKeys.length +
+                allArchKeys.length +
+                allIncidentKeys.length +
+                allGuidedLabKeys.length}
             </div>
             <div className="stat__label">
               Challenges solved · SQL {sqlSolved}/{sqlChallenges.length} · KQL {kqlSolved}/
               {kqlChallenges.length} · Python {pySolved}/{pythonChallenges.length} · CLI missions{' '}
               {missionsDone}/{missions.length} · Config lab {labDone}/{labExercises.length} ·
-              Networking {netDone}/{allNetKeys.length}
+              Networking {netDone}/{allNetKeys.length} · Visualise {vizDone}/{allVizKeys.length} ·
+              Architecture {archDone}/{allArchKeys.length} · Incidents {incidentsDone}/
+              {allIncidentKeys.length} · Guided labs {labsDone}/{allGuidedLabKeys.length}
             </div>
           </div>
           <div className="stat">
@@ -210,6 +256,9 @@ export function HomePage() {
           </Link>
           <Link className="btn btn--secondary" to="/stats">
             My stats
+          </Link>
+          <Link className="btn btn--secondary" to="/bot">
+            🤖 Study bot
           </Link>
         </div>
       </section>
@@ -232,6 +281,28 @@ export function HomePage() {
           <ProgressBar value={interview.percent} showValue />
           <p className="subtle" style={{ margin: 0 }}>
             {interview.known} of {interview.total} you can answer out loud
+          </p>
+        </Link>
+      </section>
+
+      <section aria-labelledby="roles" className="stack">
+        <h2 id="roles">Roles & skills</h2>
+        <Link className="card card--interactive stack-sm" to="/roles">
+          <div className="row">
+            <span aria-hidden="true" style={{ fontSize: '1.5rem' }}>
+              🧭
+            </span>
+            <Badge tone="info">{roles.length} roles</Badge>
+            {bestFit && bestFit.match > 0 && (
+              <Badge>
+                Best fit: {bestFit.role.title.split(' (')[0]} {bestFit.match}%
+              </Badge>
+            )}
+          </div>
+          <strong className="card__title">Which DevOps and cloud role fits you?</strong>
+          <p className="subtle" style={{ margin: 0 }}>
+            The skills and tools each role needs, a skills matrix, role comparison and your own fit
+            - linked to the topics in this app.
           </p>
         </Link>
       </section>

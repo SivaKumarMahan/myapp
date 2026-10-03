@@ -61,6 +61,45 @@ const NetworkLabPage = lazy(() =>
   import('./pages/NetworkLabPage').then((m) => ({ default: m.NetworkLabPage })),
 )
 const CliPage = lazy(() => import('./pages/CliPage').then((m) => ({ default: m.CliPage })))
+const BotPage = lazy(() => import('./pages/BotPage').then((m) => ({ default: m.BotPage })))
+const VisualisePage = lazy(() =>
+  import('./pages/VisualisePage').then((m) => ({ default: m.VisualisePage })),
+)
+const ArchitecturePage = lazy(() =>
+  import('./pages/ArchitecturePage').then((m) => ({ default: m.ArchitecturePage })),
+)
+const MockInterviewPage = lazy(() =>
+  import('./pages/MockInterviewPage').then((m) => ({ default: m.MockInterviewPage })),
+)
+const StoriesPage = lazy(() =>
+  import('./pages/StoriesPage').then((m) => ({ default: m.StoriesPage })),
+)
+const PacksPage = lazy(() => import('./pages/PacksPage').then((m) => ({ default: m.PacksPage })))
+const IncidentLabsPage = lazy(() =>
+  import('./pages/IncidentLabsPage').then((m) => ({ default: m.IncidentLabsPage })),
+)
+const GuidedLabsPage = lazy(() =>
+  import('./pages/GuidedLabsPage').then((m) => ({ default: m.GuidedLabsPage })),
+)
+const IacComparePage = lazy(() =>
+  import('./pages/IacComparePage').then((m) => ({ default: m.IacComparePage })),
+)
+const GlossaryPage = lazy(() =>
+  import('./pages/GlossaryPage').then((m) => ({ default: m.GlossaryPage })),
+)
+const CheatSheetPage = lazy(() =>
+  import('./pages/CheatSheetPage').then((m) => ({ default: m.CheatSheetPage })),
+)
+const SettingsPage = lazy(() =>
+  import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })),
+)
+const rolesPages = () => import('./pages/RolesPages')
+const RolesOverviewPage = lazy(() => rolesPages().then((m) => ({ default: m.RolesOverviewPage })))
+const RoleDetailPage = lazy(() => rolesPages().then((m) => ({ default: m.RoleDetailPage })))
+const RolesMatrixPage = lazy(() => rolesPages().then((m) => ({ default: m.RolesMatrixPage })))
+const RolesComparePage = lazy(() => rolesPages().then((m) => ({ default: m.RolesComparePage })))
+const RolesFitPage = lazy(() => rolesPages().then((m) => ({ default: m.RolesFitPage })))
+const RolesToolsPage = lazy(() => rolesPages().then((m) => ({ default: m.RolesToolsPage })))
 
 const Loading = ({ children }: { children: ReactNode }) => (
   <Suspense
@@ -136,6 +175,158 @@ function Routed() {
               element={
                 <Loading>
                   <ConfigLabPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/roles"
+              element={
+                <Loading>
+                  <RolesOverviewPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/roles/matrix"
+              element={
+                <Loading>
+                  <RolesMatrixPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/roles/compare"
+              element={
+                <Loading>
+                  <RolesComparePage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/roles/fit"
+              element={
+                <Loading>
+                  <RolesFitPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/roles/tools"
+              element={
+                <Loading>
+                  <RolesToolsPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/roles/:roleId"
+              element={
+                <Loading>
+                  <RoleDetailPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/interview/mock"
+              element={
+                <Loading>
+                  <MockInterviewPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/interview/stories"
+              element={
+                <Loading>
+                  <StoriesPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/interview/packs"
+              element={
+                <Loading>
+                  <PacksPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/incidents"
+              element={
+                <Loading>
+                  <IncidentLabsPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/guided-labs"
+              element={
+                <Loading>
+                  <GuidedLabsPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/guided-labs/:labId"
+              element={
+                <Loading>
+                  <GuidedLabsPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/iac"
+              element={
+                <Loading>
+                  <IacComparePage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/glossary"
+              element={
+                <Loading>
+                  <GlossaryPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/:courseId/cheatsheet"
+              element={
+                <Loading>
+                  <CheatSheetPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <Loading>
+                  <SettingsPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/architecture"
+              element={
+                <Loading>
+                  <ArchitecturePage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/visualise"
+              element={
+                <Loading>
+                  <VisualisePage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/bot"
+              element={
+                <Loading>
+                  <BotPage />
                 </Loading>
               }
             />

@@ -54,6 +54,9 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         // wasm: SQLite for the SQL playground, so it works offline too.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,wasm}'],
+        // The Study bot's optional semantic search is cached on first use
+        // (below) instead of being precached for everyone.
+        globIgnores: ['**/ort-wasm*', '**/vendor-transformers-*.js'],
         // Old revisions are deleted on activation so a new deployment can never leave
         // somebody stranded on stale cached content.
         cleanupOutdatedCaches: true,
@@ -67,6 +70,29 @@ export default defineConfig(({ mode }) => ({
          * offline. The version is in the URL, so an upgrade is a new entry.
          */
         runtimeCaching: [
+          {
+            /*
+             * Study bot Smart search: transformers.js (hashed name) and the
+             * ONNX runtime it loads from jsDelivr (version in the URL), so
+             * cache-first is always safe. The model files themselves are kept
+             * by transformers.js in its own browser cache.
+             */
+            urlPattern: ({ url }) =>
+              /\/assets\/vendor-transformers-[^/]*\.js$/.test(url.pathname) ||
+              /^https:\/\/cdn\.jsdelivr\.net\/npm\/onnxruntime-web@/.test(url.href),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'bot-runtime',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 12, maxAgeSeconds: 365 * 24 * 60 * 60 },
+            },
+          },
+          {
+            // The precomputed question vectors: refreshed in the background.
+            urlPattern: ({ url }) => /\/bot\/embeddings\.(json|bin)$/.test(url.pathname),
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'bot-embeddings', cacheableResponse: { statuses: [200] } },
+          },
           {
             urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/pyodide\//,
             handler: 'CacheFirst',
@@ -120,6 +146,12 @@ export default defineConfig(({ mode }) => ({
               return 'vendor-codemirror'
             }
             if (id.includes('/sql.js/')) return 'vendor-sqljs'
+            // The Study bot: keyword search on its page, and the on-device
+            // model only once Smart search is switched on.
+            if (id.includes('/minisearch/')) return 'vendor-bot'
+            if (id.includes('@huggingface/transformers') || id.includes('onnxruntime')) {
+              return 'vendor-transformers'
+            }
             // The CLI simulator and the Config lab: loaded only on those pages.
             if (id.includes('/jmespath/')) return 'vendor-jmespath'
             if (
@@ -157,6 +189,7 @@ export default defineConfig(({ mode }) => ({
             return 'content-interview-bank'
           }
           if (id.includes('/src/content/interview/')) return 'content-interview'
+          if (id.includes('/src/content/bot/')) return 'content-bot'
           if (id.includes('/src/content/')) return 'content-shared'
           return undefined
         },

@@ -32,9 +32,11 @@ export const THEME_KEY = 'azure-learning-hub.theme'
 /**
  * 2 added spaced repetition (`srs`, `newCardsByDay`), `mistakes` and
  * `settings`; 3 added `activity`, the daily goal and exam dates; 4 added
- * `challenges` for the playgrounds.
+ * `challenges` for the playgrounds; 5 added `skills` (Roles & skills: My fit);
+ * 6 added `designs` (architecture builder); 7 added `stories` (STAR builder) and
+ * `questionTags` (company / round prep packs); 8 added `guidedLabs`.
  */
-export const SCHEMA_VERSION = 4
+export const SCHEMA_VERSION = 8
 export const DEFAULT_NEW_CARDS_PER_DAY = 20
 export const DEFAULT_DAILY_GOAL: DailyGoal = { kind: 'questions', target: 20 }
 /** About thirteen months: enough for a full calendar year plus the current week. */
@@ -188,6 +190,61 @@ export interface ProgressState {
   activity: Record<string, ActivityDay>
   /** Playground challenge key -> progress. */
   challenges: Record<string, ChallengeProgress>
+  /** Roles & skills "My fit": skill id -> when you ticked it as known. */
+  skills: Record<string, number>
+  /** Architecture builder: saved designs by id. */
+  designs: Record<string, SavedDesign>
+  /** STAR stories for behavioural questions, by id. */
+  stories: Record<string, StarStory>
+  /** Interview question id -> your own tags (company, round...) for prep packs. */
+  questionTags: Record<string, string[]>
+  /** Guided Azure labs: progress per lab id. */
+  guidedLabs: Record<string, GuidedLabProgress>
+}
+
+export interface GuidedLabProgress {
+  /** Step indexes marked done. */
+  done: number[]
+  /** Step indexes whose verify output matched. */
+  verified: number[]
+  /** Checklist item indexes ticked. */
+  checks: number[]
+  /** When the first step was marked done - resources may exist from here. */
+  startedAt?: number
+  /** When cleanup was confirmed. */
+  cleanedAt?: number
+}
+
+export interface StarStory {
+  id: string
+  title: string
+  situation: string
+  task: string
+  action: string
+  result: string
+  /** What you learned or would do differently - the senior bit. */
+  learned: string
+  /** Behavioural question ids this story answers. */
+  questions: string[]
+  updatedAt: number
+}
+
+/** A saved architecture diagram. Shape owned by `lib/arch/model.ts` (`Design`). */
+export interface SavedDesign {
+  id: string
+  name: string
+  scenarioId?: string
+  nodes: {
+    id: string
+    type: string
+    label: string
+    x: number
+    y: number
+    region?: string
+    props: Record<string, string | number | boolean>
+  }[]
+  edges: { id: string; from: string; to: string }[]
+  updatedAt: number
 }
 
 export function createEmptyState(now = Date.now()): ProgressState {
@@ -211,6 +268,11 @@ export function createEmptyState(now = Date.now()): ProgressState {
     },
     activity: {},
     challenges: {},
+    skills: {},
+    designs: {},
+    stories: {},
+    questionTags: {},
+    guidedLabs: {},
   }
 }
 
@@ -413,6 +475,80 @@ export function migrate(raw: unknown, now = Date.now()): ProgressState {
     }
   }
 
+  const skills: Record<string, number> = {}
+  if (isRecord(raw.skills)) {
+    for (const [id, value] of Object.entries(raw.skills)) {
+      if (typeof value === 'number' && Number.isFinite(value)) skills[id] = value
+    }
+  }
+
+  const designs: Record<string, SavedDesign> = {}
+  if (isRecord(raw.designs)) {
+    for (const [id, value] of Object.entries(raw.designs)) {
+      const design = migrateDesign(value)
+      if (design && design.id === id) designs[id] = design
+    }
+  }
+
+  const text = (value: unknown) => (typeof value === 'string' ? value : '')
+  const stories: Record<string, StarStory> = {}
+  if (isRecord(raw.stories)) {
+    for (const [id, value] of Object.entries(raw.stories)) {
+      if (!isRecord(value) || value.id !== id) continue
+      stories[id] = {
+        id,
+        title: text(value.title) || 'Untitled story',
+        situation: text(value.situation),
+        task: text(value.task),
+        action: text(value.action),
+        result: text(value.result),
+        learned: text(value.learned),
+        questions: Array.isArray(value.questions)
+          ? value.questions.filter((entry): entry is string => typeof entry === 'string')
+          : [],
+        updatedAt: asNumber(value.updatedAt, 0),
+      }
+    }
+  }
+
+  const questionTags: Record<string, string[]> = {}
+  if (isRecord(raw.questionTags)) {
+    for (const [id, value] of Object.entries(raw.questionTags)) {
+      if (!Array.isArray(value)) continue
+      const tags = [
+        ...new Set(
+          value
+            .filter((tag): tag is string => typeof tag === 'string')
+            .map((tag) => tag.trim())
+            .filter(Boolean),
+        ),
+      ]
+      if (tags.length > 0) questionTags[id] = tags
+    }
+  }
+
+  const indexes = (value: unknown) =>
+    Array.isArray(value)
+      ? [
+          ...new Set(
+            value.filter((entry): entry is number => Number.isInteger(entry) && entry >= 0),
+          ),
+        ].sort((a, b) => a - b)
+      : []
+  const guidedLabs: Record<string, GuidedLabProgress> = {}
+  if (isRecord(raw.guidedLabs)) {
+    for (const [id, value] of Object.entries(raw.guidedLabs)) {
+      if (!isRecord(value)) continue
+      guidedLabs[id] = {
+        done: indexes(value.done),
+        verified: indexes(value.verified),
+        checks: indexes(value.checks),
+        ...(typeof value.startedAt === 'number' ? { startedAt: value.startedAt } : undefined),
+        ...(typeof value.cleanedAt === 'number' ? { cleanedAt: value.cleanedAt } : undefined),
+      }
+    }
+  }
+
   const activity: Record<string, ActivityDay> = {}
   if (isRecord(raw.activity)) {
     for (const [day, value] of Object.entries(raw.activity)) {
@@ -455,6 +591,54 @@ export function migrate(raw: unknown, now = Date.now()): ProgressState {
     },
     activity,
     challenges,
+    skills,
+    designs,
+    stories,
+    questionTags,
+    guidedLabs,
+  }
+}
+
+/** Keeps a saved design only if its shape is sound; drops bad nodes and dangling edges. */
+function migrateDesign(value: unknown): SavedDesign | null {
+  if (!isRecord(value) || typeof value.id !== 'string' || !Array.isArray(value.nodes)) return null
+  const nodes: SavedDesign['nodes'] = []
+  for (const node of value.nodes) {
+    if (!isRecord(node) || typeof node.id !== 'string' || typeof node.type !== 'string') continue
+    const props: Record<string, string | number | boolean> = {}
+    if (isRecord(node.props)) {
+      for (const [key, entry] of Object.entries(node.props)) {
+        if (typeof entry === 'string' || typeof entry === 'number' || typeof entry === 'boolean')
+          props[key] = entry
+      }
+    }
+    nodes.push({
+      id: node.id,
+      type: node.type,
+      label: typeof node.label === 'string' ? node.label : node.type,
+      x: asNumber(node.x, 0),
+      y: asNumber(node.y, 0),
+      ...(typeof node.region === 'string' ? { region: node.region } : undefined),
+      props,
+    })
+  }
+  const ids = new Set(nodes.map((node) => node.id))
+  const edges = (Array.isArray(value.edges) ? value.edges : []).filter(
+    (edge): edge is SavedDesign['edges'][number] =>
+      isRecord(edge) &&
+      typeof edge.id === 'string' &&
+      typeof edge.from === 'string' &&
+      typeof edge.to === 'string' &&
+      ids.has(edge.from) &&
+      ids.has(edge.to),
+  )
+  return {
+    id: value.id,
+    name: typeof value.name === 'string' ? value.name : 'Untitled design',
+    ...(typeof value.scenarioId === 'string' ? { scenarioId: value.scenarioId } : undefined),
+    nodes,
+    edges,
+    updatedAt: asNumber(value.updatedAt, 0),
   }
 }
 
@@ -701,6 +885,60 @@ export function mergeStates(current: ProgressState, incoming: ProgressState): Pr
     mistakes,
     activity,
     challenges,
+    // A skill ticked on either device stays ticked.
+    skills: { ...incoming.skills, ...current.skills },
+    // Stories: union by id, the most recently edited copy wins.
+    stories: Object.fromEntries(
+      [...new Set([...Object.keys(current.stories), ...Object.keys(incoming.stories)])].map(
+        (id) => {
+          const mine = current.stories[id]
+          const theirs = incoming.stories[id]
+          return [id, !mine || (theirs && theirs.updatedAt > mine.updatedAt) ? theirs : mine]
+        },
+      ),
+    ),
+    // Labs: union of ticks; cleanup counts only if it came after the latest start.
+    guidedLabs: Object.fromEntries(
+      [...new Set([...Object.keys(current.guidedLabs), ...Object.keys(incoming.guidedLabs)])].map(
+        (id) => {
+          const a = current.guidedLabs[id] ?? { done: [], verified: [], checks: [] }
+          const b = incoming.guidedLabs[id] ?? { done: [], verified: [], checks: [] }
+          const union = (x: number[], y: number[]) =>
+            [...new Set([...x, ...y])].sort((m, n) => m - n)
+          const startedAt = Math.max(a.startedAt ?? 0, b.startedAt ?? 0) || undefined
+          const cleanedAt = Math.max(a.cleanedAt ?? 0, b.cleanedAt ?? 0) || undefined
+          return [
+            id,
+            {
+              done: union(a.done, b.done),
+              verified: union(a.verified, b.verified),
+              checks: union(a.checks, b.checks),
+              ...(startedAt ? { startedAt } : undefined),
+              ...(cleanedAt && (!startedAt || cleanedAt >= startedAt) ? { cleanedAt } : undefined),
+            },
+          ]
+        },
+      ),
+    ),
+    // Tags: the union of both sides for every question.
+    questionTags: Object.fromEntries(
+      [
+        ...new Set([...Object.keys(current.questionTags), ...Object.keys(incoming.questionTags)]),
+      ].map((id) => [
+        id,
+        [...new Set([...(current.questionTags[id] ?? []), ...(incoming.questionTags[id] ?? [])])],
+      ]),
+    ),
+    // Designs: union by id, the most recently edited copy wins.
+    designs: Object.fromEntries(
+      [...new Set([...Object.keys(current.designs), ...Object.keys(incoming.designs)])].map(
+        (id) => {
+          const mine = current.designs[id]
+          const theirs = incoming.designs[id]
+          return [id, !mine || (theirs && theirs.updatedAt > mine.updatedAt) ? theirs : mine]
+        },
+      ),
+    ),
     settings: {
       ...current.settings,
       examDates: { ...incoming.settings.examDates, ...current.settings.examDates },

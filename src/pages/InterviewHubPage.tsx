@@ -59,6 +59,32 @@ export function InterviewHubPage() {
             Revision queue{overall.review > 0 ? ` (${overall.review})` : ''}
           </Link>
         </div>
+        <div className="itv-practice-grid">
+          <Link className="card card--interactive stack-sm" to="/interview/mock">
+            <strong className="card__title">🎤 Mock interview</strong>
+            <span className="subtle">
+              Timed questions, answered aloud and recorded, then self-scored with follow-ups.
+            </span>
+          </Link>
+          <Link className="card card--interactive stack-sm" to="/interview/stories">
+            <strong className="card__title">⭐ STAR stories</strong>
+            <span className="subtle">
+              Write your behavioural stories once and quick-review them before the day.
+            </span>
+          </Link>
+          <Link className="card card--interactive stack-sm" to="/incidents">
+            <strong className="card__title">🚨 Incident labs</strong>
+            <span className="subtle">
+              Troubleshoot a production problem step by step, scored on the root cause.
+            </span>
+          </Link>
+          <Link className="card card--interactive stack-sm" to="/interview/packs">
+            <strong className="card__title">🏢 Prep packs</strong>
+            <span className="subtle">
+              Questions by company and round - built in, plus your own tags.
+            </span>
+          </Link>
+        </div>
       </section>
 
       <section className="stack-lg" aria-labelledby="itv-topics">

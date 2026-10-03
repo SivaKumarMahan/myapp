@@ -1,0 +1,123 @@
+{
+  "strategies": [
+    {
+      "id": "blue-green",
+      "title": "Blue-green",
+      "summary": "Run v2 as a complete second environment, test it with no users, then switch all traffic at once.",
+      "pros": [
+        "Instant rollback while blue still runs",
+        "Test the real environment before users see it",
+        "No mixed versions serving at once"
+      ],
+      "cons": [
+        "Double the infrastructure during the release",
+        "Shared databases must work with both versions",
+        "All users move at once"
+      ],
+      "azure": [
+        "App Service deployment slots: deploy to staging, warm up, swap",
+        "Front Door or Traffic Manager switching between two environments",
+        "AKS: two Deployments, switch the Service selector"
+      ]
+    },
+    {
+      "id": "canary",
+      "title": "Canary",
+      "summary": "Send a small share of real traffic to v2, watch its metrics, and raise the share in stages.",
+      "pros": [
+        "Real users, small blast radius",
+        "Decide on real metrics (errors, latency)",
+        "Cheap: one extra instance"
+      ],
+      "cons": [
+        "Two versions serve at once, so they must be compatible",
+        "Needs good monitoring to judge the canary",
+        "Slower than a switch"
+      ],
+      "azure": [
+        "Azure Pipelines Kubernetes manifest task with strategy: canary",
+        "App Service traffic routing: a percentage to a slot",
+        "Front Door weighted origins",
+        "Argo Rollouts or Flagger on AKS"
+      ]
+    },
+    {
+      "id": "rolling",
+      "title": "Rolling",
+      "summary": "Replace instances a few at a time; traffic moves as new instances become ready.",
+      "pros": [
+        "No extra environment (only a small surge)",
+        "Built into Kubernetes and VM scale sets",
+        "Zero downtime with readiness probes"
+      ],
+      "cons": [
+        "Rollback is another rolling update",
+        "Mixed versions during the rollout",
+        "Probes say it is up, not that it is right"
+      ],
+      "azure": [
+        "AKS Deployment rollingUpdate (maxSurge, maxUnavailable); kubectl rollout undo",
+        "VM scale set rolling upgrade policy",
+        "Azure Pipelines strategy: rolling with maxParallel on VM environments"
+      ]
+    },
+    {
+      "id": "rings",
+      "title": "Ring-based",
+      "summary": "Promote the release through rings of users - internal, early adopters, one region, everyone - with a bake time and health gate between them.",
+      "pros": [
+        "Blast radius grows only when the previous ring is healthy",
+        "Matches how large services (and Azure itself) roll out",
+        "Automatic halt on a failed gate"
+      ],
+      "cons": [
+        "Slow: days or weeks to reach everyone",
+        "Needs ring targeting and per-ring health signals",
+        "Several versions live at once"
+      ],
+      "azure": [
+        "Azure Pipelines stages per ring with approvals and gates (e.g. query Azure Monitor alerts)",
+        "Feature flags in Azure App Configuration targeting rings",
+        "Safe deployment practice across regions"
+      ]
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q-slots",
+      "question": "You need rollback in seconds, can pay for a second environment during the release, and run on App Service.",
+      "answer": "blue-green",
+      "explanation": "Deployment slots are blue-green: swap to release, swap back to roll back."
+    },
+    {
+      "id": "q-metrics",
+      "question": "A new recommendation model should face 5% of real users, and you'll decide on its click-through and error metrics.",
+      "answer": "canary",
+      "explanation": "A canary exposes a small share of real traffic and is judged on metrics before the weight goes up."
+    },
+    {
+      "id": "q-aks",
+      "question": "A stateless API on AKS. You want zero downtime and no extra environment.",
+      "answer": "rolling",
+      "explanation": "The default Deployment strategy: replace pods a few at a time behind readiness probes."
+    },
+    {
+      "id": "q-rings",
+      "question": "Dogfood internally first, then a preview audience, then region by region.",
+      "answer": "rings",
+      "explanation": "Ring-based: each ring is a bigger audience behind a health gate."
+    },
+    {
+      "id": "q-cheap",
+      "question": "Rollback must not need a redeploy, but you can't afford two full environments.",
+      "answer": "canary",
+      "explanation": "Rolling back a canary is just weight 0% and removing one instance; v1 never stopped serving."
+    },
+    {
+      "id": "q-probes",
+      "question": "v2 passes readiness probes but returns wrong prices. Which strategy, watching only probes, would put it in front of everyone?",
+      "answer": "rolling",
+      "explanation": "Rolling trusts readiness probes. Canary and ring gates look at business and error metrics before going wider."
+    }
+  ]
+}

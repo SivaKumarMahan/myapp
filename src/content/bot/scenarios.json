@@ -1,0 +1,993 @@
+{
+  "$comment": "Branching troubleshooting scenarios for the Study Bot. Each node has text, optional evidence, and choices {label, next, score, feedback}; an end node has end {rootCause, lesson}.",
+  "scenarios": [
+    {
+      "id": "acr-403",
+      "title": "Pipeline gets 403 from ACR, intermittently",
+      "topic": "azure-devops",
+      "level": "intermediate",
+      "intro": "Your Azure Pipelines build pushes images to Azure Container Registry. About one run in five fails at docker push with \"403 Forbidden\". Re-running usually works.",
+      "start": "n1",
+      "nodes": {
+        "n1": {
+          "text": "What do you look at first?",
+          "choices": [
+            {
+              "label": "The exact error and which agent ran the failing jobs",
+              "next": "n2",
+              "score": 2,
+              "feedback": "Good: intermittent failures that vary by run often vary by agent."
+            },
+            {
+              "label": "Give the service principal Owner on the registry",
+              "next": "n1x",
+              "score": -2,
+              "feedback": "That grants far more than needed and does not explain why it works most of the time."
+            },
+            {
+              "label": "Recreate the service connection",
+              "next": "n2",
+              "score": 0,
+              "feedback": "It might be needed later, but first find what differs between passing and failing runs."
+            }
+          ]
+        },
+        "n1x": {
+          "text": "Owner did not help - the next run still failed. Back to the evidence.",
+          "choices": [
+            {
+              "label": "Look at the error and the agents",
+              "next": "n2",
+              "score": 0,
+              "feedback": ""
+            }
+          ]
+        },
+        "n2": {
+          "text": "The failing runs all ran on the self-hosted pool 'build-linux'; passing runs used Microsoft-hosted agents. The error says: denied: client with IP '20.1.2.3' is not allowed access.",
+          "evidence": "ACR firewall: public network access 'Selected networks', allowed: the Microsoft-hosted agents' service tag ranges.",
+          "choices": [
+            {
+              "label": "The registry firewall blocks the self-hosted agents' outbound IP",
+              "next": "n3",
+              "score": 3,
+              "feedback": "Exactly - it is network, not RBAC: 403 with 'client with IP ... is not allowed'."
+            },
+            {
+              "label": "The AcrPush role is missing",
+              "next": "n3w",
+              "score": -1,
+              "feedback": "RBAC is fine - the same identity pushes successfully from hosted agents."
+            },
+            {
+              "label": "Docker credentials expire mid-build",
+              "next": "n3w",
+              "score": -1,
+              "feedback": "The message names an IP, which points at network rules."
+            }
+          ]
+        },
+        "n3w": {
+          "text": "Look again at the message: it names a client IP. What controls which IPs may reach the registry?",
+          "choices": [
+            {
+              "label": "The registry's network rules",
+              "next": "n3",
+              "score": 1,
+              "feedback": ""
+            }
+          ]
+        },
+        "n3": {
+          "text": "How do you fix it properly?",
+          "choices": [
+            {
+              "label": "Give the self-hosted agents a private endpoint path to ACR (Premium SKU) and disable public access",
+              "next": "end",
+              "score": 3,
+              "feedback": "Best: no public exposure, agents reach ACR over the VNet."
+            },
+            {
+              "label": "Add the agents' NAT gateway public IP to the ACR firewall",
+              "next": "end",
+              "score": 2,
+              "feedback": "Works and is quick; a private endpoint is the stronger long-term fix."
+            },
+            {
+              "label": "Allow all networks",
+              "next": "end",
+              "score": -2,
+              "feedback": "That removes the protection entirely."
+            }
+          ]
+        },
+        "end": {
+          "text": "Root cause",
+          "end": {
+            "rootCause": "The ACR firewall only allowed the Microsoft-hosted agents' ranges; jobs on the self-hosted pool came from a different public IP and got 403 from the registry's network rules.",
+            "lesson": "A 403 from a PaaS service can be network access, not RBAC. Read the message - 'client with IP ... is not allowed' - and compare what differs between passing and failing runs."
+          }
+        }
+      }
+    },
+    {
+      "id": "aks-crashloop",
+      "title": "Pods in CrashLoopBackOff after a deploy",
+      "topic": "kubernetes",
+      "level": "intermediate",
+      "intro": "After deploying version 2.4 of the orders API to AKS, all new pods go into CrashLoopBackOff. Version 2.3 ran fine.",
+      "start": "n1",
+      "nodes": {
+        "n1": {
+          "text": "First step?",
+          "choices": [
+            {
+              "label": "kubectl describe pod and kubectl logs --previous",
+              "next": "n2",
+              "score": 3,
+              "feedback": "Yes - describe shows events and the exit reason; --previous shows the crashed container's logs."
+            },
+            {
+              "label": "Scale the deployment to 10 replicas",
+              "next": "n1",
+              "score": -2,
+              "feedback": "More copies of a crashing container still crash."
+            },
+            {
+              "label": "Delete the namespace and redeploy",
+              "next": "n1",
+              "score": -3,
+              "feedback": "Destructive, and you lose the evidence."
+            }
+          ]
+        },
+        "n2": {
+          "text": "describe shows: Last State: Terminated, Reason: Error, Exit Code: 1. logs --previous: 'Unhandled exception: Configuration key ConnectionStrings:Orders not found'.",
+          "evidence": "The 2.4 Helm values reference a secret 'orders-db' with key 'connection'; the cluster secret has key 'connectionString'.",
+          "choices": [
+            {
+              "label": "The app cannot find its configuration - check the secret and env mapping",
+              "next": "n3",
+              "score": 3,
+              "feedback": "Right - exit 1 with a config error is an application start-up failure."
+            },
+            {
+              "label": "It is an OOMKilled problem - raise memory limits",
+              "next": "n3w",
+              "score": -1,
+              "feedback": "OOM shows Reason: OOMKilled and exit code 137, not exit 1 with a config error."
+            },
+            {
+              "label": "The node is unhealthy",
+              "next": "n3w",
+              "score": -1,
+              "feedback": "All new pods fail on every node, and old pods run - it follows the version."
+            }
+          ]
+        },
+        "n3w": {
+          "text": "Re-read the logs: they name a missing configuration key.",
+          "choices": [
+            {
+              "label": "Check the config mapping",
+              "next": "n3",
+              "score": 1,
+              "feedback": ""
+            }
+          ]
+        },
+        "n3": {
+          "text": "What do you do?",
+          "choices": [
+            {
+              "label": "Roll back to 2.3 now, then fix the key mapping and add a config check to the pipeline",
+              "next": "end",
+              "score": 3,
+              "feedback": "Restore service first, then fix forward with a guard."
+            },
+            {
+              "label": "Edit the secret in production by hand to match",
+              "next": "end",
+              "score": 1,
+              "feedback": "Fixes it, but untracked manual changes drift; fix in source and roll out."
+            },
+            {
+              "label": "Wait for Kubernetes to retry",
+              "next": "end",
+              "score": -2,
+              "feedback": "CrashLoopBackOff only backs off further; it will not fix configuration."
+            }
+          ]
+        },
+        "end": {
+          "text": "Root cause",
+          "end": {
+            "rootCause": "Version 2.4 expected the secret key 'connection' but the cluster secret used 'connectionString', so the app exited at start-up with code 1.",
+            "lesson": "CrashLoopBackOff is a symptom. Exit code and previous logs tell you why: 1 = app error, 137 = OOMKilled/SIGKILL, 143 = SIGTERM."
+          }
+        }
+      }
+    },
+    {
+      "id": "appservice-502-swap",
+      "title": "502s right after a slot swap",
+      "topic": "azure-compute",
+      "level": "intermediate",
+      "intro": "You swapped the staging slot of an App Service web app into production. For about three minutes users got 502 errors, then everything recovered.",
+      "start": "n1",
+      "nodes": {
+        "n1": {
+          "text": "What is the most likely class of cause?",
+          "choices": [
+            {
+              "label": "The new code was not warmed up when it started taking traffic",
+              "next": "n2",
+              "score": 3,
+              "feedback": "Yes - a short burst of errors right after a swap is the classic cold start."
+            },
+            {
+              "label": "A DNS change during the swap",
+              "next": "n2",
+              "score": -1,
+              "feedback": "Swaps do not change DNS; traffic is switched inside the platform."
+            },
+            {
+              "label": "The App Service plan is too small",
+              "next": "n2",
+              "score": 0,
+              "feedback": "Possible, but the errors lasted minutes and stopped - more like warm-up."
+            }
+          ]
+        },
+        "n2": {
+          "text": "Logs show the app takes 90 seconds to load caches at start-up. The staging slot had been stopped before the swap. There is no applicationInitialization in web.config and no health check path set.",
+          "choices": [
+            {
+              "label": "Keep staging running and warm it before swapping, using applicationInitialization or a custom warm-up path",
+              "next": "n3",
+              "score": 3,
+              "feedback": "Swap waits for warm-up when you configure it."
+            },
+            {
+              "label": "Use swap with preview",
+              "next": "n3",
+              "score": 2,
+              "feedback": "Good: it applies production settings to staging and lets you verify before completing."
+            },
+            {
+              "label": "Restart production after every swap",
+              "next": "n3",
+              "score": -2,
+              "feedback": "That causes another cold start."
+            }
+          ]
+        },
+        "n3": {
+          "text": "What else prevents users seeing errors?",
+          "choices": [
+            {
+              "label": "Configure Health check so unhealthy instances are taken out of rotation",
+              "next": "end",
+              "score": 2,
+              "feedback": "Health check stops routing to instances that are not ready."
+            },
+            {
+              "label": "Use deployment slot sticky settings for connection strings",
+              "next": "end",
+              "score": 1,
+              "feedback": "Important for correctness, but not the cause here."
+            },
+            {
+              "label": "Disable the swap and deploy straight to production",
+              "next": "end",
+              "score": -2,
+              "feedback": "That makes downtime worse, not better."
+            }
+          ]
+        },
+        "end": {
+          "text": "Root cause",
+          "end": {
+            "rootCause": "Production received traffic on a cold instance: staging was stopped and there was no warm-up configuration, so the app spent 90 seconds loading caches while returning 502s.",
+            "lesson": "Swaps are near-zero-downtime only when the source slot is running and warmed: applicationInitialization (or WEBSITE_SWAP_WARMUP_PING_PATH), swap with preview, and Health check."
+          }
+        }
+      }
+    },
+    {
+      "id": "storage-private-endpoint",
+      "title": "VM loses access to storage after a private endpoint",
+      "topic": "azure-networking",
+      "level": "intermediate",
+      "intro": "A storage account was given a private endpoint and public network access was disabled. Now a VM in a spoke VNet gets '403 This request is not authorized to perform this operation'.",
+      "start": "n1",
+      "nodes": {
+        "n1": {
+          "text": "First check?",
+          "choices": [
+            {
+              "label": "Resolve the storage account name from the VM (nslookup)",
+              "next": "n2",
+              "score": 3,
+              "feedback": "Yes - a private endpoint only helps if the name resolves to its private IP."
+            },
+            {
+              "label": "Check the VM identity's RBAC role on the account",
+              "next": "n2",
+              "score": 0,
+              "feedback": "Worth knowing, but nothing about RBAC changed - the network did."
+            },
+            {
+              "label": "Re-enable public network access",
+              "next": "n1",
+              "score": -2,
+              "feedback": "That undoes the security change instead of fixing it."
+            }
+          ]
+        },
+        "n2": {
+          "text": "nslookup mystore.blob.core.windows.net returns a public IP via mystore.privatelink.blob.core.windows.net.",
+          "evidence": "The privatelink.blob.core.windows.net zone exists in the hub, linked to the hub VNet only. The spoke uses Azure-provided DNS.",
+          "choices": [
+            {
+              "label": "The private DNS zone is not linked to the spoke VNet",
+              "next": "n3",
+              "score": 3,
+              "feedback": "Right - the spoke's resolver cannot see the zone, so it gets the public answer."
+            },
+            {
+              "label": "The private endpoint is in the wrong subnet",
+              "next": "n3",
+              "score": -1,
+              "feedback": "Peered VNets can reach it wherever it is; the name resolves publicly, so DNS is the problem."
+            },
+            {
+              "label": "TLS certificate mismatch",
+              "next": "n3",
+              "score": -1,
+              "feedback": "The error is 403 from the public endpoint, not a TLS failure."
+            }
+          ]
+        },
+        "n3": {
+          "text": "Fix?",
+          "choices": [
+            {
+              "label": "Link the privatelink zone to the spoke (or make the spoke use the hub's DNS resolver)",
+              "next": "end",
+              "score": 3,
+              "feedback": "Then the CNAME chain resolves to the private IP."
+            },
+            {
+              "label": "Add a hosts file entry on the VM",
+              "next": "end",
+              "score": 0,
+              "feedback": "Works on one VM but does not scale and breaks if the IP changes."
+            },
+            {
+              "label": "Create a second privatelink zone in the spoke",
+              "next": "end",
+              "score": -2,
+              "feedback": "Duplicate zones cause inconsistent resolution across the estate."
+            }
+          ]
+        },
+        "end": {
+          "text": "Root cause",
+          "end": {
+            "rootCause": "The spoke VNet could not see the privatelink.blob zone, so the storage name resolved to the public endpoint - which was disabled - giving 403.",
+            "lesson": "With private endpoints, 'it is always DNS': check what the name resolves to from the client, and which zones its resolver can see."
+          }
+        }
+      }
+    },
+    {
+      "id": "tf-state-lock",
+      "title": "Terraform pipeline stuck on a state lock",
+      "topic": "terraform",
+      "level": "basic",
+      "intro": "Your Terraform apply stage fails with 'Error acquiring the state lock: state blob is already locked'. The last run was cancelled halfway through.",
+      "start": "n1",
+      "nodes": {
+        "n1": {
+          "text": "What does the lock tell you?",
+          "choices": [
+            {
+              "label": "Another run - or the cancelled one - still holds the lease on the state blob",
+              "next": "n2",
+              "score": 3,
+              "feedback": "Yes - the azurerm backend uses a blob lease as the lock."
+            },
+            {
+              "label": "The state file is corrupted",
+              "next": "n2",
+              "score": -1,
+              "feedback": "A lock error is about concurrency, not corruption."
+            },
+            {
+              "label": "The storage account key expired",
+              "next": "n2",
+              "score": -1,
+              "feedback": "That would fail authentication, not lock acquisition."
+            }
+          ]
+        },
+        "n2": {
+          "text": "No other pipeline run is active. The error output shows Lock Info with ID a1b2-..., Who: build-agent-7, Created: 2 hours ago - the cancelled run.",
+          "choices": [
+            {
+              "label": "Confirm nothing is running, then terraform force-unlock <lock-id>",
+              "next": "end",
+              "score": 3,
+              "feedback": "Correct, and only after confirming no run is active."
+            },
+            {
+              "label": "Break the blob lease in the portal",
+              "next": "end",
+              "score": 2,
+              "feedback": "Also works for the azurerm backend; force-unlock is the Terraform way."
+            },
+            {
+              "label": "Delete the state file and re-import everything",
+              "next": "end",
+              "score": -3,
+              "feedback": "Never - the state is your source of truth."
+            }
+          ]
+        },
+        "end": {
+          "text": "Root cause",
+          "end": {
+            "rootCause": "The cancelled run never released its lease on the state blob, so later runs could not acquire the lock.",
+            "lesson": "Locks protect state from concurrent writes. Release a stale lock only after confirming nothing else is running, and avoid hard-cancelling apply stages."
+          }
+        }
+      }
+    },
+    {
+      "id": "cost-spike",
+      "title": "The Azure bill doubled overnight",
+      "topic": "my-ops",
+      "level": "intermediate",
+      "intro": "Finance reports yesterday's Azure spend was twice the usual daily amount. Nobody admits to deploying anything.",
+      "start": "n1",
+      "nodes": {
+        "n1": {
+          "text": "Where do you start?",
+          "choices": [
+            {
+              "label": "Cost analysis grouped by service and resource for yesterday vs the previous week",
+              "next": "n2",
+              "score": 3,
+              "feedback": "Find which resource changed before guessing why."
+            },
+            {
+              "label": "Delete the most expensive resources",
+              "next": "n1",
+              "score": -3,
+              "feedback": "You might delete production."
+            },
+            {
+              "label": "Ask every team in a channel",
+              "next": "n2",
+              "score": 0,
+              "feedback": "People help, but data first is faster."
+            }
+          ]
+        },
+        "n2": {
+          "text": "Cost analysis: the increase is all 'Virtual Machines - D16s v5' in resource group rg-batch, 40 instances, created yesterday at 01:00.",
+          "evidence": "Activity log: a VM scale set's capacity changed from 2 to 40 at 01:00 by the autoscale engine; the custom metric it scales on was stuck at 100%.",
+          "choices": [
+            {
+              "label": "An autoscale rule scaled out on a broken metric and never scaled in",
+              "next": "n3",
+              "score": 3,
+              "feedback": "Right - the activity log shows the scale-out and its trigger."
+            },
+            {
+              "label": "Someone deployed 40 VMs by hand",
+              "next": "n3",
+              "score": -1,
+              "feedback": "The activity log says the autoscale engine changed capacity."
+            },
+            {
+              "label": "Reserved instance expired",
+              "next": "n3",
+              "score": -1,
+              "feedback": "That changes price per hour, not the number of instances."
+            }
+          ]
+        },
+        "n3": {
+          "text": "What do you change?",
+          "choices": [
+            {
+              "label": "Fix the metric, set a sensible maximum instance count, add a scale-in rule, and a budget alert with action group",
+              "next": "end",
+              "score": 3,
+              "feedback": "Fix cause, cap blast radius, detect earlier."
+            },
+            {
+              "label": "Disable autoscale permanently",
+              "next": "end",
+              "score": 0,
+              "feedback": "Stops the spike but loses elasticity."
+            },
+            {
+              "label": "Just add a budget alert",
+              "next": "end",
+              "score": 1,
+              "feedback": "Detection is good, but the cause and the cap remain."
+            }
+          ]
+        },
+        "end": {
+          "text": "Root cause",
+          "end": {
+            "rootCause": "A VM scale set autoscaled from 2 to 40 instances on a custom metric stuck at 100%, with a high maximum and no effective scale-in.",
+            "lesson": "For cost spikes: cost analysis by resource, then the activity log for who/what changed it. Protect with max instance counts, budgets and anomaly alerts."
+          }
+        }
+      }
+    },
+    {
+      "id": "aks-imagepull-private-acr",
+      "title": "ImagePullBackOff after ACR went private",
+      "topic": "kubernetes",
+      "level": "senior",
+      "intro": "You moved Azure Container Registry behind a private endpoint and disabled public access. Existing pods on AKS keep running, but every new pod sticks in ImagePullBackOff.",
+      "start": "n1",
+      "nodes": {
+        "n1": {
+          "text": "What do you check first?",
+          "choices": [
+            {
+              "label": "kubectl describe pod - the pull error in the events",
+              "next": "n2",
+              "score": 2,
+              "feedback": "The events carry the kubelet's real error."
+            },
+            {
+              "label": "Restart the nodes",
+              "next": "n1x",
+              "score": -1,
+              "feedback": "Old pods run from cached images; a reboot would break them too."
+            },
+            {
+              "label": "Re-assign AcrPull to the kubelet identity",
+              "next": "n2",
+              "score": 0,
+              "feedback": "It is already there - nothing changes, but you still need the real error."
+            }
+          ]
+        },
+        "n1x": {
+          "text": "Two nodes rebooted and now their pods cannot start either. Get the actual error.",
+          "choices": [
+            {
+              "label": "kubectl describe pod",
+              "next": "n2",
+              "score": 0,
+              "feedback": ""
+            }
+          ]
+        },
+        "n2": {
+          "text": "Event: failed to pull image \"myacr.azurecr.io/shop:1.4\": dial tcp 20.50.1.9:443: i/o timeout.",
+          "evidence": "From a debug pod: nslookup myacr.azurecr.io \u2192 20.50.1.9 (public), not the endpoint's 10.1.4.5.",
+          "choices": [
+            {
+              "label": "DNS gives the registry's public IP, which is now blocked",
+              "next": "n3",
+              "score": 3,
+              "feedback": "Right: a private endpoint only helps if the name resolves to its private IP."
+            },
+            {
+              "label": "The AcrPull role is missing",
+              "next": "wrong-rbac",
+              "score": -2,
+              "feedback": ""
+            },
+            {
+              "label": "A NetworkPolicy blocks egress",
+              "next": "n2w",
+              "score": -1,
+              "feedback": ""
+            }
+          ]
+        },
+        "n2w": {
+          "text": "Egress is not blocked: the timeout is to a public address. Why would the registry resolve to one?",
+          "choices": [
+            {
+              "label": "Look at private DNS",
+              "next": "n3",
+              "score": 1,
+              "feedback": ""
+            }
+          ]
+        },
+        "wrong-rbac": {
+          "text": "You re-check RBAC and close the ticket as a permissions issue.",
+          "end": {
+            "correct": false,
+            "rootCause": "You blamed RBAC, but an authorisation failure is a 401/403 - this was a network timeout to a public IP.",
+            "lesson": "Read the error class first: timeouts are network or DNS, 401/403 are identity."
+          }
+        },
+        "n3": {
+          "text": "Which DNS piece is missing?",
+          "evidence": "Private DNS zone privatelink.azurecr.io has A records for myacr and myacr.westeurope.data, but is linked only to the hub VNet. The AKS spoke VNet uses Azure-provided DNS.",
+          "choices": [
+            {
+              "label": "Link the privatelink.azurecr.io zone to the AKS VNet (or forward to the hub's resolver)",
+              "next": "end",
+              "score": 3,
+              "feedback": "That makes the nodes resolve the private IP."
+            },
+            {
+              "label": "Add a hosts-file entry on every node",
+              "next": "wrong-hosts",
+              "score": -1,
+              "feedback": ""
+            }
+          ]
+        },
+        "wrong-hosts": {
+          "text": "You add hosts entries and pulls work - until the node pool scales.",
+          "end": {
+            "correct": false,
+            "rootCause": "A hosts-file hack hides the missing DNS zone link; new nodes and IP changes break it again.",
+            "lesson": "Fix name resolution where it lives: zone links or resolver forwarding."
+          }
+        },
+        "end": {
+          "text": "Pulls succeed on every node.",
+          "end": {
+            "rootCause": "The registry's private DNS zone was not linked to the AKS VNet, so nodes resolved the public endpoint, which disabled public access blocks.",
+            "lesson": "With private endpoints the DNS zone link (or resolver forwarding) is part of the deployment - and ACR's data endpoint (<registry>.<region>.data.azurecr.io) needs a record too."
+          }
+        }
+      }
+    },
+    {
+      "id": "appgw-502-backend-cert",
+      "title": "Application Gateway 502 after a certificate renewal",
+      "topic": "azure-networking",
+      "level": "intermediate",
+      "intro": "The backend team renewed the TLS certificate on the web VMs. Since then Application Gateway v2 returns 502 Bad Gateway for every request.",
+      "start": "n1",
+      "nodes": {
+        "n1": {
+          "text": "Where do you look first?",
+          "choices": [
+            {
+              "label": "Application Gateway Backend health",
+              "next": "n2",
+              "score": 2,
+              "feedback": "It says exactly why the gateway marks backends unhealthy."
+            },
+            {
+              "label": "Restart the backend VMs",
+              "next": "n1x",
+              "score": -1,
+              "feedback": ""
+            },
+            {
+              "label": "Scale out the gateway",
+              "next": "n1x",
+              "score": -1,
+              "feedback": "A 502 on every request is not capacity."
+            }
+          ]
+        },
+        "n1x": {
+          "text": "Still 502 everywhere. What does the gateway think of its backends?",
+          "choices": [
+            {
+              "label": "Open Backend health",
+              "next": "n2",
+              "score": 0,
+              "feedback": ""
+            }
+          ]
+        },
+        "n2": {
+          "text": "Backend health: all members Unhealthy.",
+          "evidence": "Message: \"The Common Name (CN) of the backend server certificate does not match the host header...\". New certificate CN: app.contoso.com. Backend setting: connects by IP with no host name override.",
+          "choices": [
+            {
+              "label": "The new certificate's name does not match the host name the gateway uses - set it in the backend setting and probe",
+              "next": "end",
+              "score": 3,
+              "feedback": "Yes: v2 validates the backend certificate against the host name it sends."
+            },
+            {
+              "label": "Upload the new certificate to the HTTPS listener",
+              "next": "n2w",
+              "score": -1,
+              "feedback": ""
+            },
+            {
+              "label": "Switch the backend to plain HTTP",
+              "next": "wrong-http",
+              "score": -2,
+              "feedback": ""
+            }
+          ]
+        },
+        "n2w": {
+          "text": "The listener certificate is the client-facing one and it is fine. The failure is gateway \u2192 backend. Read the health message again.",
+          "choices": [
+            {
+              "label": "Back to Backend health",
+              "next": "n2",
+              "score": 0,
+              "feedback": ""
+            }
+          ]
+        },
+        "wrong-http": {
+          "text": "You switch the backend to HTTP and the 502s stop.",
+          "end": {
+            "correct": false,
+            "rootCause": "You removed end-to-end TLS instead of fixing the host-name mismatch.",
+            "lesson": "Keep end-to-end TLS; make the host name in the backend setting and probe match the certificate."
+          }
+        },
+        "end": {
+          "text": "Backends turn Healthy and traffic flows.",
+          "end": {
+            "rootCause": "The renewed backend certificate's CN/SAN did not match the host name Application Gateway used (it connected by IP), so v2 rejected it.",
+            "lesson": "For end-to-end TLS on v2, set the host name in backend settings (or pick it from the backend target), use the same host name in custom probes, and use a well-known CA or upload the trusted root."
+          }
+        }
+      }
+    },
+    {
+      "id": "sql-timeouts-after-release",
+      "title": "SQL timeouts at peak after a release",
+      "topic": "azure-storage",
+      "level": "senior",
+      "intro": "Since Tuesday's release the API on App Service throws SQL timeouts during the evening peak. CPU on the App Service plan sits at 35%.",
+      "start": "n1",
+      "nodes": {
+        "n1": {
+          "text": "Your first move?",
+          "choices": [
+            {
+              "label": "Compare Azure SQL metrics (CPU, waits) with the times of the timeouts",
+              "next": "n2",
+              "score": 2,
+              "feedback": "The app tier is idle - look where the time goes."
+            },
+            {
+              "label": "Scale the App Service plan up",
+              "next": "n1x",
+              "score": -1,
+              "feedback": "App CPU is 35%; the wait is elsewhere."
+            },
+            {
+              "label": "Raise the command timeout to 5 minutes",
+              "next": "n1x",
+              "score": -2,
+              "feedback": "That hides the symptom and holds connections longer."
+            }
+          ]
+        },
+        "n1x": {
+          "text": "No change: timeouts continue at peak. What about the database?",
+          "choices": [
+            {
+              "label": "Check Azure SQL metrics",
+              "next": "n2",
+              "score": 0,
+              "feedback": ""
+            }
+          ]
+        },
+        "n2": {
+          "text": "Azure SQL CPU hits 100% from 19:00 to 21:00 since Tuesday; before, it peaked at 45%.",
+          "evidence": "Query Performance Insight: GetOrdersByCustomer uses 70% of CPU. Query Store shows its plan changed on Tuesday to a clustered index scan after the release added a Status filter.",
+          "choices": [
+            {
+              "label": "A query regression from the release: the new filter has no supporting index",
+              "next": "n3",
+              "score": 3,
+              "feedback": "Yes - one query, a new plan, a scan."
+            },
+            {
+              "label": "The database tier is too small - scale it up",
+              "next": "wrong-scale",
+              "score": -1,
+              "feedback": ""
+            },
+            {
+              "label": "Network latency between App Service and SQL",
+              "next": "n2w",
+              "score": -1,
+              "feedback": ""
+            }
+          ]
+        },
+        "n2w": {
+          "text": "Latency is flat; CPU is not. What is using it?",
+          "choices": [
+            {
+              "label": "Back to the CPU evidence",
+              "next": "n2",
+              "score": 0,
+              "feedback": ""
+            }
+          ]
+        },
+        "wrong-scale": {
+          "text": "You scale the database up two tiers and the timeouts stop - for now.",
+          "end": {
+            "correct": false,
+            "rootCause": "Scaling up bought headroom, but the regressed query still scans; cost went up and the problem returns as data grows.",
+            "lesson": "Find the query first. Scale only when the workload, not a regression, needs it."
+          }
+        },
+        "n3": {
+          "text": "How do you fix it tonight and for good?",
+          "choices": [
+            {
+              "label": "Force the last good plan in Query Store now; ship the missing index in a migration",
+              "next": "end",
+              "score": 3,
+              "feedback": "Safe immediately, and fixed properly."
+            },
+            {
+              "label": "Rebuild every index",
+              "next": "n3w",
+              "score": -1,
+              "feedback": ""
+            }
+          ]
+        },
+        "n3w": {
+          "text": "The rebuild runs for an hour; CPU is still pinned and the query still scans.",
+          "choices": [
+            {
+              "label": "Back to the options",
+              "next": "n3",
+              "score": 0,
+              "feedback": ""
+            }
+          ]
+        },
+        "end": {
+          "text": "CPU drops to 40% at peak and the timeouts stop.",
+          "end": {
+            "rootCause": "The release added a filter without a supporting index; the plan changed to a scan and saturated Azure SQL CPU at peak.",
+            "lesson": "Check database metrics before scaling the app tier. Query Store shows plan regressions and can force a known-good plan while the index ships."
+          }
+        }
+      }
+    },
+    {
+      "id": "kv-reference-rbac-switch",
+      "title": "Key Vault references fail after an RBAC switch",
+      "topic": "azure-identity",
+      "level": "intermediate",
+      "intro": "The security team switched Key Vault kv-shop to the Azure RBAC permission model. Now App Service settings that use Key Vault references fail and the app will not start.",
+      "start": "n1",
+      "nodes": {
+        "n1": {
+          "text": "Where do you look?",
+          "choices": [
+            {
+              "label": "The Key Vault reference status on the app's environment variables",
+              "next": "n2",
+              "score": 2,
+              "feedback": "It shows why each reference failed to resolve."
+            },
+            {
+              "label": "Rotate the secret",
+              "next": "n1x",
+              "score": -1,
+              "feedback": ""
+            },
+            {
+              "label": "Restart the app",
+              "next": "n1x",
+              "score": 0,
+              "feedback": "It fails the same way."
+            }
+          ]
+        },
+        "n1x": {
+          "text": "Nothing changes. What does App Service say about the references?",
+          "choices": [
+            {
+              "label": "Check the reference status",
+              "next": "n2",
+              "score": 0,
+              "feedback": ""
+            }
+          ]
+        },
+        "n2": {
+          "text": "Reference status: AccessToKeyVaultDenied. Identity: the system-assigned managed identity of app-shop.",
+          "evidence": "Access policies still list app-shop with Get/List on secrets. Permission model: Azure role-based access control. Role assignments on kv-shop: Key Vault Administrator for the security group only.",
+          "choices": [
+            {
+              "label": "With the RBAC model access policies are ignored - the identity needs a data role",
+              "next": "n3",
+              "score": 3,
+              "feedback": "Exactly."
+            },
+            {
+              "label": "The vault firewall blocks App Service",
+              "next": "n2w",
+              "score": -1,
+              "feedback": ""
+            },
+            {
+              "label": "Recreate the access policy",
+              "next": "wrong-policy",
+              "score": -2,
+              "feedback": ""
+            }
+          ]
+        },
+        "n2w": {
+          "text": "Networking did not change, and the status says access denied, not blocked by firewall. What did change?",
+          "choices": [
+            {
+              "label": "The permission model",
+              "next": "n2",
+              "score": 0,
+              "feedback": ""
+            }
+          ]
+        },
+        "wrong-policy": {
+          "text": "You recreate the access policy and restart. Same error.",
+          "end": {
+            "correct": false,
+            "rootCause": "Access policies are ignored once a vault uses Azure RBAC, so recreating them changes nothing.",
+            "lesson": "Know which permission model a vault uses before changing access."
+          }
+        },
+        "n3": {
+          "text": "What do you grant, and where?",
+          "choices": [
+            {
+              "label": "Key Vault Secrets User for app-shop's identity on kv-shop (or just the secrets it needs)",
+              "next": "end",
+              "score": 2,
+              "feedback": "Least privilege at the right scope."
+            },
+            {
+              "label": "Key Vault Administrator on the subscription",
+              "next": "n3w",
+              "score": -2,
+              "feedback": ""
+            }
+          ]
+        },
+        "n3w": {
+          "text": "Security rejects the change: far beyond least privilege.",
+          "choices": [
+            {
+              "label": "Choose again",
+              "next": "n3",
+              "score": 0,
+              "feedback": ""
+            }
+          ]
+        },
+        "end": {
+          "text": "References resolve and the app starts.",
+          "end": {
+            "rootCause": "Switching to the Azure RBAC permission model made the vault ignore its access policies; the app's managed identity had no data-plane role.",
+            "lesson": "Before switching models, turn access policies into role assignments (e.g. Key Vault Secrets User at vault or secret scope). New assignments can take a few minutes to apply."
+          }
+        }
+      }
+    }
+  ]
+}

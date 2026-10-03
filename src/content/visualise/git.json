@@ -1,0 +1,430 @@
+{
+  "exercises": [
+    {
+      "id": "b-branch",
+      "track": "basics",
+      "title": "Branch and commit",
+      "goal": "Create a branch called **feature/login**, switch to it and make **two** commits.",
+      "setup": [],
+      "solution": ["git switch -c feature/login", "git commit", "git commit"],
+      "hint": "git switch -c creates and switches in one go.",
+      "checks": [
+        {
+          "type": "branchExists",
+          "branch": "feature/login"
+        },
+        {
+          "type": "headOn",
+          "branch": "feature/login"
+        },
+        {
+          "type": "commitsSince",
+          "branch": "feature/login",
+          "base": "main",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "b-merge",
+      "track": "basics",
+      "title": "A real merge",
+      "goal": "main and feature/api have both moved on. Merge **feature/api** into **main** - you should get a merge commit with two parents.",
+      "setup": [
+        "git commit -m \"Add README\"",
+        "git checkout -b feature/api",
+        "git commit -m \"Add API\"",
+        "git commit -m \"Add tests\"",
+        "git checkout main",
+        "git commit -m \"Fix typo\""
+      ],
+      "solution": ["git merge feature/api"],
+      "hint": "You are on main already.",
+      "checks": [
+        {
+          "type": "headOn",
+          "branch": "main"
+        },
+        {
+          "type": "mergeCommit",
+          "branch": "main",
+          "from": "feature/api"
+        },
+        {
+          "type": "contains",
+          "branch": "main",
+          "message": "Add API"
+        }
+      ]
+    },
+    {
+      "id": "b-ff",
+      "track": "basics",
+      "title": "Fast-forward",
+      "goal": "main has not moved since **hotfix** branched off. Bring the fix into main **without** a merge commit.",
+      "setup": ["git checkout -b hotfix", "git commit -m \"Fix header\"", "git checkout main"],
+      "solution": ["git merge hotfix"],
+      "hint": "When main is behind, git merge just moves the pointer.",
+      "checks": [
+        {
+          "type": "noMergeCommits",
+          "branch": "main"
+        },
+        {
+          "type": "sameCommit",
+          "a": "main",
+          "b": "hotfix"
+        }
+      ]
+    },
+    {
+      "id": "b-rebase",
+      "track": "basics",
+      "title": "Rebase for a straight line",
+      "goal": "Replay **feature/search** on top of the latest **main**, then fast-forward main to it. No merge commits.",
+      "setup": [
+        "git checkout -b feature/search",
+        "git commit -m \"Search box\"",
+        "git commit -m \"Search API\"",
+        "git checkout main",
+        "git commit -m \"Update deps\"",
+        "git checkout feature/search"
+      ],
+      "solution": ["git rebase main", "git checkout main", "git merge feature/search"],
+      "hint": "Rebase from the feature branch: git rebase main.",
+      "checks": [
+        {
+          "type": "noMergeCommits",
+          "branch": "main"
+        },
+        {
+          "type": "contains",
+          "branch": "main",
+          "message": "Search API"
+        },
+        {
+          "type": "contains",
+          "branch": "main",
+          "message": "Update deps"
+        },
+        {
+          "type": "sameCommit",
+          "a": "main",
+          "b": "feature/search"
+        }
+      ]
+    },
+    {
+      "id": "b-cherry",
+      "track": "basics",
+      "title": "Cherry-pick one fix",
+      "goal": "**feature/big** is not ready, but main needs its **Fix null check** commit now - and nothing else from it.",
+      "setup": [
+        "git checkout -b feature/big",
+        "git commit -m \"Half-done feature\"",
+        "git commit -m \"Fix null check\"",
+        "git commit -m \"More feature\"",
+        "git checkout main"
+      ],
+      "solution": ["git cherry-pick feature/big~1"],
+      "hint": "Find the commit id in the graph, or use feature/big~1.",
+      "checks": [
+        {
+          "type": "contains",
+          "branch": "main",
+          "message": "Fix null check"
+        },
+        {
+          "type": "notContains",
+          "branch": "main",
+          "message": "Half-done feature"
+        },
+        {
+          "type": "notContains",
+          "branch": "main",
+          "message": "More feature"
+        }
+      ]
+    },
+    {
+      "id": "b-revert",
+      "track": "basics",
+      "title": "Undo on a shared branch",
+      "goal": "Everyone has pulled main. Undo **Break the build** without rewriting history.",
+      "setup": [
+        "git commit -m \"Add payment\"",
+        "git commit -m \"Break the build\"",
+        "git commit -m \"Add logging\""
+      ],
+      "solution": ["git revert HEAD~1"],
+      "hint": "Reset would rewrite history others have. Revert adds an undo commit.",
+      "checks": [
+        {
+          "type": "messageAtTip",
+          "branch": "main",
+          "startsWith": "Revert \"Break the build\""
+        },
+        {
+          "type": "contains",
+          "branch": "main",
+          "message": "Add logging"
+        }
+      ]
+    },
+    {
+      "id": "b-reset",
+      "track": "basics",
+      "title": "Throw away local experiments",
+      "goal": "Your **experiment** commits were never pushed. Move experiment back to where **main** is.",
+      "setup": ["git checkout -b experiment", "git commit -m \"Try A\"", "git commit -m \"Try B\""],
+      "solution": ["git reset --hard main"],
+      "hint": "git reset --hard <ref> moves the branch you are on.",
+      "checks": [
+        {
+          "type": "headOn",
+          "branch": "experiment"
+        },
+        {
+          "type": "sameCommit",
+          "a": "experiment",
+          "b": "main"
+        }
+      ]
+    },
+    {
+      "id": "b-cleanup",
+      "track": "basics",
+      "title": "Clean up",
+      "goal": "feature/x is merged. Delete the branch (its commits stay in main).",
+      "setup": [
+        "git checkout -b feature/x",
+        "git commit -m \"X\"",
+        "git checkout main",
+        "git merge --no-ff feature/x"
+      ],
+      "solution": ["git branch -d feature/x"],
+      "hint": "git branch -d refuses to delete unmerged work; -D forces it.",
+      "checks": [
+        {
+          "type": "branchAbsent",
+          "branch": "feature/x"
+        },
+        {
+          "type": "contains",
+          "branch": "main",
+          "message": "X"
+        }
+      ]
+    },
+    {
+      "id": "gf-feature",
+      "track": "gitflow",
+      "title": "GitFlow: a feature",
+      "goal": "Branch **feature/cart** off **develop**, commit, and merge it back into develop with **--no-ff** so the feature stays visible as one merge.",
+      "setup": ["git branch develop", "git checkout develop", "git commit -m \"Develop work\""],
+      "solution": [
+        "git checkout -b feature/cart",
+        "git commit",
+        "git checkout develop",
+        "git merge --no-ff feature/cart"
+      ],
+      "hint": "Features never touch main in GitFlow.",
+      "checks": [
+        {
+          "type": "mergeCommit",
+          "branch": "develop",
+          "from": "feature/cart"
+        },
+        {
+          "type": "notContains",
+          "branch": "main",
+          "message": "Develop work"
+        }
+      ]
+    },
+    {
+      "id": "gf-release",
+      "track": "gitflow",
+      "title": "GitFlow: a release",
+      "goal": "Cut **release/1.0** from develop, commit **\"Bump version\"**, merge it into **main** (--no-ff), tag main **v1.0**, then merge the release back into **develop**.",
+      "setup": [
+        "git branch develop",
+        "git checkout develop",
+        "git commit -m \"Feature A\"",
+        "git commit -m \"Feature B\""
+      ],
+      "solution": [
+        "git checkout -b release/1.0",
+        "git commit -m \"Bump version\"",
+        "git checkout main",
+        "git merge --no-ff release/1.0",
+        "git tag v1.0",
+        "git checkout develop",
+        "git merge --no-ff release/1.0"
+      ],
+      "hint": "main only ever receives release and hotfix merges.",
+      "checks": [
+        {
+          "type": "mergeCommit",
+          "branch": "main",
+          "from": "release/1.0"
+        },
+        {
+          "type": "tagOn",
+          "tag": "v1.0",
+          "branch": "main"
+        },
+        {
+          "type": "contains",
+          "branch": "develop",
+          "message": "Bump version"
+        }
+      ]
+    },
+    {
+      "id": "gf-hotfix",
+      "track": "gitflow",
+      "title": "GitFlow: a hotfix",
+      "goal": "Production (main, v1.0) needs a fix. Branch **hotfix/1.0.1** from main, commit **\"Fix login\"**, merge into **main** and tag **v1.0.1**, then merge into **develop** too.",
+      "setup": [
+        "git commit -m \"Release 1.0\"",
+        "git tag v1.0",
+        "git branch develop",
+        "git checkout develop",
+        "git commit -m \"Next feature\"",
+        "git checkout main"
+      ],
+      "solution": [
+        "git checkout -b hotfix/1.0.1",
+        "git commit -m \"Fix login\"",
+        "git checkout main",
+        "git merge --no-ff hotfix/1.0.1",
+        "git tag v1.0.1",
+        "git checkout develop",
+        "git merge --no-ff hotfix/1.0.1"
+      ],
+      "hint": "Hotfixes branch from main, and must reach develop too or the bug comes back.",
+      "checks": [
+        {
+          "type": "contains",
+          "branch": "main",
+          "message": "Fix login"
+        },
+        {
+          "type": "contains",
+          "branch": "develop",
+          "message": "Fix login"
+        },
+        {
+          "type": "tagOn",
+          "tag": "v1.0.1",
+          "branch": "main"
+        },
+        {
+          "type": "notContains",
+          "branch": "main",
+          "message": "Next feature"
+        }
+      ]
+    },
+    {
+      "id": "tb-short",
+      "track": "trunk",
+      "title": "Trunk-based: a short-lived branch",
+      "goal": "Your one-commit branch is behind main. Rebase it, fast-forward **main**, and delete the branch - main stays a straight line.",
+      "setup": [
+        "git checkout -b feature/flag",
+        "git commit -m \"Add flag (off)\"",
+        "git checkout main",
+        "git commit -m \"Teammate change\"",
+        "git checkout feature/flag"
+      ],
+      "solution": [
+        "git rebase main",
+        "git checkout main",
+        "git merge feature/flag",
+        "git branch -d feature/flag"
+      ],
+      "hint": "Unfinished work ships behind a feature flag, so branches can be merged within a day.",
+      "checks": [
+        {
+          "type": "noMergeCommits",
+          "branch": "main"
+        },
+        {
+          "type": "contains",
+          "branch": "main",
+          "message": "Add flag (off)"
+        },
+        {
+          "type": "branchAbsent",
+          "branch": "feature/flag"
+        }
+      ]
+    },
+    {
+      "id": "tb-release",
+      "track": "trunk",
+      "title": "Trunk-based: patch a release branch",
+      "goal": "release/2.0 was cut from main earlier. It needs **Fix crash** (now on main) but **not Feature 3**. Get the fix there and tag the release branch **v2.0.1**.",
+      "setup": [
+        "git commit -m \"Feature 1\"",
+        "git commit -m \"Feature 2\"",
+        "git branch release/2.0",
+        "git commit -m \"Feature 3\"",
+        "git commit -m \"Fix crash\""
+      ],
+      "solution": ["git checkout release/2.0", "git cherry-pick main", "git tag v2.0.1"],
+      "hint": "Fix on trunk first, then cherry-pick to the release branch.",
+      "checks": [
+        {
+          "type": "contains",
+          "branch": "release/2.0",
+          "message": "Fix crash"
+        },
+        {
+          "type": "notContains",
+          "branch": "release/2.0",
+          "message": "Feature 3"
+        },
+        {
+          "type": "tagOn",
+          "tag": "v2.0.1",
+          "branch": "release/2.0"
+        }
+      ]
+    }
+  ],
+  "comparison": [
+    {
+      "aspect": "Long-lived branches",
+      "gitflow": "main and develop, plus release and hotfix branches",
+      "trunk": "Just main (the trunk); optional short release branches"
+    },
+    {
+      "aspect": "Feature branches",
+      "gitflow": "Can live for days or weeks, merged to develop with --no-ff",
+      "trunk": "Hours to a day or two, or commit straight to main"
+    },
+    {
+      "aspect": "Unfinished work",
+      "gitflow": "Stays on its branch",
+      "trunk": "Merged early, hidden behind feature flags"
+    },
+    {
+      "aspect": "Release",
+      "gitflow": "release/x branch from develop, merged to main and tagged",
+      "trunk": "Tag main, or cut a release branch and cherry-pick fixes"
+    },
+    {
+      "aspect": "Fits",
+      "gitflow": "Scheduled releases, several supported versions",
+      "trunk": "Continuous delivery, strong CI and test automation"
+    },
+    {
+      "aspect": "Main risk",
+      "gitflow": "Big merges and merge conflicts late",
+      "trunk": "Needs discipline: small changes, fast reviews, good tests"
+    }
+  ]
+}

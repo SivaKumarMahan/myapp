@@ -1,0 +1,156 @@
+{
+  "$comment": "Generic follow-ups the mock interviewer asks when a question has none of its own, with key points for the self-score checklist.",
+  "followUps": [
+    {
+      "id": "why",
+      "question": "Why that approach rather than the obvious alternative?",
+      "keyPoints": [
+        {
+          "point": "Name the alternative you rejected",
+          "keywords": ["instead of", "alternative", "rather than", "versus", "vs", "option"],
+          "weight": 2
+        },
+        {
+          "point": "The trade-off (cost, complexity, risk, speed)",
+          "keywords": ["trade-off", "tradeoff", "cost", "complexity", "risk", "simpler", "faster"],
+          "weight": 2
+        },
+        {
+          "point": "The context that tipped the decision",
+          "keywords": ["because", "constraint", "requirement", "team", "deadline", "budget"],
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "id": "scale",
+      "question": "What changes at 10x the traffic or data?",
+      "keyPoints": [
+        {
+          "point": "Find the first bottleneck (often the database or state)",
+          "keywords": ["bottleneck", "database", "state", "limit", "throughput"],
+          "weight": 2
+        },
+        {
+          "point": "Scale out and partition",
+          "keywords": ["scale out", "horizontal", "partition", "shard", "replica", "autoscale"],
+          "weight": 2
+        },
+        {
+          "point": "Cache or queue to absorb load",
+          "keywords": ["cache", "queue", "async", "buffer", "cdn"],
+          "weight": 2
+        },
+        {
+          "point": "Cost and service limits",
+          "keywords": ["cost", "quota", "limit", "throttl"],
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "id": "monitor",
+      "question": "How would you know it is working in production?",
+      "keyPoints": [
+        {
+          "point": "SLIs: latency, errors, traffic, saturation",
+          "keywords": ["latency", "error rate", "sli", "slo", "golden signals", "throughput"],
+          "weight": 2
+        },
+        {
+          "point": "Alert on user-facing symptoms",
+          "keywords": ["alert", "page", "symptom", "threshold"],
+          "weight": 2
+        },
+        {
+          "point": "Logs and traces to dig in",
+          "keywords": ["log", "trace", "tracing", "correlation", "application insights"],
+          "weight": 2
+        },
+        {
+          "point": "A dashboard or runbook",
+          "keywords": ["dashboard", "runbook", "grafana"],
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "id": "failure",
+      "question": "What happens when it fails, and how do you recover?",
+      "keyPoints": [
+        {
+          "point": "The likely failure mode and blast radius",
+          "keywords": ["fail", "failure", "blast radius", "outage", "down"],
+          "weight": 2
+        },
+        {
+          "point": "Rollback or failover",
+          "keywords": ["rollback", "roll back", "failover", "redeploy", "restore"],
+          "weight": 2
+        },
+        {
+          "point": "RTO and RPO",
+          "keywords": ["rto", "rpo", "recovery time", "data loss"],
+          "weight": 2
+        },
+        {
+          "point": "Test the recovery",
+          "keywords": ["test", "drill", "chaos", "game day"],
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "id": "secure",
+      "question": "How would you secure it?",
+      "keyPoints": [
+        {
+          "point": "Identity and least privilege",
+          "keywords": ["least privilege", "rbac", "managed identity", "role"],
+          "weight": 2
+        },
+        {
+          "point": "Secrets in a vault",
+          "keywords": ["key vault", "vault", "secret"],
+          "weight": 2
+        },
+        {
+          "point": "Network isolation",
+          "keywords": ["private endpoint", "vnet", "firewall", "nsg", "private"],
+          "weight": 2
+        },
+        {
+          "point": "Scanning, patching and audit",
+          "keywords": ["scan", "patch", "audit", "log", "defender"],
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "id": "cost",
+      "question": "How would you cut its cost by 30% without hurting users?",
+      "keyPoints": [
+        {
+          "point": "Measure where the money goes",
+          "keywords": ["cost management", "cost analysis", "tag", "breakdown", "measure"],
+          "weight": 2
+        },
+        {
+          "point": "Rightsize and autoscale",
+          "keywords": ["rightsize", "right-size", "autoscale", "scale down", "smaller"],
+          "weight": 2
+        },
+        {
+          "point": "Commitments for steady load",
+          "keywords": ["reservation", "reserved", "savings plan", "commit"],
+          "weight": 2
+        },
+        {
+          "point": "Turn off or tier what is idle",
+          "keywords": ["shut down", "schedule", "idle", "tier", "archive", "delete"],
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

@@ -6,6 +6,9 @@ import type {
   TopicStatus,
   InterviewStatus,
   DailyGoal,
+  SavedDesign,
+  StarStory,
+  GuidedLabProgress,
 } from './storage'
 import type { Confidence, Rating } from './srs'
 
@@ -40,6 +43,18 @@ export interface ProgressApi {
   setExamDate: (courseId: string, date: string | null) => void
   /** A playground challenge was checked. Counts towards today's questions. */
   recordChallengeCheck: (key: string, solved: boolean) => void
+  /** Roles & skills "My fit": tick or untick a skill you know. */
+  setSkillKnown: (skillId: string, known: boolean) => void
+  /** Architecture builder: create or replace a saved design. */
+  saveDesign: (design: SavedDesign) => void
+  deleteDesign: (designId: string) => void
+  /** STAR builder: create or replace a story. */
+  saveStory: (story: StarStory) => void
+  deleteStory: (storyId: string) => void
+  /** Replaces your tags on one interview question (empty removes them). */
+  setQuestionTags: (questionId: string, tags: string[]) => void
+  /** Guided labs: replace one lab's progress (null resets it). */
+  setGuidedLab: (labId: string, progress: GuidedLabProgress | null) => void
   /** Called by the study timer while the app is in active use. */
   addStudyMinutes: (minutes: number) => void
   /** Also files every wrong answer in the mistake notebook. */

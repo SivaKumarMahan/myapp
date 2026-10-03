@@ -12,6 +12,9 @@ import {
   type ExamAttempt,
   type InterviewStatus,
   type ProgressState,
+  type SavedDesign,
+  type StarStory,
+  type GuidedLabProgress,
   type ThemePreference,
   type TopicStatus,
 } from './storage'
@@ -338,6 +341,75 @@ export function ProgressProvider({
     [update],
   )
 
+  const setSkillKnown = useCallback(
+    (skillId: string, known: boolean) =>
+      update((previous) => {
+        const skills = { ...previous.skills }
+        if (known) skills[skillId] = Date.now()
+        else delete skills[skillId]
+        return { ...previous, skills }
+      }),
+    [update],
+  )
+
+  const saveDesign = useCallback(
+    (design: SavedDesign) =>
+      update((previous) => ({
+        ...previous,
+        designs: { ...previous.designs, [design.id]: design },
+      })),
+    [update],
+  )
+
+  const deleteDesign = useCallback(
+    (designId: string) =>
+      update((previous) => {
+        const designs = { ...previous.designs }
+        delete designs[designId]
+        return { ...previous, designs }
+      }),
+    [update],
+  )
+
+  const saveStory = useCallback(
+    (story: StarStory) =>
+      update((previous) => ({ ...previous, stories: { ...previous.stories, [story.id]: story } })),
+    [update],
+  )
+
+  const deleteStory = useCallback(
+    (storyId: string) =>
+      update((previous) => {
+        const stories = { ...previous.stories }
+        delete stories[storyId]
+        return { ...previous, stories }
+      }),
+    [update],
+  )
+
+  const setQuestionTags = useCallback(
+    (questionId: string, tags: string[]) =>
+      update((previous) => {
+        const questionTags = { ...previous.questionTags }
+        const clean = [...new Set(tags.map((tag) => tag.trim()).filter(Boolean))]
+        if (clean.length > 0) questionTags[questionId] = clean
+        else delete questionTags[questionId]
+        return { ...previous, questionTags }
+      }),
+    [update],
+  )
+
+  const setGuidedLab = useCallback(
+    (labId: string, progress: GuidedLabProgress | null) =>
+      update((previous) => {
+        const guidedLabs = { ...previous.guidedLabs }
+        if (progress) guidedLabs[labId] = progress
+        else delete guidedLabs[labId]
+        return { ...previous, guidedLabs }
+      }),
+    [update],
+  )
+
   const addStudyMinutes = useCallback(
     (minutes: number) => update((previous) => addActivity(previous, { minutes })),
     [update],
@@ -443,6 +515,13 @@ export function ProgressProvider({
       setExamDate,
       addStudyMinutes,
       recordChallengeCheck,
+      setSkillKnown,
+      saveDesign,
+      deleteDesign,
+      saveStory,
+      deleteStory,
+      setQuestionTags,
+      setGuidedLab,
       saveExamAttempt,
       updateExamAttempt,
       deleteExamAttempt,
@@ -468,6 +547,13 @@ export function ProgressProvider({
       setExamDate,
       addStudyMinutes,
       recordChallengeCheck,
+      setSkillKnown,
+      saveDesign,
+      deleteDesign,
+      saveStory,
+      deleteStory,
+      setQuestionTags,
+      setGuidedLab,
       saveExamAttempt,
       updateExamAttempt,
       deleteExamAttempt,

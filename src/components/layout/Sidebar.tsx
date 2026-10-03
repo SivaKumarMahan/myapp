@@ -37,7 +37,7 @@ export function Sidebar() {
   )
 
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" aria-label="Site navigation">
       <NavLink to="/" className="sidebar__brand">
         <BrandMark size={34} />
         <span>
@@ -79,6 +79,18 @@ export function Sidebar() {
             📈
           </span>
           My stats
+        </NavLink>
+        <NavLink to="/bot" className="sidebar__link">
+          <span className="sidebar__link-icon" aria-hidden="true">
+            🤖
+          </span>
+          Study bot
+        </NavLink>
+        <NavLink to="/roles" className="sidebar__link">
+          <span className="sidebar__link-icon" aria-hidden="true">
+            🧭
+          </span>
+          Roles & skills
         </NavLink>
       </div>
 

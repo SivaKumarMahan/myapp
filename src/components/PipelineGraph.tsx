@@ -65,7 +65,12 @@ export function PipelineGraph({ nodes, kind }: { nodes: GraphNode[]; kind: Pipel
 
   return (
     <figure className="pipeline-graph">
-      <div className="pipeline-graph__scroll">
+      <div
+        className="pipeline-graph__scroll"
+        tabIndex={0}
+        role="region"
+        aria-label="Pipeline graph (scrolls sideways)"
+      >
         <svg
           width={width}
           height={height}

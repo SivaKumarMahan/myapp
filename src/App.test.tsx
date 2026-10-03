@@ -103,7 +103,7 @@ describe('navigation', () => {
     }
 
     expect(screen.getByRole('button', { name: /mark as completed/i })).toBeVisible()
-    await user.click(screen.getByRole('link', { name: /^Search the course$/i }))
+    await user.click(screen.getByRole('link', { name: /^Search$/i }))
     expect(
       await screen.findByRole('heading', { level: 1, name: /search the course/i }),
     ).toBeVisible()

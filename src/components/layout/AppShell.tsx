@@ -3,6 +3,8 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
+import { PaletteHost } from '../PaletteHost'
+import { AutoSync } from '../AutoSync'
 import { useStudyTimer } from '../../lib/use-study-timer'
 
 /**
@@ -39,6 +41,8 @@ export function AppShell() {
         </main>
       </div>
       <BottomNav />
+      <PaletteHost />
+      <AutoSync />
     </div>
   )
 }
