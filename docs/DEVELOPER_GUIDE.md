@@ -4,11 +4,16 @@ The technical reference: how each feature works, where its content lives, and ho
 
 An installable, offline-capable study app for Microsoft Azure certifications and Azure / DevOps interviews. It has two sections.
 
-**Certification courses** — three are installed:
+**Courses** — six are installed:
 
 - **AZ-900 — Microsoft Azure Fundamentals**
 - **AZ-104 — Microsoft Azure Administrator**
 - **AZ-400 — Designing and Implementing Microsoft DevOps Solutions**
+- **CKAD — Certified Kubernetes Application Developer** (Kubernetes v1.35)
+- **Terraform Associate (004)** (Terraform v1.16; HashiCorp publishes no weights, so the app's are labelled as its own)
+- **Containers & Docker fundamentals** (no certification; the app's own teaching order and study weights)
+
+The CKAD, Terraform and Docker courses come from the original DevOps Learning Hub (`~/Documents/A/devopsApp/Devops`), copied unchanged into `src/content/ckad`, `terraform` and `docker`.
 
 **Interview preparation** — 2,584 questions in 48 topics, in four sections:
 
@@ -27,13 +32,11 @@ Built as a React + TypeScript + Vite Progressive Web App. There is no backend an
 
 ## What is in it
 
-|                              | AZ-900 | AZ-104 | AZ-400 | Total |
-| ---------------------------- | -----: | -----: | -----: | ----: |
-| Lessons (each with a lab)    |     13 |     21 |     18 |    52 |
-| Exam-bank questions          |     78 |     97 |     95 |   270 |
-| In-lesson practice questions |     52 |     87 |     74 |   213 |
-| Diagrams                     |     26 |     47 |     36 |   109 |
-| Command-reference entries    |     30 |     81 |     56 |   167 |
+|                           | AZ-900 | AZ-104 | AZ-400 | CKAD | Terraform | Docker | Total |
+| ------------------------- | -----: | -----: | -----: | ---: | --------: | -----: | ----: |
+| Lessons (each with a lab) |     13 |     21 |     18 |   50 |        41 |     15 |   158 |
+| Exam-bank questions       |     78 |     97 |     95 |  116 |       118 |     44 |   548 |
+| Command-reference entries |     30 |     81 |     56 |  177 |        81 |     40 |   465 |
 
 Every lesson has these sections:
 
@@ -537,7 +540,8 @@ Content is plain TypeScript, type-checked against `src/content/types.ts`, so a b
 ```
 src/content/
 ├── courses.ts            # course registry (add a course here)
-├── az900/ az104/ az400/  # one folder per certification
+├── az900/ az104/ az400/  # one folder per Azure certification
+├── ckad/ terraform/ docker/  # the DevOps courses from the original app
 │   ├── index.ts          # the Course: blueprint, sources, dashboard copy
 │   ├── domains.ts        # skill areas with their published ranges
 │   ├── commands.ts       # searchable Azure CLI / PowerShell / git reference

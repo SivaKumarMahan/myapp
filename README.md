@@ -1,6 +1,6 @@
 # Azure Learning Hub
 
-A study app for **Azure certifications** (AZ-900, AZ-104, AZ-400) and **Azure / DevOps job interviews**. It works on your computer and your phone, and keeps working without internet once it has been opened.
+A study app for **Azure certifications** (AZ-900, AZ-104, AZ-400), **DevOps courses** (CKAD, Terraform Associate, Docker) and **Azure / DevOps job interviews**. It works on your computer and your phone, and keeps working without internet once it has been opened.
 
 **Open it:** https://sivakumarmahan.github.io/myapp/
 
@@ -73,7 +73,18 @@ Set your daily goal and exam date in **⚙️ Settings**, and the app will tell 
 
 ## 4. Certification courses
 
-Three courses: **AZ-900** (Fundamentals), **AZ-104** (Administrator) and **AZ-400** (DevOps Engineer). That is 52 lessons, 270 exam-style questions and 167 commands.
+Six courses, with 158 lessons, 548 exam-style questions and 465 reference commands in total:
+
+| Course                                       | Lessons | Questions | Commands |
+| -------------------------------------------- | ------: | --------: | -------: |
+| **AZ-900** Azure Fundamentals                |      13 |        78 |       30 |
+| **AZ-104** Azure Administrator               |      21 |        97 |       81 |
+| **AZ-400** DevOps Engineer                   |      18 |        95 |       56 |
+| **CKAD** Kubernetes Application Developer    |      50 |       116 |      177 |
+| **Terraform Associate (004)**                |      41 |       118 |       81 |
+| **Docker** containers fundamentals (no exam) |      15 |        44 |       40 |
+
+Every course works the same way:
 
 | What                          | Where                          | How to use it                                                                                                                                                                                               |
 | ----------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -86,7 +97,7 @@ Three courses: **AZ-900** (Fundamentals), **AZ-104** (Administrator) and **AZ-40
 | **Search a course**           | Course tools → 🔎 Search       | Full-text search inside one course.                                                                                                                                                                         |
 | **Cheat sheets**              | Course tools → 🖨️ Cheat sheets | A one-page summary per exam area. Click **Print / save as PDF** to keep a copy.                                                                                                                             |
 
-> The exam weights come from Microsoft's study guides. Always check the latest study guide before your exam (links are on each course dashboard).
+> Exam weights come from the official study guides (Microsoft, CNCF). HashiCorp does not publish Terraform weights and Docker has no exam, so for those two the app shows its own study weights and says so. Always check the official exam page before you book (links are on each course dashboard).
 
 ---
 
@@ -290,7 +301,7 @@ Yes, after one visit online. Python, Smart search and voice input need internet 
 Most cost cents or nothing, but they create **real** Azure resources. Each lab shows an estimate. **Always run the cleanup.** Setting a budget alert in Azure is a good idea.
 
 **Are the questions real exam questions?**
-No. Everything is original. Use it to understand, then check Microsoft's official study guide before the exam.
+No. Everything is original. Use it to understand, then check the official exam guide (Microsoft, CNCF or HashiCorp) before the exam.
 
 **Something looks wrong or out of date.**
 Azure changes quickly. If a command or fact looks off, check the official Microsoft docs (links are in each course). Content changes are explained in the [developer guide](docs/DEVELOPER_GUIDE.md).

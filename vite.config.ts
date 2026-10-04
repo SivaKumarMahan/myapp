@@ -180,6 +180,9 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('/src/content/az900/')) return 'content-az900'
           if (id.includes('/src/content/az104/')) return 'content-az104'
           if (id.includes('/src/content/az400/')) return 'content-az400'
+          if (id.includes('/src/content/ckad/')) return 'content-ckad'
+          if (id.includes('/src/content/terraform/')) return 'content-terraform'
+          if (id.includes('/src/content/docker/')) return 'content-docker'
           // Interview preparation is its own body of content on the same rule:
           // adding a question must not invalidate any cached course.
           // The learner's imported bank and interview rounds are several MB on

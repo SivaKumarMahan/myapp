@@ -57,7 +57,7 @@ describe('interview hub', () => {
     goTo('/')
     await screen.findByRole('heading', { level: 1, name: /azure learning hub/i })
     const main = within(screen.getByRole('main'))
-    expect(main.getByRole('heading', { name: /certification courses/i })).toBeVisible()
+    expect(main.getByRole('heading', { name: /^courses$/i })).toBeVisible()
     expect(main.getByRole('heading', { name: /interview preparation/i })).toBeVisible()
     expect(main.getByRole('link', { name: /devops interview questions/i })).toBeVisible()
   })

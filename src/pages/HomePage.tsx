@@ -308,7 +308,7 @@ export function HomePage() {
       </section>
 
       <section aria-labelledby="courses" className="stack">
-        <h2 id="courses">Certification courses</h2>
+        <h2 id="courses">Courses</h2>
         <div className="card-grid card-grid--2">
           {perCourse.map(({ entry, completion }) => (
             <Link

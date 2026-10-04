@@ -239,7 +239,12 @@
       "id": "deploy-strategies",
       "name": "Deployment strategies (blue-green, canary, rings)",
       "type": "concept",
-      "appLinks": ["lesson:az4-deployment-strategies", "itv:my-frequent", "tool:visualise-deploy"],
+      "appLinks": [
+        "lesson:az4-deployment-strategies",
+        "itv:my-frequent",
+        "tool:visualise-deploy",
+        "lesson:deployment-strategies"
+      ],
       "search": "blue green canary deployment"
     },
     {
@@ -292,7 +297,7 @@
       "id": "terraform",
       "name": "Terraform / OpenTofu",
       "type": "tool",
-      "appLinks": ["itv:terraform", "itv:my-terraform", "itv:azure-iac"],
+      "appLinks": ["itv:terraform", "itv:my-terraform", "itv:azure-iac", "course:terraform"],
       "search": "terraform"
     },
     {
@@ -313,14 +318,19 @@
       "id": "iac-pipelines",
       "name": "IaC in pipelines (plan, review, apply)",
       "type": "concept",
-      "appLinks": ["lesson:az4-iac-pipelines", "itv:my-terraform"],
+      "appLinks": ["lesson:az4-iac-pipelines", "itv:my-terraform", "lesson:tf-workflow-overview"],
       "search": "terraform pipeline plan apply"
     },
     {
       "id": "state-drift",
       "name": "State management & drift detection",
       "type": "concept",
-      "appLinks": ["itv:terraform", "itv:my-terraform"],
+      "appLinks": [
+        "itv:terraform",
+        "itv:my-terraform",
+        "lesson:tf-drift-and-state-commands",
+        "lesson:tf-state-locking"
+      ],
       "search": "terraform state drift"
     },
     {
@@ -334,21 +344,33 @@
       "id": "docker",
       "name": "Docker & container images",
       "type": "tool",
-      "appLinks": ["itv:docker", "itv:my-docker", "tool:lab"],
+      "appLinks": [
+        "itv:docker",
+        "itv:my-docker",
+        "tool:lab",
+        "course:docker",
+        "lesson:dk-dockerfile-basics"
+      ],
       "search": "dockerfile image"
     },
     {
       "id": "kubernetes",
       "name": "Kubernetes core (pods, deployments, services)",
       "type": "platform",
-      "appLinks": ["itv:kubernetes", "itv:my-kubernetes", "tool:lab"],
+      "appLinks": ["itv:kubernetes", "itv:my-kubernetes", "tool:lab", "course:ckad", "lesson:pods"],
       "search": "kubernetes deployment service"
     },
     {
       "id": "k8s-troubleshooting",
       "name": "Kubernetes troubleshooting",
       "type": "concept",
-      "appLinks": ["itv:my-study-scenarios", "itv:my-cheatsheets", "itv:my-kubernetes"],
+      "appLinks": [
+        "itv:my-study-scenarios",
+        "itv:my-cheatsheets",
+        "itv:my-kubernetes",
+        "lesson:pod-failure-modes",
+        "lesson:debugging-pods"
+      ],
       "search": "crashloopbackoff troubleshooting"
     },
     {
@@ -362,7 +384,7 @@
       "id": "helm",
       "name": "Helm",
       "type": "tool",
-      "appLinks": ["itv:my-helm"],
+      "appLinks": ["itv:my-helm", "lesson:helm-fundamentals"],
       "search": "helm chart"
     },
     {
@@ -383,28 +405,48 @@
       "id": "k8s-networking",
       "name": "Kubernetes networking (Ingress, CNI, NetworkPolicy)",
       "type": "concept",
-      "appLinks": ["itv:my-study-platform", "itv:kubernetes"],
+      "appLinks": [
+        "itv:my-study-platform",
+        "itv:kubernetes",
+        "lesson:ingress",
+        "lesson:networkpolicy"
+      ],
       "search": "ingress networkpolicy"
     },
     {
       "id": "k8s-security",
       "name": "Kubernetes security (RBAC, Pod Security, secrets)",
       "type": "concept",
-      "appLinks": ["itv:my-study-platform", "itv:rounds-atc", "itv:my-kubernetes"],
+      "appLinks": [
+        "itv:my-study-platform",
+        "itv:rounds-atc",
+        "itv:my-kubernetes",
+        "lesson:rbac",
+        "lesson:securitycontext"
+      ],
       "search": "kubernetes rbac security"
     },
     {
       "id": "autoscaling",
       "name": "Autoscaling (HPA, KEDA, cluster autoscaler / Karpenter)",
       "type": "concept",
-      "appLinks": ["itv:my-ops", "itv:my-cheatsheets", "itv:azure-compute"],
+      "appLinks": [
+        "itv:my-ops",
+        "itv:my-cheatsheets",
+        "itv:azure-compute",
+        "lesson:scaling-applications"
+      ],
       "search": "hpa keda autoscaling"
     },
     {
       "id": "registries",
       "name": "Container registries (ACR · ECR)",
       "type": "tool",
-      "appLinks": ["lesson:az1-containers", "itv:my-study-scenarios"],
+      "appLinks": [
+        "lesson:az1-containers",
+        "itv:my-study-scenarios",
+        "lesson:dk-registries-and-tags"
+      ],
       "search": "acr container registry"
     },
     {
@@ -595,7 +637,12 @@
       "id": "secrets",
       "name": "Secrets management (Key Vault · Secrets Manager, Vault)",
       "type": "tool",
-      "appLinks": ["itv:azure-identity", "lesson:az4-pipeline-security", "itv:my-azure-devops"],
+      "appLinks": [
+        "itv:azure-identity",
+        "lesson:az4-pipeline-security",
+        "itv:my-azure-devops",
+        "lesson:secrets"
+      ],
       "search": "key vault secrets"
     },
     {
@@ -616,7 +663,12 @@
       "id": "container-scanning",
       "name": "Container image scanning (Trivy, Defender for Containers)",
       "type": "tool",
-      "appLinks": ["lesson:az4-security-scanning", "itv:rounds-simcorp", "itv:my-docker"],
+      "appLinks": [
+        "lesson:az4-security-scanning",
+        "itv:rounds-simcorp",
+        "itv:my-docker",
+        "lesson:dk-image-security"
+      ],
       "search": "trivy image scanning"
     },
     {
@@ -889,7 +941,7 @@
       "id": "multi-tenancy",
       "name": "Multi-tenant cluster design (namespaces, quotas)",
       "type": "concept",
-      "appLinks": ["itv:my-study-platform", "itv:my-kubernetes"],
+      "appLinks": ["itv:my-study-platform", "itv:my-kubernetes", "lesson:quota-and-limitrange"],
       "search": "namespaces resource quotas"
     },
     {
@@ -1347,7 +1399,8 @@
         {
           "name": "HashiCorp Certified: Terraform Associate",
           "issuer": "HashiCorp",
-          "status": "recommended"
+          "status": "recommended",
+          "appLink": "course:terraform"
         },
         {
           "name": "Certified Kubernetes Administrator (CKA)",
@@ -1398,12 +1451,12 @@
         {
           "title": "Docker",
           "detail": "Write good Dockerfiles; multi-stage, small, non-root.",
-          "appLinks": ["itv:docker"]
+          "appLinks": ["itv:docker", "course:docker"]
         },
         {
           "title": "Infrastructure as code",
           "detail": "Terraform or Bicep, with remote state and plans reviewed in PRs.",
-          "appLinks": ["itv:terraform", "itv:azure-iac"]
+          "appLinks": ["itv:terraform", "itv:azure-iac", "course:terraform"]
         },
         {
           "title": "CD and release strategies",
@@ -1413,7 +1466,7 @@
         {
           "title": "Kubernetes and Helm",
           "detail": "Deploy, probe, scale and debug workloads.",
-          "appLinks": ["itv:kubernetes", "itv:my-helm"]
+          "appLinks": ["itv:kubernetes", "itv:my-helm", "course:ckad", "lesson:helm-fundamentals"]
         },
         {
           "title": "Security in the pipeline",
@@ -1789,7 +1842,7 @@
         {
           "title": "Kubernetes in production",
           "detail": "Probes, autoscaling, disruption budgets, debugging.",
-          "appLinks": ["itv:kubernetes", "itv:my-study-scenarios"]
+          "appLinks": ["itv:kubernetes", "itv:my-study-scenarios", "course:ckad"]
         },
         {
           "title": "Reliability design",
@@ -2144,7 +2197,8 @@
         {
           "name": "HashiCorp Certified: Terraform Associate",
           "issuer": "HashiCorp",
-          "status": "optional"
+          "status": "optional",
+          "appLink": "course:terraform"
         }
       ],
       "interviewFocus": [
@@ -2511,12 +2565,14 @@
         {
           "name": "Certified Kubernetes Application Developer (CKAD)",
           "issuer": "CNCF / Linux Foundation",
-          "status": "optional"
+          "status": "optional",
+          "appLink": "course:ckad"
         },
         {
           "name": "HashiCorp Certified: Terraform Associate",
           "issuer": "HashiCorp",
-          "status": "recommended"
+          "status": "recommended",
+          "appLink": "course:terraform"
         },
         {
           "name": "Certified Argo Project Associate (CAPA)",
@@ -2553,17 +2609,17 @@
         {
           "title": "Kubernetes core",
           "detail": "Workloads, services, config, storage.",
-          "appLinks": ["itv:kubernetes", "itv:my-kubernetes"]
+          "appLinks": ["itv:kubernetes", "itv:my-kubernetes", "course:ckad"]
         },
         {
           "title": "Helm and packaging",
           "detail": "Charts, values, library charts.",
-          "appLinks": ["itv:my-helm"]
+          "appLinks": ["itv:my-helm", "lesson:helm-fundamentals"]
         },
         {
           "title": "Infrastructure as code at scale",
           "detail": "Modules, versioning, remote state.",
-          "appLinks": ["itv:terraform", "itv:my-terraform"]
+          "appLinks": ["itv:terraform", "itv:my-terraform", "course:terraform"]
         },
         {
           "title": "CI/CD templates",
@@ -3685,7 +3741,8 @@
         {
           "name": "Certified Kubernetes Application Developer (CKAD)",
           "issuer": "CNCF / Linux Foundation",
-          "status": "optional"
+          "status": "optional",
+          "appLink": "course:ckad"
         },
         {
           "name": "Certified Kubernetes Security Specialist (CKS)",
@@ -3727,12 +3784,12 @@
         {
           "title": "Containers and Docker",
           "detail": "Images, layers, runtimes, cgroups and namespaces.",
-          "appLinks": ["itv:docker", "itv:my-docker"]
+          "appLinks": ["itv:docker", "itv:my-docker", "course:docker"]
         },
         {
           "title": "Kubernetes fundamentals",
           "detail": "Pods, deployments, services, config.",
-          "appLinks": ["itv:kubernetes"]
+          "appLinks": ["itv:kubernetes", "course:ckad"]
         },
         {
           "title": "Hands-on troubleshooting",
@@ -3757,7 +3814,7 @@
         {
           "title": "Packaging and GitOps",
           "detail": "Helm charts, Argo CD / Flux.",
-          "appLinks": ["itv:my-helm", "itv:my-ops"]
+          "appLinks": ["itv:my-helm", "itv:my-ops", "lesson:helm-fundamentals"]
         },
         {
           "title": "Scaling and cost",
@@ -4073,7 +4130,8 @@
         {
           "name": "Certified Kubernetes Application Developer (CKAD)",
           "issuer": "CNCF / Linux Foundation",
-          "status": "optional"
+          "status": "optional",
+          "appLink": "course:ckad"
         },
         {
           "name": "Microsoft Certified: Azure Administrator Associate (AZ-104)",
@@ -4084,7 +4142,8 @@
         {
           "name": "HashiCorp Certified: Terraform Associate",
           "issuer": "HashiCorp",
-          "status": "optional"
+          "status": "optional",
+          "appLink": "course:terraform"
         }
       ],
       "interviewFocus": [
@@ -4105,7 +4164,7 @@
         {
           "title": "Containers",
           "detail": "Package models and their dependencies.",
-          "appLinks": ["itv:docker"]
+          "appLinks": ["itv:docker", "course:docker"]
         },
         {
           "title": "CI/CD fundamentals",
@@ -4130,7 +4189,7 @@
         {
           "title": "Serving on Kubernetes",
           "detail": "Endpoints, autoscaling, GPUs.",
-          "appLinks": ["itv:kubernetes", "itv:my-ops"]
+          "appLinks": ["itv:kubernetes", "itv:my-ops", "course:ckad"]
         },
         {
           "title": "Monitoring models",

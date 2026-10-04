@@ -636,6 +636,202 @@
       "aliases": ["DORA"],
       "category": "DevOps",
       "definition": "Deployment frequency, lead time for changes, change failure rate and time to restore - the four delivery performance measures."
+    },
+    {
+      "id": "pod",
+      "term": "Pod",
+      "aliases": ["Pods"],
+      "category": "Containers & Kubernetes",
+      "definition": "The smallest thing Kubernetes runs: one or more containers that share a network address and storage."
+    },
+    {
+      "id": "deployment",
+      "term": "Deployment",
+      "aliases": ["Deployments"],
+      "category": "Containers & Kubernetes",
+      "definition": "A Kubernetes object that keeps a set number of identical Pods running and rolls out new versions gradually.",
+      "autolink": false
+    },
+    {
+      "id": "replicaset",
+      "term": "ReplicaSet",
+      "aliases": ["ReplicaSets"],
+      "category": "Containers & Kubernetes",
+      "definition": "Keeps a given number of identical Pods running; Deployments create and manage them for you."
+    },
+    {
+      "id": "kubernetes-service",
+      "term": "Kubernetes Service",
+      "aliases": ["Service", "Services", "ClusterIP", "NodePort"],
+      "category": "Containers & Kubernetes",
+      "definition": "A stable name and IP in front of a changing set of Pods (ClusterIP, NodePort, LoadBalancer).",
+      "autolink": false
+    },
+    {
+      "id": "ingress",
+      "term": "Ingress",
+      "aliases": ["IngressClass", "ingress controller"],
+      "category": "Containers & Kubernetes",
+      "definition": "HTTP(S) routing from outside the cluster to Services, by host name and path, through an ingress controller."
+    },
+    {
+      "id": "configmap",
+      "term": "ConfigMap",
+      "aliases": ["ConfigMaps"],
+      "category": "Containers & Kubernetes",
+      "definition": "Non-secret configuration (key/value pairs or files) given to Pods as environment variables or mounted files."
+    },
+    {
+      "id": "kubernetes-secret",
+      "term": "Kubernetes Secret",
+      "aliases": ["Secret", "Secrets"],
+      "category": "Containers & Kubernetes",
+      "definition": "Like a ConfigMap but for sensitive data; values are base64-encoded, not encrypted, unless encryption at rest is enabled.",
+      "autolink": false
+    },
+    {
+      "id": "namespace",
+      "term": "Namespace",
+      "aliases": ["namespaces"],
+      "category": "Containers & Kubernetes",
+      "definition": "A named section of a cluster that groups objects and scopes names, quotas and RBAC.",
+      "autolink": false
+    },
+    {
+      "id": "kubectl",
+      "term": "kubectl",
+      "aliases": [],
+      "category": "Containers & Kubernetes",
+      "definition": "The Kubernetes command-line tool: get, describe, apply, logs, exec and more."
+    },
+    {
+      "id": "helm",
+      "term": "Helm",
+      "aliases": ["Helm chart", "Helm charts"],
+      "category": "Containers & Kubernetes",
+      "definition": "A package manager for Kubernetes: charts are templated manifests installed as versioned releases you can upgrade and roll back."
+    },
+    {
+      "id": "kustomize",
+      "term": "Kustomize",
+      "aliases": [],
+      "category": "Containers & Kubernetes",
+      "definition": "Customises plain Kubernetes YAML with bases, overlays and patches, without templates; built into kubectl -k."
+    },
+    {
+      "id": "probe",
+      "term": "Probe",
+      "aliases": ["liveness probe", "readiness probe", "startup probe", "probes"],
+      "category": "Containers & Kubernetes",
+      "definition": "A health check Kubernetes runs on a container: liveness restarts it, readiness takes it out of the Service, startup delays the others."
+    },
+    {
+      "id": "crashloopbackoff",
+      "term": "CrashLoopBackOff",
+      "aliases": [],
+      "category": "Containers & Kubernetes",
+      "definition": "A Pod status: the container keeps crashing, and Kubernetes waits longer between each restart."
+    },
+    {
+      "id": "networkpolicy",
+      "term": "NetworkPolicy",
+      "aliases": ["NetworkPolicies", "network policy"],
+      "category": "Containers & Kubernetes",
+      "definition": "Firewall rules for Pods: which Pods and namespaces may talk to which, enforced by the network plugin."
+    },
+    {
+      "id": "serviceaccount",
+      "term": "ServiceAccount",
+      "aliases": ["ServiceAccounts", "service account"],
+      "category": "Containers & Kubernetes",
+      "definition": "The identity a Pod uses to call the Kubernetes API (and, with workload identity, cloud services)."
+    },
+    {
+      "id": "hpa",
+      "term": "HPA",
+      "aliases": ["Horizontal Pod Autoscaler"],
+      "category": "Containers & Kubernetes",
+      "definition": "Horizontal Pod Autoscaler: adds or removes Pod replicas based on CPU, memory or custom metrics."
+    },
+    {
+      "id": "statefulset",
+      "term": "StatefulSet",
+      "aliases": ["StatefulSets"],
+      "category": "Containers & Kubernetes",
+      "definition": "Runs Pods that need stable names and their own persistent storage, such as databases."
+    },
+    {
+      "id": "crd",
+      "term": "CRD",
+      "aliases": ["CustomResourceDefinition", "custom resource"],
+      "category": "Containers & Kubernetes",
+      "definition": "CustomResourceDefinition: adds a new object type to the Kubernetes API, usually managed by an operator."
+    },
+    {
+      "id": "dockerfile",
+      "term": "Dockerfile",
+      "aliases": ["Dockerfiles"],
+      "category": "Containers & Kubernetes",
+      "definition": "The recipe for building a container image: a base image plus instructions such as COPY, RUN and CMD."
+    },
+    {
+      "id": "multi-stage-build",
+      "term": "Multi-stage build",
+      "aliases": ["multi-stage builds"],
+      "category": "Containers & Kubernetes",
+      "definition": "A Dockerfile with several FROM stages, so build tools stay out of the final, smaller image."
+    },
+    {
+      "id": "docker-compose",
+      "term": "Docker Compose",
+      "aliases": ["Compose file", "compose.yaml"],
+      "category": "Containers & Kubernetes",
+      "definition": "Describes and runs a multi-container application from one YAML file (docker compose up)."
+    },
+    {
+      "id": "image-layer",
+      "term": "Image layer",
+      "aliases": ["image layers", "layers"],
+      "category": "Containers & Kubernetes",
+      "definition": "Each Dockerfile instruction adds a read-only layer; layers are cached and shared between images.",
+      "autolink": false
+    },
+    {
+      "id": "terraform-provider",
+      "term": "Terraform provider",
+      "aliases": ["provider", "providers"],
+      "category": "DevOps",
+      "definition": "A plugin that lets Terraform manage one platform's API (azurerm, aws, kubernetes).",
+      "autolink": false
+    },
+    {
+      "id": "terraform-module",
+      "term": "Terraform module",
+      "aliases": ["module", "modules"],
+      "category": "DevOps",
+      "definition": "A reusable folder of Terraform configuration, called with a module block and its inputs.",
+      "autolink": false
+    },
+    {
+      "id": "terraform-plan",
+      "term": "terraform plan",
+      "aliases": ["execution plan"],
+      "category": "DevOps",
+      "definition": "Shows what Terraform would create, change or destroy, without doing it."
+    },
+    {
+      "id": "hcp-terraform",
+      "term": "HCP Terraform",
+      "aliases": ["Terraform Cloud"],
+      "category": "DevOps",
+      "definition": "HashiCorp's hosted service (formerly Terraform Cloud) for remote runs, state, policies and collaboration."
+    },
+    {
+      "id": "dependency-lock-file",
+      "term": "Dependency lock file",
+      "aliases": [".terraform.lock.hcl"],
+      "category": "DevOps",
+      "definition": "The .terraform.lock.hcl file that records the exact provider versions so every run uses the same ones."
     }
   ]
 }

@@ -185,7 +185,7 @@ describe('navigation', () => {
     // detail cards, and interview preparation comes first.
     const sections = [...main.querySelectorAll('h2')].map((h) => h.textContent ?? '')
     const interview = sections.findIndex((text) => /interview preparation/i.test(text))
-    const courses = sections.findIndex((text) => /certification courses/i.test(text))
+    const courses = sections.findIndex((text) => /^courses$/i.test(text.trim()))
     const readiness = sections.findIndex((text) => /exam readiness/i.test(text))
 
     expect(interview).toBeGreaterThanOrEqual(0)
