@@ -80,6 +80,7 @@ export function utilityNav(): NavItem[] {
       icon: '🛠️',
       matchPrefix: true,
     },
+    { to: '/linux-lab', label: 'Linux & Bash lab', shortLabel: 'Linux', icon: '🐧' },
     { to: '/iac', label: 'IaC compare', shortLabel: 'IaC', icon: '📐' },
     { to: '/glossary', label: 'Glossary', shortLabel: 'Glossary', icon: '📖' },
     { to: '/sql', label: 'SQL playground', shortLabel: 'SQL', icon: '🗃️', matchPrefix: true },

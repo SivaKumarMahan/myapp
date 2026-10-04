@@ -456,6 +456,52 @@ YAML is parsed with the `yaml` package rather than js-yaml, because it keeps the
 
   Each check is a JMESPath query over the simulated cloud, ticked off live as you work. A completed mission counts on Home.
 
+## Linux & Bash lab
+
+`/linux-lab` (🐧 in the sidebar, `?c=<challenge id>` opens one) is a set of 62 scenario challenges on a simulated Linux server. It runs entirely in the browser, offline, with no backend and no AI at runtime.
+
+- **Engine:** [just-bash](https://github.com/vercel-labs/just-bash) (Apache-2.0), a bash interpreter written in TypeScript with an in-memory filesystem. Only the lab page loads it (about 1.3 MB, in the page's lazy chunk).
+- **The world** (`src/lib/linuxlab/world.ts`): `buildWorld(variant, now)` generates everything from a variant (`main` or `hidden`) and a timestamp: files with real modification times, about ten hosts (up, down, SSH refused, SSH auth failure, full disk), domains (expired certificate, no DNS), services, processes, disks, memory, Docker images, Kubernetes deployments and Azure resources. The `hidden` variant has the same layout with different names, dates, numbers and failures, so hard-coded answers fail. Large files are sparse (`LabFs` in `fs.ts` reports their declared size).
+- **Mock tools** (`src/lib/linuxlab/commands.ts`): `ping`, `ssh` (runs commands in a per-host shell), `scp`, `nc`, `curl`, `mail`/`sendmail`, `getent`/`nslookup`/`dig`, `openssl s_client`/`x509`, `ps`, `top -bn1`, `free`, `uptime`, `df`, `du`, `ss`, `lsof`, `fuser`, `kill`, `systemctl`, `crontab`, `useradd`, `docker`, `kubectl` and `az`, with realistic output and exit codes. Mail and webhooks go to `world.outbox` (the **Outbox** tab).
+- **Shims** for gaps in just-bash: `date` (frozen to the world's clock), `touch -d`, `stat -c`, `sed -i.bak`, `xargs -I`, `find -mmin` and GNU `-mtime` rounding, `sort -h`, one-character `awk -F`, `gzip` keeping mtimes, `zgrep`, `realpath`. A transform plugin (`transform.ts`) makes `"$@"` and `"${arr[@]}"` work as a command. The clock runs in the browser's time zone (`time.ts`), so logs, `date` and `ls -l` agree.
+- **Known shell quirks** (listed by `help` in the terminal): unquoted `key=value` items inside an array literal are dropped by the just-bash parser; `$(cmd < "$file")` inside `$(( ))` loses the redirect target; `ssh` does not swallow a `while read` loop's stdin; there are no interactive programs.
+- **`LinuxLab`** (`lab.ts`) is one environment. `run()` keeps the working directory, variables and functions between commands, stops runaway loops, and returns stdout, stderr and the exit code.
+- **Checking** (`checks.ts`) is outcome-based. `checkChallenge` replays the learner's terminal commands (or runs their script with each test case's arguments) on a fresh world, runs the first reference solution on an identical world, and compares them with the challenge's checks. It does this for `main` and then `hidden`. Check kinds:
+  - `output` (modes: exact, unordered, contains, tokens with a regex, numbers);
+  - `files` (deleted, kept or created, with "it's only 4 days old" feedback);
+  - `file` (content);
+  - `probe` (a command run afterwards, e.g. `systemctl is-active nginx` or `crontab -l`);
+  - `outbox`;
+  - `exit`.
+- **Storage:** the lab's own record (drafts, hints shown, attempts, solved) lives under `azure-learning-hub.linuxlab` (`.user.<email>` when signed in), separate from the progress record. A solved challenge is also recorded as `linux:<id>` in `challenges`, so it counts on Home and syncs like the others.
+
+### Adding a challenge
+
+1. Pick the category file in `src/content/linuxlab/challenges/` (`disk.ts`, `logs.ts`, `text.ts`, `json.ts`, `network.ts`, `processes.ts`, `cloud.ts`, `fundamentals.ts`) and add an object of type `LabChallenge` (`src/content/linuxlab/types.ts`):
+   - `id` (unique, kebab-case: it becomes `linux:<id>` in progress and `?c=<id>` in links), `title`, `category`, `level` (`simple` | `medium`), `type` (`command` | `script` | `bugfix`);
+   - `scenario`, `task` (inline markdown: `**bold**` and `` `code` ``);
+   - `seedFiles` (paths shown as "Look at" buttons) and optional `mockHosts` (shown as "Simulated: ...");
+   - exactly three `hints`, from a nudge to almost the answer;
+   - `solutions`: the first one is the **reference** the checker compares against; others are shown as "Another way";
+   - `explanation`: `{ code, note }` lines for the reference;
+   - `checks` (see the list above);
+   - for `script` and `bugfix`: `script: { name, cases }`, where each case has a `label` and `args`, either the same for both variants or `{ main, hidden }`; `bugfix` also needs `starter` (the broken script);
+   - `hiddenVariant` (what differs, in one sentence), `followUp` (an interview question), `repoRef`, `tags`.
+2. If the task needs data that isn't there, add it to `buildWorld` in `world.ts` for **both** variants, and make the hidden one different.
+3. Run the self-test: `npx vitest run src/content/linuxlab`. It checks that the reference passes its own checks on both variants and runs without shell errors, that a do-nothing answer fails, and that a bug-fix starter fails. For one challenge: `LAB_ONLY=my-id npx vitest run src/content/linuxlab`. The same check runs in the app under **Self-test** at the bottom of the lab page.
+4. Update the count in `src/content/linuxlab/challenges.test.ts` (it expects 62) and the README.
+
+### Setting `repoRef`
+
+`repoRef` links a challenge to a question in your interview-questions repository. It is shown under **Related questions**. Every challenge ships with `repoRef: null`. To set one:
+
+```ts
+repoRef: { path: 'linux/scripting.md', questionId: 'Q12' },
+```
+
+- `path` is the file in the repo, relative to its root; `questionId` is however that file numbers its questions. Both are shown as text only: the lab never reads the repo, so it keeps working offline and without the repo.
+- Leave it `null` when there's no matching question. In-app interview questions that share the challenge's `tags` are linked automatically.
+
 ## SQL playground
 
 `/sql` (🗃️ in the sidebar) is a SQL editor on real **SQLite**, compiled to WebAssembly and running in your browser. It works offline: the engine (about 650 KB) is part of the offline cache. It loads only when you open the page.
@@ -562,6 +608,7 @@ src/content/
 - **Tasks aren't auto-graded.** Mock-exam tasks are self-verified against a checkpoint list; only multiple-choice and command questions are auto-scored.
 - **Commands weren't run against Azure.** The Azure CLI, Bicep and KQL samples were written and reviewed, but not executed against a live subscription. If a command errors, check `az <group> --help`. Azure changes fast.
 - **Labs create real resources.** Every lab ends with a cleanup step (usually `az group delete`). Run it, or you will be billed.
+- **The Linux lab is a simulation.** It runs a JavaScript bash (just-bash) with mocked tools, not GNU bash on a real kernel; the quirks are listed under [Linux & Bash lab](#linux--bash-lab).
 - **Progress stays in one browser.** Progress lives in one browser on one device. Use **Progress & data → Export** to move it.
 - **iOS Safari clears unused sites.** In a Safari _tab_, storage for sites not opened for about 7 days is cleared. Installing the app to the Home Screen avoids this.
 

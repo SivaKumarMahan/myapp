@@ -46,9 +46,12 @@ describe('Architecture builder', () => {
     await user.click(screen.getByRole('checkbox', { name: 'Azure Backup' }))
     expect(within(review).queryByText(/is not backed up/)).not.toBeInTheDocument()
 
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    // The design is saved after a debounce; poll rather than sleep a fixed
+    // time, which is too short on a busy runner.
+    await expect
+      .poll(() => Object.values(loadState(TEST_EMAIL).designs).length, { timeout: 5000 })
+      .toBe(1)
     const saved = Object.values(loadState(TEST_EMAIL).designs)
-    expect(saved).toHaveLength(1)
     expect(saved[0].nodes).toHaveLength(2)
     expect(saved[0].edges).toHaveLength(1)
   })

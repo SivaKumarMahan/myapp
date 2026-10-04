@@ -112,6 +112,19 @@ export default defineConfig(({ mode }) => ({
   ],
   // The SQL worker loads each database's data on demand (dynamic import),
   // which needs ES-module workers. Every browser the app supports has them.
+  resolve: {
+    // just-bash (Linux lab) imports node:zlib even in its browser bundle.
+    // Tests run in Node and keep the real zlib.
+    alias:
+      mode === 'test'
+        ? []
+        : [
+            {
+              find: 'node:zlib',
+              replacement: new URL('./src/lib/linuxlab/zlib-browser.ts', import.meta.url).pathname,
+            },
+          ],
+  },
   worker: {
     format: 'es',
   },
@@ -152,6 +165,8 @@ export default defineConfig(({ mode }) => ({
             if (id.includes('@huggingface/transformers') || id.includes('onnxruntime')) {
               return 'vendor-transformers'
             }
+            // The Linux & Bash lab's shell: loaded only on that page.
+            if (id.includes('/just-bash/') || id.includes('/fflate/')) return 'vendor-justbash'
             // The CLI simulator and the Config lab: loaded only on those pages.
             if (id.includes('/jmespath/')) return 'vendor-jmespath'
             if (

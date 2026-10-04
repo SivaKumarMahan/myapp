@@ -81,6 +81,9 @@ const IncidentLabsPage = lazy(() =>
 const GuidedLabsPage = lazy(() =>
   import('./pages/GuidedLabsPage').then((m) => ({ default: m.GuidedLabsPage })),
 )
+const LinuxLabPage = lazy(() =>
+  import('./pages/LinuxLabPage').then((m) => ({ default: m.LinuxLabPage })),
+)
 const IacComparePage = lazy(() =>
   import('./pages/IacComparePage').then((m) => ({ default: m.IacComparePage })),
 )
@@ -271,6 +274,14 @@ function Routed() {
               element={
                 <Loading>
                   <GuidedLabsPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/linux-lab"
+              element={
+                <Loading>
+                  <LinuxLabPage />
                 </Loading>
               }
             />

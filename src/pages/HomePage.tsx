@@ -28,6 +28,7 @@ import { allVizKeys } from '../content/visualise'
 import { allArchKeys } from '../content/arch'
 import { allIncidentKeys } from '../lib/incident'
 import { allGuidedLabKeys, guidedLabById, isRunning } from '../content/labs'
+import { allLinuxKeys } from '../content/linuxlab'
 import { roles } from '../content/roles'
 import { roleMatch } from '../lib/roles'
 
@@ -94,6 +95,7 @@ export function HomePage() {
   const archDone = allArchKeys.filter((key) => state.challenges[key]?.solvedAt).length
   const incidentsDone = allIncidentKeys.filter((key) => state.challenges[key]?.solvedAt).length
   const labsDone = allGuidedLabKeys.filter((key) => state.challenges[key]?.solvedAt).length
+  const linuxDone = allLinuxKeys.filter((key) => state.challenges[key]?.solvedAt).length
   const runningLabs = Object.entries(state.guidedLabs)
     .filter(([, progress]) => isRunning(progress))
     .map(([id]) => guidedLabById.get(id))
@@ -217,7 +219,8 @@ export function HomePage() {
                 vizDone +
                 archDone +
                 incidentsDone +
-                labsDone}
+                labsDone +
+                linuxDone}
               /
               {sqlChallenges.length +
                 kqlChallenges.length +
@@ -228,7 +231,8 @@ export function HomePage() {
                 allVizKeys.length +
                 allArchKeys.length +
                 allIncidentKeys.length +
-                allGuidedLabKeys.length}
+                allGuidedLabKeys.length +
+                allLinuxKeys.length}
             </div>
             <div className="stat__label">
               Challenges solved · SQL {sqlSolved}/{sqlChallenges.length} · KQL {kqlSolved}/
@@ -236,7 +240,8 @@ export function HomePage() {
               {missionsDone}/{missions.length} · Config lab {labDone}/{labExercises.length} ·
               Networking {netDone}/{allNetKeys.length} · Visualise {vizDone}/{allVizKeys.length} ·
               Architecture {archDone}/{allArchKeys.length} · Incidents {incidentsDone}/
-              {allIncidentKeys.length} · Guided labs {labsDone}/{allGuidedLabKeys.length}
+              {allIncidentKeys.length} · Guided labs {labsDone}/{allGuidedLabKeys.length} · Linux{' '}
+              {linuxDone}/{allLinuxKeys.length}
             </div>
           </div>
           <div className="stat">

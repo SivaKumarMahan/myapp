@@ -10,6 +10,7 @@ import { roles } from '../content/roles'
 import { guidedLabs } from '../content/labs'
 import { iacResources } from '../content/iac'
 import { archScenarios } from '../content/arch'
+import { linuxChallenges } from '../content/linuxlab'
 import { glossaryTerms } from './glossary'
 import { incidentScenarios } from './incident'
 import { linkTo } from './bot/engine'
@@ -172,6 +173,13 @@ export function buildItems(): PaletteItem[] {
       entry.title,
       `Config lab · ${entry.tab}`,
       `/lab?tab=${entry.tab}&exercise=${entry.id}`,
+    )
+  for (const entry of linuxChallenges)
+    challenge(
+      `linux:${entry.id}`,
+      entry.title,
+      `Linux & Bash lab · ${entry.category}`,
+      `/linux-lab?c=${entry.id}`,
     )
   for (const entry of archScenarios)
     challenge(`arch:${entry.id}`, entry.title, 'Architecture scenario', '/architecture')

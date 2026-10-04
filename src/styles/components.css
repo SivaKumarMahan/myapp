@@ -5646,3 +5646,194 @@ kbd {
     display: none;
   }
 }
+
+/* ---------- Linux & Bash lab ---------- */
+
+.linux-layout {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (min-width: 1000px) {
+  .linux-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  }
+
+  .linux-list {
+    grid-column: 1 / -1;
+  }
+
+  .linux-list__items {
+    max-height: 16rem;
+  }
+}
+
+@media (min-width: 1400px) {
+  .linux-layout {
+    grid-template-columns: 250px minmax(0, 1fr) minmax(0, 1.2fr);
+  }
+
+  .linux-list {
+    grid-column: auto;
+    position: sticky;
+    top: 1rem;
+  }
+
+  .linux-list__items {
+    max-height: calc(100vh - 22rem);
+  }
+}
+
+.linux-list__items {
+  display: grid;
+  gap: 0.25rem;
+  max-height: 20rem;
+  scrollbar-color: var(--border-strong) transparent;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.linux-item {
+  display: grid;
+  gap: 0.1rem;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.linux-item:hover {
+  background: var(--surface-hover);
+}
+
+.linux-item.is-active {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.linux-item__title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.linux-item__meta {
+  font-size: 0.75rem;
+}
+
+.linux-task__task {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+}
+
+.linux-files {
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.linux-files .btn {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.linux-hint {
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--radius-sm);
+  background: var(--warning-soft);
+}
+
+.linux-results {
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+}
+
+.linux-results.is-pass {
+  background: var(--success-soft);
+}
+
+.linux-results.is-fail {
+  background: var(--danger-soft);
+}
+
+.linux-results__messages {
+  margin: 0.25rem 0 0.25rem 1.2rem;
+  padding: 0;
+  color: var(--text);
+}
+
+.linux-explain {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.linux-explain caption {
+  text-align: left;
+}
+
+.linux-explain th,
+.linux-explain td {
+  padding: 0.35rem 0.5rem;
+  border-top: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.linux-explain th {
+  width: 45%;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.linux-followup {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--info-soft);
+}
+
+.linux-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.linux-tabs__reset {
+  margin-left: auto;
+}
+
+.linux-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-left: 0.35rem;
+  border-radius: 50%;
+  background: var(--danger);
+  vertical-align: middle;
+}
+
+.linux-editor-bar {
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.linux-outbox {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
