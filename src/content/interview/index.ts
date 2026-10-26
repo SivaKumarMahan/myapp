@@ -34,6 +34,11 @@ import { roundsManagerialTopic } from './topics/rounds-managerial'
 import { roundsAtcTopic } from './topics/rounds-atc'
 import { roundsSimcorpTopic } from './topics/rounds-simcorp'
 import { roundsInnovartechTopic } from './topics/rounds-innovartech'
+import { roundsBasfTopic } from './topics/rounds-basf'
+import { roundsCognizantTopic } from './topics/rounds-cognizant'
+import { roundsEpamTopic } from './topics/rounds-epam'
+import { roundsInmarTopic } from './topics/rounds-inmar'
+import { roundsWiproTopic } from './topics/rounds-wipro'
 import { dockerTopic } from './topics/docker'
 import { kubernetesTopic } from './topics/kubernetes'
 import { jenkinsTopic } from './topics/jenkins'
@@ -92,6 +97,11 @@ export const interviewTopics: InterviewTopic[] = [
   roundsAtcTopic,
   roundsSimcorpTopic,
   roundsInnovartechTopic,
+  roundsBasfTopic,
+  roundsCognizantTopic,
+  roundsEpamTopic,
+  roundsInmarTopic,
+  roundsWiproTopic,
   kubernetesTopic,
   jenkinsTopic,
   githubActionsTopic,

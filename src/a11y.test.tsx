@@ -20,6 +20,7 @@ const PAGES: [string, RegExp][] = [
   ['/guided-labs/az104-storage', /storage account/i],
   ['/incidents', /Incident labs/i],
   ['/roles', /Roles & skills/i],
+  ['/projects/tenetic', /Tenetic/],
 ]
 
 describe('accessibility (axe)', () => {
@@ -30,6 +31,7 @@ describe('accessibility (axe)', () => {
       import('./pages/GuidedLabsPage'),
       import('./pages/IncidentLabsPage'),
       import('./pages/RolesPages'),
+      import('./pages/ProjectsPages'),
     ])
   }, 30_000)
 

@@ -122,4 +122,30 @@ export const roundsDeloitteChoiceQuestions: InterviewQuestion[] = [
     ],
     tags: ['azure monitor', 'application insights'],
   },
+  {
+    id: 'itv-rdel-33',
+    level: 'basic',
+    kind: 'open',
+    prompt: 'What should you do when your branch has merge conflicts with the main branch?',
+    probing:
+      'Whether you resolve conflicts yourself on the branch and re-validate, instead of forcing the merge.',
+    answer: [
+      '**Correct answer:** Pull the latest main branch, manually resolve conflicts, commit, and push the changes',
+      '**Steps:**\n1. Pull / update the latest main branch\n2. Resolve the conflicting sections manually\n3. Commit the resolved changes\n4. Push the updated branch\n5. Re-run the merge / PR validation',
+    ],
+    code: [
+      {
+        title: 'Bring main into your branch and resolve',
+        language: 'bash',
+        code: `git checkout feature-branch
+git fetch origin
+git merge origin/main
+# fix the conflicted files, then
+git add .
+git commit
+git push`,
+      },
+    ],
+    tags: ['git', 'merge conflicts'],
+  },
 ]

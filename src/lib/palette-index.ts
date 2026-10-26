@@ -7,6 +7,7 @@ import { pythonChallenges } from '../content/python'
 import { missions } from '../content/azcli'
 import { labExercises } from '../content/configlab'
 import { roles } from '../content/roles'
+import { projects } from '../content/projects'
 import { guidedLabs } from '../content/labs'
 import { iacResources } from '../content/iac'
 import { archScenarios } from '../content/arch'
@@ -62,6 +63,7 @@ export function pageItems(): PaletteItem[] {
     ['/stats', '📈 My stats', 'readiness streak calendar'],
     ['/bot', '🤖 Study bot', 'chat tutor'],
     ['/roles', '🧭 Roles & skills', 'career jobs'],
+    ['/projects', '📁 Projects', 'work experience product architecture'],
     ['/interview/mock', '🎤 Mock interview', 'record timer'],
     ['/interview/stories', '⭐ STAR stories', 'behavioural'],
     ['/interview/packs', '🏢 Prep packs', 'company round tags'],
@@ -226,6 +228,15 @@ export function buildItems(): PaletteItem[] {
       subtitle: role.oneLineSummary,
       to: `/roles/${role.id}`,
       keywords: role.alsoKnownAs.join(' '),
+    })
+  for (const project of projects)
+    items.push({
+      id: `page:/projects/${project.id}`,
+      kind: 'page',
+      title: `${project.icon} ${project.name} project`,
+      subtitle: project.tagline,
+      to: `/projects/${project.id}`,
+      keywords: project.techStack.join(' '),
     })
   return items
 }

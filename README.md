@@ -46,7 +46,7 @@ Each email address has its **own progress**, even on a shared device.
 
 ## 2. Finding your way around
 
-- **Sidebar** (computer): Home, Due today, Mistake notebook, My stats, Study bot, Roles & skills, Interview preparation, your courses, and all the tools.
+- **Sidebar** (computer): Home, Due today, Mistake notebook, My stats, Study bot, Roles & skills, Projects, Interview preparation, your courses, and all the tools.
 - **Bottom tabs** (phone): Home, Interview, Course, Practice and Exams. For everything else, use **🔎 search** (below).
 - **Search everything:** press **Ctrl + K** (**⌘ + K** on a Mac), or tap **🔎** in the top bar. Type anything (a lesson, a question, a command, a lab, a term) and press **Enter**. It copes with typos.
 - **Top bar icons:**
@@ -114,7 +114,7 @@ Every course works the same way:
 
 ## 6. Interview preparation
 
-**2,584 questions in 48 topics**: your own question bank, real interview rounds (Deloitte, ATC, SimCorp, InnovarTech, managerial), Azure topics and DevOps topics.
+**2,734 questions in 53 topics**: your own question bank, real interview rounds (Deloitte, ATC, SimCorp, InnovarTech, BASF, Cognizant, EPAM, Inmar, Wipro, managerial), Azure topics and DevOps topics.
 
 ### The question bank (Sidebar → 💬 Interview preparation)
 
@@ -209,6 +209,10 @@ Sidebar → 🧭 **Roles & skills**. Ten DevOps and cloud roles: DevOps, SRE, Cl
 - **My fit:** tick the skills you have. You get a match % for every role and your **top 5 gaps** to learn next.
 - **Tool lookup:** type a tool (e.g. "Terraform") to see which roles need it.
 
+### Projects
+
+Sidebar → 📁 **Projects**. The products you have worked on, ready to explain in an interview. Each project page shows an overview, what the product does and who it is for, what it offers, **how it works** (with a diagram), the platform behind it, what you owned, the tech stack, a 30-second and a longer pitch, and the questions interviewers ask about it with **practise →** links to the Study bot. To add or change a project, edit `src/content/projects/index.ts`.
+
 ---
 
 ## 11. The Study bot
@@ -225,7 +229,7 @@ Tap a button or type what you want:
 | "what should I study today?"                  | Your plan for today from your progress.                                                        |
 | **Rapid-fire**                                | 8 quick timed questions on what you are most likely to forget.                                 |
 | **Troubleshooting**                           | The incident labs, in chat form.                                                               |
-| Anything else                                 | Searches all 2,584 questions and shows short answers.                                          |
+| Anything else                                 | Searches all 2,734 questions and shows short answers.                                          |
 
 - 🎙️ **Voice input** uses your browser's speech service, which usually needs internet.
 - **Smart search** (bot Settings) understands questions worded differently. It downloads about 30 MB once, then works offline.

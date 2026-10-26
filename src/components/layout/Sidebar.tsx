@@ -92,6 +92,12 @@ export function Sidebar() {
           </span>
           Roles & skills
         </NavLink>
+        <NavLink to="/projects" className="sidebar__link">
+          <span className="sidebar__link-icon" aria-hidden="true">
+            📁
+          </span>
+          Projects
+        </NavLink>
       </div>
 
       {/*

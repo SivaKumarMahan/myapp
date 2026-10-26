@@ -34,7 +34,7 @@ describe('interview hub', () => {
     // above it also links to a topic, and which topic that is depends on the
     // question bank. The assertion here is that every topic is LISTED.
     const region = screen.getByRole('region', { name: /^topics$/i })
-    // Read every link once. Asking getByRole for each of 48 names recomputes
+    // Read every link once. Asking getByRole for each of 53 names recomputes
     // accessible names across the whole page every time, which took 13s.
     const hrefs = new Set(
       [...region.querySelectorAll('a')].map((link) => link.getAttribute('href') ?? ''),
@@ -235,7 +235,7 @@ describe('interview routing', () => {
       ).toBeVisible()
       view.unmount()
     }
-    // Renders all 48 topic pages one after another; slow on a CI runner.
+    // Renders all 53 topic pages one after another; slow on a CI runner.
   }, 90_000)
 })
 

@@ -103,6 +103,13 @@ const RolesMatrixPage = lazy(() => rolesPages().then((m) => ({ default: m.RolesM
 const RolesComparePage = lazy(() => rolesPages().then((m) => ({ default: m.RolesComparePage })))
 const RolesFitPage = lazy(() => rolesPages().then((m) => ({ default: m.RolesFitPage })))
 const RolesToolsPage = lazy(() => rolesPages().then((m) => ({ default: m.RolesToolsPage })))
+const projectsPages = () => import('./pages/ProjectsPages')
+const ProjectsOverviewPage = lazy(() =>
+  projectsPages().then((m) => ({ default: m.ProjectsOverviewPage })),
+)
+const ProjectDetailPage = lazy(() =>
+  projectsPages().then((m) => ({ default: m.ProjectDetailPage })),
+)
 
 const Loading = ({ children }: { children: ReactNode }) => (
   <Suspense
@@ -178,6 +185,22 @@ function Routed() {
               element={
                 <Loading>
                   <ConfigLabPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/projects"
+              element={
+                <Loading>
+                  <ProjectsOverviewPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/projects/:projectId"
+              element={
+                <Loading>
+                  <ProjectDetailPage />
                 </Loading>
               }
             />

@@ -24,6 +24,7 @@
 export const allowedEmails: readonly string[] = [
   'mahansivakumar1518@gmail.com',
   'saichand.kanimeraka@gmail.com',
+  'suhaspd1025@gmail.com',
 
   // Add more people below, one per line:
   // 'teammate@example.com',
