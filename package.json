@@ -17,7 +17,7 @@
     "format:check": "prettier --check .",
     "icons": "node scripts/generate-icons.mjs",
     "validate": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build",
-    "bot:embeddings": "node scripts/build-bot-embeddings.mjs",
+    "bot:embeddings": "node scripts/build-bot-embeddings.mjs && prettier --write public/bot/embeddings.json",
     "sql:expected": "node scripts/build-sql-expected.mjs && prettier --write src/content/sql/challenges.json",
     "py:expected": "python3 scripts/build-python-expected.py && prettier --write src/content/python/challenges.json"
   },
