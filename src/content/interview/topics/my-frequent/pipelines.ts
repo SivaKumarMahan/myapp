@@ -1665,4 +1665,1151 @@ deploy_production:
     ],
     tags: ['gitlab', 'ci/cd', 'sonarqube'],
   },
+  {
+    id: 'itv-myfaq-400',
+    level: 'basic',
+    kind: 'open',
+    prompt: 'What is the correct order of the DevOps lifecycle?',
+    probing:
+      'Knowing the DevOps loop, and mapping multiple-choice wording onto it so Deploy always comes before Operate.',
+    answer: [
+      'The DevOps loop is: Plan -> Code (commit to Git) -> Build -> Test -> Release -> Deploy -> Operate -> Monitor -> back to Plan.',
+      'In a multiple-choice question, map each option to these words. "Commit code to source control" is Code, "Build the package" is Build, "Bring the product into operation" is Operate. Deploy always comes before Operate.',
+      'If the given options do not start with commit, pick the option that keeps Build -> Test -> Release -> Deploy -> Operate in order. In one real interview question, the accepted answer was: Build -> Test and integrate -> Commit -> Release -> Deploy to production -> Operate.',
+      '**Same flow in AWS tools.** A related question asked for the correct AWS DevOps tool order: CodePipeline (orchestrates) -> CodeCommit (source) -> CodeBuild (build and test) -> CodeDeploy (deploy). The Azure equivalent is Azure Pipelines -> Azure Repos -> build job -> deployment job.',
+      '**Things to remember:**',
+      '- CloudWatch and X-Ray are monitoring and tracing tools. They are not steps in the build-and-deploy chain.\n- AWS stopped onboarding new CodeCommit customers in 2024, so new AWS projects usually keep the code in GitHub or GitLab and connect it to CodePipeline.',
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'The DevOps loop',
+        caption: 'Deploy always comes before Operate, and Monitor feeds back into Plan.',
+        nodes: [
+          { label: 'Plan', tone: 'accent' },
+          { label: 'Code', detail: 'Commit to Git' },
+          { label: 'Build' },
+          { label: 'Test' },
+          { label: 'Release' },
+          { label: 'Deploy', tone: 'success' },
+          { label: 'Operate and Monitor', detail: 'Back to Plan' },
+        ],
+      },
+    ],
+    code: [
+      {
+        title: 'DevOps loop',
+        language: 'text',
+        code: `Plan -> Code (commit to Git) -> Build -> Test -> Release -> Deploy -> Operate -> Monitor -> back to Plan`,
+      },
+      {
+        title: 'Accepted answer in one interview question',
+        language: 'text',
+        code: `Build -> Test and integrate -> Commit -> Release -> Deploy to production -> Operate`,
+      },
+      {
+        title: 'Same flow in AWS tools',
+        language: 'text',
+        code: `CodePipeline (orchestrates) -> CodeCommit (source) -> CodeBuild (build and test) -> CodeDeploy (deploy)`,
+      },
+    ],
+    tags: ['devops', 'lifecycle', 'aws'],
+  },
+  {
+    id: 'itv-myfaq-401',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'How does a pipeline run automatically in Azure DevOps?',
+    probing:
+      'The four trigger types, the default behaviour with no trigger block, and that `pr:` is ignored for Azure Repos.',
+    answer: [
+      'Through triggers. There are four types:',
+      '- **Push to a branch** -> CI trigger.\n- **Pull request** -> PR trigger or branch policy build validation.\n- **Time of day** -> Scheduled trigger.\n- **Another pipeline finishes** -> Pipeline completion (resource) trigger.',
+      '**Things to remember:**',
+      '- With no `trigger` block, a YAML pipeline runs on every push to every branch. `trigger: none` turns CI off.\n- The `pr:` block works for GitHub and Bitbucket. For **Azure Repos**, it is ignored. I add the pipeline under **Branch policies -> Build validation** on `main` instead.\n- If a pipeline does not trigger, I check: the YAML exists on that branch, the branch and path filters match, the pipeline is not disabled, and the trigger is not overridden in the UI settings.',
+    ],
+    diagrams: [
+      {
+        kind: 'decision',
+        title: 'What starts the pipeline',
+        caption: 'Each event maps to one trigger type.',
+        question: 'What event should start the run?',
+        branches: [
+          { condition: 'Push to a branch', result: 'CI trigger' },
+          {
+            condition: 'Pull request',
+            result: 'PR trigger or build validation',
+            detail: 'Azure Repos uses branch policy build validation',
+          },
+          { condition: 'Time of day', result: 'Scheduled trigger', detail: 'cron is in UTC' },
+          {
+            condition: 'Another pipeline finishes',
+            result: 'Pipeline completion trigger',
+            tone: 'accent',
+          },
+        ],
+      },
+    ],
+    code: [
+      {
+        title: 'CI, scheduled and pipeline completion triggers',
+        language: 'yaml',
+        code: `# CI trigger with a path filter
+trigger:
+  branches:
+    include: [main]
+  paths:
+    exclude: [docs/*]
+
+# Nightly run (cron is in UTC)
+schedules:
+  - cron: "30 2 * * *"        # 02:30 UTC = 08:00 IST
+    displayName: Nightly scan
+    branches:
+      include: [main]
+    always: true              # run even when nothing changed
+
+# Start this CD pipeline when the CI pipeline finishes
+resources:
+  pipelines:
+    - pipeline: ci
+      source: payment-api-ci
+      trigger:
+        branches:
+          include: [main]`,
+      },
+    ],
+    tags: ['azure devops', 'triggers', 'yaml'],
+  },
+  {
+    id: 'itv-myfaq-402',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'What is an Azure DevOps Service Connection?',
+    probing:
+      'That it keeps credentials out of YAML, uses workload identity federation, and is scoped per environment with least privilege.',
+    answer: [
+      'A service connection stores how a pipeline authenticates to an outside system. The YAML only uses its name, so no credentials are in the pipeline file.',
+      'Common service connection types:',
+      '- **Azure Resource Manager** - deploy to an Azure subscription or resource group.\n- **Docker Registry** - log in to ACR or Docker Hub.\n- **Kubernetes** - connect to a cluster.\n- **GitHub**, **SonarQube**, generic and others.',
+      'For Azure, I create Azure Resource Manager connections with **workload identity federation**. The pipeline gets a short-lived token, so there is no client secret to store or rotate. I automated service connection setup with Bicep, so every new project got the same configuration.',
+      '**Things to remember:**',
+      '- One connection per environment. The Dev connection cannot touch Production.\n- Give its identity only the roles it needs, at the smallest scope (for example Contributor on one resource group, AcrPush on the registry).\n- Do not grant it to all pipelines. Use **pipeline permissions** and add **approvals and checks** on the Production connection.',
+    ],
+    code: [
+      {
+        title: 'Use a service connection by name',
+        language: 'yaml',
+        code: `- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'prod-arm-wif'    # the service connection name
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: az group list -o table`,
+      },
+    ],
+    followUps: [
+      'How does workload identity federation avoid storing a client secret?',
+      'How would you stop a Dev pipeline from using the Production connection?',
+    ],
+    tags: ['azure devops', 'service connection', 'security'],
+  },
+  {
+    id: 'itv-myfaq-403',
+    level: 'basic',
+    kind: 'mcq',
+    prompt: 'What is the purpose of GitLab Environments in CI/CD?',
+    options: [
+      {
+        id: 'a',
+        text: 'They represent where the application is deployed and track deployments, status and rollback',
+      },
+      { id: 'b', text: 'They control which runners can access which cloud regions' },
+      { id: 'c', text: 'They store the source code for each stage of the pipeline' },
+      { id: 'd', text: 'They define which Docker image each job runs in' },
+    ],
+    correct: ['a'],
+    probing:
+      'That an environment is a deployment target with history and protection, not a runner or region access control.',
+    answer: [
+      'An environment represents a place where the application is deployed, such as development, staging, or production. It is not about access control for runners or regions.',
+      'The CI/CD tool uses it to:',
+      '- Track which version is deployed where, and the deployment history.\n- Show the environment status and a link to the deployed app.\n- Protect important environments with approvals.\n- Roll back to an earlier deployment.',
+      'The same idea exists in other tools: GitLab uses `environment:` plus protected environments (required approvals), Azure DevOps uses a deployment job with `environment:` plus approvals and checks, and GitHub Actions uses `environment:` plus required reviewers.',
+    ],
+    code: [
+      {
+        title: 'GitLab environment',
+        language: 'yaml',
+        code: `# GitLab
+deploy_production:
+  stage: deploy
+  script: ./deploy.sh production
+  environment:
+    name: production
+    url: https://orders.example.com
+  when: manual`,
+      },
+      {
+        title: 'Same idea in other tools',
+        language: 'text',
+        code: `GitLab         -> environment: + protected environments (required approvals)
+Azure DevOps   -> deployment job with environment: + approvals and checks
+GitHub Actions -> environment: + required reviewers`,
+      },
+    ],
+    tags: ['gitlab', 'azure devops', 'environments'],
+  },
+  {
+    id: 'itv-myfaq-404',
+    level: 'advanced',
+    kind: 'open',
+    prompt: 'How do you avoid duplicating YAML across Azure DevOps pipelines?',
+    probing:
+      'Templates with parameters, the template levels, a central versioned template repo, and extends templates with the Required template check.',
+    answer: [
+      'Dev, QA, and Prod have the same deployment steps, so I use **templates with parameters**. The logic is written once and each environment passes its own values.',
+      'There are four template levels:',
+      '- **Step template** - a few repeated steps.\n- **Job template** - a whole job.\n- **Stage template** - a whole environment deployment.\n- **Variable template** - shared variables.',
+      'For many repositories, I keep the templates in one central repo and reference them.',
+    ],
+    deeper: [
+      'Pin the template repo to a tag so a template change does not break every pipeline at once.',
+      '`extends` templates plus the **Required template** check on an environment force every Production deployment to use the approved template (with its security scans).',
+    ],
+    code: [
+      {
+        title: 'Repository layout',
+        language: 'text',
+        code: `azure-pipelines.yml
+templates/
+  build.yml
+  security-scan.yml
+  helm-deploy.yml`,
+      },
+      {
+        title: 'templates/helm-deploy.yml',
+        language: 'yaml',
+        code: `parameters:
+  - name: environment
+    type: string
+  - name: serviceConnection
+    type: string
+  - name: aksName
+    type: string
+
+stages:
+  - stage: Deploy_\${{ parameters.environment }}
+    jobs:
+      - deployment: Deploy
+        environment: \${{ parameters.environment }}
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: AzureCLI@2
+                  inputs:
+                    azureSubscription: \${{ parameters.serviceConnection }}
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az aks get-credentials -g rg-\${{ parameters.environment }} -n \${{ parameters.aksName }} --overwrite-existing
+                      helm upgrade --install payment-api ./helm/payment-api --set image.tag=$(Build.BuildId) --wait`,
+      },
+      {
+        title: 'azure-pipelines.yml',
+        language: 'yaml',
+        code: `stages:
+  - template: templates/helm-deploy.yml
+    parameters: { environment: dev,  serviceConnection: dev-arm-wif,  aksName: aks-dev }
+  - template: templates/helm-deploy.yml
+    parameters: { environment: prod, serviceConnection: prod-arm-wif, aksName: aks-prod }`,
+      },
+      {
+        title: 'Templates from a central repo',
+        language: 'yaml',
+        code: `resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: Platform/pipeline-templates
+      ref: refs/tags/v1.4.0      # pin a version
+
+stages:
+  - template: stages/helm-deploy.yml@templates
+    parameters: { environment: dev, serviceConnection: dev-arm-wif, aksName: aks-dev }`,
+      },
+    ],
+    followUps: [
+      'What is the difference between an `include`-style template and an `extends` template?',
+      'Why is `${{ parameters.environment }}` resolved at compile time and not at runtime?',
+    ],
+    tags: ['azure devops', 'templates', 'yaml'],
+  },
+  {
+    id: 'itv-myfaq-405',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'How many YAML pipelines do you have per environment?',
+    probing:
+      'One multi-stage pipeline per application with a stage per environment, not a copied pipeline per environment.',
+    answer: [
+      'I do not create one pipeline for each environment. Usually I have **one multi-stage YAML pipeline per application**. Each environment is a stage.',
+      'Each stage gets its own settings:',
+      '- **Dev** -> dev variable group + dev service connection + `aks-dev`.\n- **QA** -> qa variable group + qa service connection + `aks-qa`.\n- **Prod** -> prod variable group + prod service connection + `aks-prod` + approval.',
+      'The deploy logic is a shared stage template, so adding an environment is a few lines, not a copied file.',
+      '**Things to remember:**',
+      '- Some teams split CI and CD into two pipelines connected by a pipeline completion trigger. That is fine. Still, it is not one pipeline per environment.\n- Terraform often has its own pipeline, separate from the application pipeline.',
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'One multi-stage pipeline',
+        caption: 'Each environment is a stage, not a separate pipeline.',
+        nodes: [
+          { label: 'Build and test', detail: 'SonarQube, Trivy', tone: 'accent' },
+          { label: 'Push to ACR' },
+          { label: 'Deploy Dev' },
+          { label: 'Deploy QA and UAT' },
+          { label: 'Approval', tone: 'warning' },
+          { label: 'Deploy Prod', tone: 'success' },
+        ],
+      },
+    ],
+    code: [
+      {
+        title: 'Stages in one pipeline',
+        language: 'text',
+        code: `azure-pipelines.yml
+  Build -> Test -> SonarQube -> Docker build -> Trivy -> Push to ACR
+  -> Deploy Dev -> Deploy QA -> Deploy UAT -> Approval -> Deploy Prod`,
+      },
+    ],
+    tags: ['azure devops', 'multi-stage', 'environments'],
+  },
+  {
+    id: 'itv-myfaq-406',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'How do you use multiple agents in a YAML pipeline?',
+    probing:
+      'That one job runs on one agent, so parallelism comes from more jobs, and jobs pass files only through artifacts.',
+    answer: [
+      '**One job runs on one agent.** To use more agents, I split the work into more jobs. Jobs without `dependsOn` between them run in parallel, if the organization has enough parallel jobs.',
+      '**Things to remember:**',
+      '- Each job can pick its own pool: Microsoft-hosted, self-hosted, or a scale set pool. Use `demands` to choose agents with specific tools.\n- Jobs do not share files. Pass outputs with pipeline artifacts.\n- `strategy: matrix` or `parallel` creates many copies of one job, for example to test on several Node or Java versions.\n- `pool: server` is an agentless job, used for `ManualValidation@1` and similar tasks.',
+    ],
+    code: [
+      {
+        title: 'Jobs on different agents',
+        language: 'yaml',
+        code: `jobs:
+  - job: Backend
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - script: ./mvnw clean package
+
+  - job: Frontend
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - script: npm ci && npm run build
+
+  - job: WindowsBuild
+    pool:
+      name: windows-self-hosted        # a self-hosted pool
+    steps:
+      - powershell: .\\build.ps1
+
+  - job: Package
+    dependsOn: [Backend, Frontend]     # waits for both, may run on another agent
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - script: echo "package"`,
+      },
+      {
+        title: 'Which agent runs what',
+        language: 'text',
+        code: `Agent 1: Backend   \\
+                     -> Agent 3: Package
+Agent 2: Frontend  /
+Agent 4: WindowsBuild (self-hosted pool)`,
+      },
+    ],
+    tags: ['azure devops', 'agents', 'yaml'],
+  },
+  {
+    id: 'itv-myfaq-407',
+    level: 'advanced',
+    kind: 'open',
+    prompt: 'How do you add manual validation to an Azure DevOps pipeline?',
+    probing:
+      'Both mechanisms - the ManualValidation task in an agentless job and environment approvals - and why Production uses the environment.',
+    answer: [
+      'Yes, I have added manual approvals to pipelines. There are two ways.',
+      '**1. `ManualValidation@1` task** - pauses in the middle of a run, for example after a Terraform plan. It must be in an agentless job.',
+      '**2. Environment approvals and checks** - preferred for Production. In **Pipelines -> Environments -> prod -> Approvals and checks**, I add Approvals, Branch control (only `main`), Business hours, or Exclusive lock. Any deployment job with `environment: prod` waits for them.',
+      'The ManualValidation task lives in YAML, so a developer can delete it. An environment approval lives on the environment, so it cannot be removed by editing YAML.',
+    ],
+    deeper: [
+      'I use the task to review output in the middle of a run, and environment approvals to gate every Production deployment.',
+      'The Jenkins equivalent is `input`. The GitHub equivalent is an environment with required reviewers.',
+    ],
+    diagrams: [
+      {
+        kind: 'decision',
+        title: 'Which manual gate to use',
+        caption: 'Production is gated on the environment, where YAML edits cannot remove it.',
+        question: 'What do you need to approve?',
+        branches: [
+          {
+            condition: 'Output in the middle of a run',
+            result: 'ManualValidation task',
+            detail: 'Agentless job, for example after a plan',
+          },
+          {
+            condition: 'Every Production deployment',
+            result: 'Environment approvals and checks',
+            detail: 'Cannot be removed by editing YAML',
+            tone: 'success',
+          },
+        ],
+      },
+    ],
+    code: [
+      {
+        title: 'ManualValidation in an agentless job',
+        language: 'yaml',
+        code: `- job: ReviewPlan
+  dependsOn: TerraformPlan
+  pool: server
+  timeoutInMinutes: 1440               # longer than the task timeout
+  steps:
+    - task: ManualValidation@1
+      timeoutInMinutes: 1380
+      inputs:
+        approvers: 'platform-team@company.com'
+        notifyUsers: 'platform-team@company.com'
+        instructions: 'Review the Terraform plan before apply.'
+        allowApproversToApproveTheirOwnRuns: false
+        onTimeout: 'reject'`,
+      },
+      {
+        title: 'Task versus environment approval',
+        language: 'text',
+        code: `ManualValidation task  -> lives in YAML, a developer can delete it
+Environment approval   -> lives on the environment, cannot be removed by editing YAML`,
+      },
+    ],
+    followUps: [
+      'Why must the job timeout be longer than the ManualValidation task timeout?',
+      'What does the Exclusive lock check protect against?',
+    ],
+    tags: ['azure devops', 'approvals', 'environments'],
+  },
+  {
+    id: 'itv-myfaq-408',
+    level: 'advanced',
+    kind: 'scenario',
+    prompt:
+      'Stage and Production are in different resource groups and share one ACR. How do you promote the same image from Stage to Production?',
+    probing:
+      'Build once, deploy by digest, AcrPull for both clusters, and no environment-specific values baked into the image.',
+    answer: [
+      'I build and push the image **once**, then deploy that same reference to Stage and later to Production. I never rebuild for Production.',
+      "Both clusters need pull access. Resource groups do not matter. `--attach-acr` gives the cluster's kubelet identity the **AcrPull** role.",
+    ],
+    deeper: [
+      'A digest is fixed. A tag can be overwritten. I can lock a released image with `az acr repository update --image payment-api:1.4.2 --write-enabled false`.',
+      'If ACR has a private endpoint, both cluster VNets must reach it and resolve `privatelink.azurecr.io`.',
+      'Environment differences go in Helm values, ConfigMaps, or Key Vault, never in the image.',
+      'With two registries (for example a separate Production ACR), I copy the tested image with `az acr import` instead of rebuilding.',
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'Promote one image Stage to Prod',
+        caption: 'The digest tested in Stage is the digest deployed to Production.',
+        nodes: [
+          { label: 'Build, scan, push once', detail: 'payment-api:1.4.2', tone: 'accent' },
+          { label: 'Deploy Stage', detail: 'rg-stage' },
+          {
+            label: 'Smoke tests',
+            branch: { label: 'Tests fail', detail: 'Stop, do not promote', tone: 'danger' },
+          },
+          { label: 'Approval', tone: 'warning' },
+          { label: 'Deploy Prod', detail: 'rg-prod, same digest', tone: 'success' },
+        ],
+      },
+    ],
+    code: [
+      {
+        title: 'Promotion flow',
+        language: 'text',
+        code: `CI: build -> scan -> push myacr.azurecr.io/payment-api:1.4.2 (digest sha256:abc...)
+-> Deploy Stage (rg-stage) -> smoke tests
+-> Approval
+-> Deploy Prod (rg-prod) with the same tag, or better, the same digest`,
+      },
+      {
+        title: 'Deploy by digest',
+        language: 'yaml',
+        code: `image: myacr.azurecr.io/payment-api@sha256:<digest-tested-in-stage>`,
+      },
+      {
+        title: 'Give both clusters pull access',
+        language: 'bash',
+        code: `az aks update -g rg-stage -n aks-stage --attach-acr myacr
+az aks update -g rg-prod  -n aks-prod  --attach-acr myacr`,
+      },
+    ],
+    followUps: [
+      'How do you find the digest of the image that was tested in Stage?',
+      'How would you copy the image to a separate Production registry?',
+    ],
+    tags: ['acr', 'promotion', 'aks'],
+  },
+  {
+    id: 'itv-myfaq-409',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'What code checks do you run in CI/CD, like SonarQube and Trivy?',
+    probing:
+      'Layered checks that each stop the pipeline, and knowing what each tool does and does not cover.',
+    answer: [
+      'I add checks at several levels. Each one can stop the pipeline.',
+      '- **Build** (Maven, npm): stops when code does not compile.\n- **Unit tests** (JUnit, Jest): stops when a test fails.\n- **Code quality** (SonarQube Quality Gate): stops on bugs, low coverage, duplications, new vulnerabilities.\n- **Dependencies** (OWASP Dependency-Check, Trivy, Snyk, `npm audit`): stops when a known vulnerable library is used.\n- **Secrets** (Gitleaks): stops when a password or key is committed.\n- **Dockerfile** (Hadolint): stops on bad Dockerfile practices.\n- **Container image** (Trivy): stops on HIGH or CRITICAL CVEs.\n- **IaC** (`terraform validate`, TFLint, Checkov, Trivy config): stops on insecure or invalid infrastructure.\n- **Kubernetes manifests** (kubeconform, `helm lint`): stops on invalid manifests.\n- **After deploy** (`kubectl rollout status`, `curl` health check): stops when the app is not healthy.',
+      'If Trivy finds a CRITICAL issue, the exit code is non-zero, so the job fails. The image is not pushed and not deployed. We update the base image or library, rebuild, and scan again.',
+      '**Things to remember:**',
+      '- SonarQube is mainly a code quality tool. It finds some security issues, but it is not a container or dependency scanner.\n- In my project, adding SonarQube, Trivy, and Checkov gates stopped vulnerable code, images, and IaC from reaching Production.',
+    ],
+    code: [
+      {
+        title: 'Fail the job on HIGH or CRITICAL findings',
+        language: 'bash',
+        code: `trivy image --severity HIGH,CRITICAL --exit-code 1 myacr.azurecr.io/payment-api:1.4.2`,
+      },
+    ],
+    traps: [
+      'Calling SonarQube a container or dependency scanner - it is mainly a code quality tool.',
+    ],
+    tags: ['devsecops', 'sonarqube', 'trivy'],
+  },
+  {
+    id: 'itv-myfaq-410',
+    level: 'advanced',
+    kind: 'open',
+    prompt: 'How have you used Azure App Service and Azure Functions in CI/CD?',
+    probing:
+      'Clear terms (App Service, Web App, Function App), the same build-once flow, slot deployment and swap, and Key Vault references.',
+    answer: [
+      '- **App Service** is the managed hosting platform.\n- **Web App** is an App Service app that hosts a website or API.\n- **Function App** runs event-driven code (HTTP, timer, Blob, Service Bus triggers). It can run on an App Service plan or a serverless plan such as Flex Consumption.',
+      'The flow is the same as for AKS, only the target changes.',
+      'I built Azure Functions triggered by Service Bus messages that generated documents into a Storage account. The pipeline deployed the function code. The Service Bus trigger then started each run.',
+    ],
+    deeper: [
+      'Deploy to a **staging slot**, warm it up and test it, then **swap**. Rollback is swapping back.',
+      "App settings are per environment. Secrets use Key Vault references (`@Microsoft.KeyVault(SecretUri=...)`) and the app's managed identity.",
+      'I verify the release with the health endpoint, Application Insights, and Azure Monitor alerts.',
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'App Service release with a slot',
+        caption: 'Package once, deploy to the staging slot, then swap.',
+        nodes: [
+          { label: 'Build and test', detail: 'Unit tests, SonarQube', tone: 'accent' },
+          { label: 'Package once', detail: 'zip or jar artifact' },
+          { label: 'Deploy Dev and QA' },
+          { label: 'Approval', tone: 'warning' },
+          { label: 'Deploy to staging slot', detail: 'Warm up and test' },
+          {
+            label: 'Swap to production',
+            tone: 'success',
+            branch: { label: 'Problem found', detail: 'Swap back', tone: 'danger' },
+          },
+        ],
+      },
+    ],
+    code: [
+      {
+        title: 'Flow',
+        language: 'text',
+        code: `Push -> build -> unit tests -> SonarQube -> package once (zip or jar) -> publish artifact
+-> Deploy Dev -> Deploy QA -> Approval -> Deploy Prod (staging slot -> swap)`,
+      },
+      {
+        title: 'Deploy to a slot, swap, and deploy a Function App',
+        language: 'yaml',
+        code: `- task: AzureWebApp@1
+  inputs:
+    azureSubscription: prod-arm-wif
+    appType: webAppLinux
+    appName: payment-web-prod
+    deployToSlotOrASE: true
+    resourceGroupName: rg-prod
+    slotName: staging
+    package: $(Pipeline.Workspace)/drop/app.jar
+
+- task: AzureAppServiceManage@0
+  inputs:
+    azureSubscription: prod-arm-wif
+    Action: Swap Slots
+    WebAppName: payment-web-prod
+    ResourceGroupName: rg-prod
+    SourceSlot: staging
+
+- task: AzureFunctionApp@2
+  inputs:
+    connectedServiceNameARM: prod-arm-wif
+    appType: functionAppLinux
+    appName: doc-generator-func-prod
+    package: $(Pipeline.Workspace)/drop/function.zip`,
+      },
+    ],
+    followUps: [
+      'Which settings should be slot-sticky, and why?',
+      'How does a Function App read a Key Vault secret without storing it?',
+    ],
+    tags: ['app service', 'azure functions', 'ci/cd'],
+  },
+  {
+    id: 'itv-myfaq-411',
+    level: 'intermediate',
+    kind: 'scenario',
+    prompt: 'A unit test fails in the pipeline. How do you help the developer?',
+    probing:
+      'Finding out whose problem it is first, giving the developer evidence, and owning the environment or pipeline part.',
+    answer: [
+      'I do not just send the failure back and say "please fix it." I find out **whose problem it is** first, give the developer clear evidence, and own the part that belongs to DevOps.',
+      '- **Code bug** - fails locally and in CI with the same assertion. Developer fixes it.\n- **Test bug or test data** - wrong expected value, test depends on order or current date. Developer fixes it, I point to the cause.\n- **Flaky test** - passes on re-run with no code change. Developer marks or fixes it; I track flaky tests.\n- **Environment** - different JDK or Node version, missing env variable, time zone, no network to a dependency. DevOps fixes it.\n- **Pipeline** - wrong working directory, stale cache, wrong agent image, test DB not started. DevOps fixes it.',
+      'What I give the developer:',
+      '- The failing test name, the error, and the stack trace, plus the commit and pipeline run link.\n- The exact command and tool versions the pipeline used, so they can reproduce it (for example `mvn -B test -Dtest=PaymentServiceTest`).\n- What changed recently: their commit, a dependency update, or an agent image change.',
+      '**Things to remember:**',
+      '- Publish test results (`PublishTestResults@2` in Azure DevOps, `junit` in Jenkins, test reports in GitLab and GitHub). The **Tests** tab shows the failing test and its history, so nobody has to dig through logs.\n- Never skip tests (`-DskipTests`) to get a release out. Fix the test or quarantine a known flaky one with a ticket.\n- Pin tool versions in the agent image, so "works on my machine" does not happen because of a different JDK.',
+    ],
+    diagrams: [
+      {
+        kind: 'decision',
+        title: 'Whose problem is the failing test',
+        caption: 'Reproduce on the same commit before assigning the fix.',
+        question: 'Does it also fail locally on the same commit?',
+        branches: [
+          {
+            condition: 'Yes',
+            result: 'Code or test logic',
+            detail: 'Developer fixes, I share the evidence',
+          },
+          {
+            condition: 'No',
+            result: 'Environment or pipeline',
+            detail: 'I fix it, then re-run the full suite',
+            tone: 'accent',
+          },
+        ],
+      },
+    ],
+    code: [
+      {
+        title: 'Triage flow',
+        language: 'text',
+        code: `Unit test fails in CI
+-> read the test report and stack trace
+-> does it also fail locally, on the same commit?
+   yes -> code or test logic -> developer fixes, I share the evidence
+   no  -> environment or pipeline -> I fix it
+-> re-run the full test suite
+-> pipeline continues only when all tests pass`,
+      },
+      {
+        title: 'Reproduce one test',
+        language: 'bash',
+        code: `mvn -B test -Dtest=PaymentServiceTest`,
+      },
+    ],
+    traps: [
+      'Skipping tests with `-DskipTests` to get a release out.',
+      'Sending the failure back with "please fix it" and no evidence.',
+    ],
+    tags: ['unit tests', 'troubleshooting', 'ci/cd'],
+  },
+  {
+    id: 'itv-myfaq-412',
+    level: 'intermediate',
+    kind: 'open',
+    prompt:
+      'A Jenkins Maven build fails with compilation errors after a successful checkout. Write the prompt you would give an AI assistant.',
+    probing:
+      'A structured prompt with context, the first error, the good-to-bad diff and a requested output format, with secrets removed.',
+    answer: [
+      'A good prompt gives **context, the exact error, what I already know, and the output I want**. It never includes secrets.',
+      'Why this prompt works:',
+      "- **Context narrows the search.** Saying checkout succeeded and naming the Java and Maven versions stops generic answers.\n- **The first error matters most.** Later compiler errors are often caused by the first one.\n- **The diff between the good and bad commit** is usually where the cause is.\n- **A clear output format** gives a fix and a way to verify it, not just an explanation.\n- **Remove secrets** (tokens, passwords, internal URLs) before pasting anything into an AI tool, and follow the company's AI usage policy.",
+      "I check the AI's answer myself before changing anything. It is a fast first opinion, not the final answer.",
+    ],
+    code: [
+      {
+        title: 'Prompt for a failing build',
+        language: 'text',
+        code: `You are helping me debug a failing Jenkins pipeline.
+
+Context:
+- Java Spring Boot application, built with Maven in a Jenkins Declarative Pipeline.
+- Agent image: maven:3.9-eclipse-temurin-17. pom.xml sets maven.compiler.release=17.
+- Git checkout succeeded. The build fails in the "mvn -B clean package" stage with compilation errors.
+- The last successful build was commit <old-sha>. The failing build is commit <new-sha>.
+
+Error log (secrets and internal hostnames removed):
+<paste the first error and about 30 lines around it, not the whole log>
+
+Changes between the two commits:
+<paste git diff --stat, and the pom.xml diff if there is one>
+
+What I want:
+1. The most likely root cause, and why.
+2. Other possible causes, in order of likelihood (Java version, dependency versions, generated code, source code).
+3. The exact fix, as a code or pom.xml change.
+4. Maven commands to confirm the fix locally (for example mvn -v, mvn dependency:tree, mvn -B clean compile).
+If you are not sure, say what extra information you need instead of guessing.`,
+      },
+    ],
+    tags: ['ai', 'jenkins', 'troubleshooting'],
+  },
+  {
+    id: 'itv-myfaq-413',
+    level: 'intermediate',
+    kind: 'open',
+    prompt:
+      'In a Jenkins Declarative Pipeline, what happens if you do not give `agent`? And if a stage has no `steps`?',
+    probing:
+      'That both fail validation before the pipeline starts, the exact fixes, and when `agent none` is useful.',
+    answer: [
+      'Both fail **before the pipeline starts**. Jenkins validates the Declarative syntax first, so nothing runs and no agent is used.',
+      '- **`agent` missing at the top level** - error `Missing required section "agent"`. Fix: add `agent any` or a label at the top, or use `agent none` and give each stage its own `agent`.\n- **`steps` missing in a stage** - error `Expected one of "steps", "stages", or "parallel" for stage "Build"`. Fix: put commands like `sh` inside `steps { }`.',
+      '**Things to remember:**',
+      '- `agent none` at the top is useful when stages need different agents, or when an approval stage should not hold an agent while it waits.\n- A stage needs exactly one of `steps`, `stages` (nested sequential stages), `parallel`, or `matrix`.\n- Scripted Pipelines (`node { }`) do not have these rules. The checks apply only to Declarative syntax.',
+    ],
+    code: [
+      {
+        title: 'agent none with per-stage agents',
+        language: 'text',
+        code: `pipeline {
+  agent none                          // no default agent
+  stages {
+    stage('Build') {
+      agent { label 'maven' }         // so each stage must choose one
+      steps {
+        sh 'mvn -B clean package'
+      }
+    }
+    stage('Approve') {
+      agent none                      // no agent needed while waiting
+      steps {
+        input message: 'Deploy to production?'
+      }
+    }
+  }
+}`,
+      },
+    ],
+    tags: ['jenkins', 'declarative pipeline', 'troubleshooting'],
+  },
+  {
+    id: 'itv-myfaq-414',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'Write a sample `providers.tf` and `versions.tf` for Terraform on Azure.',
+    probing:
+      'Pinning Terraform and the provider, aliased providers for a second subscription, a remote backend, and no secrets in the provider block.',
+    answer: [
+      '`versions.tf` pins Terraform and the provider. `providers.tf` configures the provider. `backend.tf` says where the state file lives.',
+      '**Things to remember:**',
+      '- No secrets in the provider block. Login comes from `az login` locally, and from OIDC (workload identity federation) or a managed identity in the pipeline. With OIDC, the provider reads `ARM_USE_OIDC=true`, `ARM_CLIENT_ID`, and `ARM_TENANT_ID` from the environment.\n- `~> 4.0` allows 4.x updates but not 5.0. Commit `.terraform.lock.hcl` so everyone uses the same provider build.',
+    ],
+    code: [
+      {
+        title: 'versions.tf',
+        language: 'hcl',
+        code: `# versions.tf
+terraform {
+  required_version = ">= 1.9.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}`,
+      },
+      {
+        title: 'providers.tf',
+        language: 'hcl',
+        code: `# providers.tf
+provider "azurerm" {
+  features {}
+  subscription_id = var.subscription_id   # required in azurerm 4.x (or set ARM_SUBSCRIPTION_ID)
+}
+
+# Second subscription, used with provider = azurerm.prod
+provider "azurerm" {
+  alias           = "prod"
+  features {}
+  subscription_id = var.prod_subscription_id
+}`,
+      },
+      {
+        title: 'variables.tf',
+        language: 'hcl',
+        code: `# variables.tf
+variable "subscription_id" {
+  type = string
+}
+
+variable "prod_subscription_id" {
+  type = string
+}`,
+      },
+      {
+        title: 'backend.tf',
+        language: 'hcl',
+        code: `# backend.tf
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "tfstate-rg"
+    storage_account_name = "companytfstate"
+    container_name       = "tfstate"
+    key                  = "dev.tfstate"
+    use_azuread_auth     = true
+  }
+}`,
+      },
+    ],
+    tags: ['terraform', 'azure', 'iac'],
+  },
+  {
+    id: 'itv-myfaq-415',
+    level: 'basic',
+    kind: 'open',
+    prompt: 'Write a Terraform file to create a Resource Group.',
+    probing:
+      'A minimal resource with tags and an output, the standard command sequence, and how state reacts to drift.',
+    answer: [
+      'It uses the `versions.tf` and `providers.tf` files: `main.tf` declares the resource group with tags and outputs its ID. I then run `init`, `fmt -check`, `validate`, `plan -out=tfplan`, and apply the saved plan.',
+      'If someone deletes the resource group in the portal, the next `terraform plan` shows it will be created again, because the state still has it.',
+    ],
+    code: [
+      {
+        title: 'main.tf',
+        language: 'hcl',
+        code: `# main.tf
+resource "azurerm_resource_group" "rg" {
+  name     = "rg-payment-dev"
+  location = "Central India"
+
+  tags = {
+    Environment = "Dev"
+    Owner       = "DevOps"
+  }
+}
+
+output "resource_group_id" {
+  value = azurerm_resource_group.rg.id
+}`,
+      },
+      {
+        title: 'Run it',
+        language: 'bash',
+        code: `terraform init
+terraform fmt -check
+terraform validate
+terraform plan -out=tfplan
+terraform apply tfplan`,
+      },
+    ],
+    tags: ['terraform', 'azure', 'iac'],
+  },
+  {
+    id: 'itv-myfaq-416',
+    level: 'advanced',
+    kind: 'open',
+    prompt: 'How do you run Terraform from Azure DevOps?',
+    probing:
+      'Plan in one stage, approve on an environment, apply that exact saved plan, with remote state and a workload identity connection.',
+    answer: [
+      'Plan in one stage, review and approve, then apply **that exact saved plan**.',
+      'The Plan stage runs `init`, `fmt -check`, `validate`, Checkov and `plan -out=tfplan`, then publishes `tfplan` as an artifact. The Apply stage runs only on `main`, as a deployment job on the `prod` environment, which holds the approval check. It downloads the plan, runs `init` again and applies the saved plan.',
+    ],
+    deeper: [
+      '`TerraformTask@5` and `TerraformInstaller@1` come from the Microsoft DevLabs Terraform extension. Use the version installed in your organization.',
+      'Remote state in Azure Storage gives locking (blob lease), versioning, and one state key per environment (`dev.tfstate`, `prod.tfstate`).',
+      'A deployment job does not check out code, so `checkout: self` is needed before `init`.',
+      'The plan file can contain sensitive values. Limit who can read pipeline artifacts.',
+      'If the state changed after the plan, Terraform rejects the stale plan. Run the pipeline again.',
+      'Dev, QA, and Prod reuse the same stages through a template, each with its own `.tfvars`, state key, and service connection. Only Production needs approval.',
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'Terraform plan and apply',
+        caption: 'The approved plan file is the one that gets applied.',
+        nodes: [
+          { label: 'PR or push to main', tone: 'accent' },
+          {
+            label: 'Init, fmt, validate, Checkov',
+            branch: { label: 'Check fails', detail: 'Stop before plan', tone: 'danger' },
+          },
+          { label: 'Plan -out=tfplan', detail: 'Publish as artifact' },
+          { label: 'Approval on prod environment', tone: 'warning' },
+          { label: 'Init, apply tfplan', tone: 'success' },
+        ],
+      },
+    ],
+    code: [
+      {
+        title: 'Flow',
+        language: 'text',
+        code: `PR / push to main
+-> init, fmt -check, validate, Checkov, plan -out=tfplan
+-> publish tfplan as an artifact
+-> approval on the prod environment
+-> init, apply tfplan`,
+      },
+      {
+        title: 'azure-pipelines.yml for Terraform',
+        language: 'yaml',
+        code: `trigger:
+  branches:
+    include: [main]
+  paths:
+    include: [terraform/*]
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  tfDir: $(System.DefaultWorkingDirectory)/terraform/environments/prod
+  serviceConnection: prod-terraform-wif     # ARM connection with workload identity federation
+
+stages:
+  - stage: Plan
+    jobs:
+      - job: Plan
+        steps:
+          - task: TerraformInstaller@1
+            inputs:
+              terraformVersion: '<approved-version>'
+
+          - task: TerraformTask@5
+            displayName: Init
+            inputs:
+              provider: azurerm
+              command: init
+              workingDirectory: $(tfDir)
+              backendServiceArm: $(serviceConnection)
+              backendAzureRmResourceGroupName: tfstate-rg
+              backendAzureRmStorageAccountName: companytfstate
+              backendAzureRmContainerName: tfstate
+              backendAzureRmKey: prod.tfstate
+
+          - script: |
+              terraform fmt -check -recursive
+              terraform validate
+              pip install checkov && checkov -d . --quiet
+            displayName: Format, validate, and scan
+            workingDirectory: $(tfDir)
+
+          - task: TerraformTask@5
+            displayName: Plan
+            inputs:
+              provider: azurerm
+              command: plan
+              workingDirectory: $(tfDir)
+              environmentServiceNameAzureRM: $(serviceConnection)
+              commandOptions: '-out=tfplan -input=false'
+
+          - publish: $(tfDir)/tfplan
+            artifact: tfplan
+
+  - stage: Apply
+    dependsOn: Plan
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: Apply
+        environment: prod                    # approval check is set on this environment
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - download: current
+                  artifact: tfplan
+
+                - task: TerraformInstaller@1
+                  inputs:
+                    terraformVersion: '<approved-version>'
+
+                - task: TerraformTask@5
+                  displayName: Init
+                  inputs:
+                    provider: azurerm
+                    command: init
+                    workingDirectory: $(tfDir)
+                    backendServiceArm: $(serviceConnection)
+                    backendAzureRmResourceGroupName: tfstate-rg
+                    backendAzureRmStorageAccountName: companytfstate
+                    backendAzureRmContainerName: tfstate
+                    backendAzureRmKey: prod.tfstate
+
+                - task: TerraformTask@5
+                  displayName: Apply saved plan
+                  inputs:
+                    provider: azurerm
+                    command: apply
+                    workingDirectory: $(tfDir)
+                    environmentServiceNameAzureRM: $(serviceConnection)
+                    commandOptions: '$(Pipeline.Workspace)/tfplan/tfplan'`,
+        placeholders: ['<approved-version>'],
+      },
+    ],
+    followUps: [
+      'Why apply a saved plan instead of running `terraform apply` again?',
+      'How is the state file locked when two runs start at once?',
+    ],
+    tags: ['terraform', 'azure devops', 'iac'],
+  },
+  {
+    id: 'itv-myfaq-417',
+    level: 'basic',
+    kind: 'scenario',
+    prompt: 'Your pull request has conflicts with `main`. How do you resolve merge conflicts?',
+    probing:
+      'Bringing main into the feature branch, resolving by understanding both changes, re-testing, and only force-pushing your own branch with lease.',
+    answer: [
+      'I bring the latest `main` into my feature branch, fix the conflicts by hand, test, and push. I never resolve by force-pushing over `main`.',
+      '`HEAD` is my branch, the other side is the incoming change. I do not blindly pick "ours" or "theirs". I check why each change was made and keep the correct final result, then delete the markers.',
+      'Then the PR pipeline runs again, and the reviewer approves.',
+      '**Things to remember:**',
+      '- Run the tests and build after resolving. A conflict that "looks" fixed can still break the app.\n- After a rebase, only force-push my own feature branch, and use `--force-with-lease`, never plain `--force`.\n- Small, short-lived branches and pulling `main` often mean fewer conflicts.',
+    ],
+    code: [
+      {
+        title: 'Bring main into the feature branch',
+        language: 'bash',
+        code: `git checkout feature/payment
+git fetch origin
+git merge origin/main        # or: git rebase origin/main
+git status                   # shows "both modified" files`,
+      },
+      {
+        title: 'Conflict markers',
+        language: 'text',
+        code: `<<<<<<< HEAD
+replicas: 3
+image: payment-api:1.4.1
+=======
+replicas: 5
+image: payment-api:1.4.2
+>>>>>>> origin/main`,
+      },
+      {
+        title: 'Finish the merge or rebase',
+        language: 'bash',
+        code: `git diff --check             # finds leftover conflict markers
+git add values.yaml
+git commit                   # for a merge
+# or: git rebase --continue  # for a rebase
+git push                     # after a rebase: git push --force-with-lease`,
+      },
+      {
+        title: 'Useful escape hatches',
+        language: 'bash',
+        code: `git merge --abort
+git rebase --abort`,
+      },
+    ],
+    traps: ['Using plain `--force` after a rebase, or force-pushing over `main`.'],
+    tags: ['git', 'merge conflicts', 'pull requests'],
+  },
+  {
+    id: 'itv-myfaq-418',
+    level: 'advanced',
+    kind: 'open',
+    prompt: 'Apart from pre-commit, what other Git hooks and checks are there?',
+    probing:
+      'Client and server hooks, sharing hooks with the pre-commit framework, and the layers of checks outside Git that cannot be skipped.',
+    answer: [
+      'Pre-commit is only the first layer. Checks run on the laptop, on the Git server, in CI, in Kubernetes, and in Azure.',
+      '**Git hooks and when they run:**',
+      '- `pre-commit` - before a commit is created: format, lint, secret scan.\n- `commit-msg` - after the message is written: enforce a format, for example `JIRA-123: message`.\n- `pre-push` - before `git push`: run unit tests or quick validation.\n- `post-merge`, `post-checkout` - after merge or checkout: install dependencies, local setup.\n- `pre-receive`, `update` - on the Git server, before a push is accepted: block pushes to protected branches, reject secrets.\n- `post-receive` - on the server, after a push: notify, trigger a build.',
+      'Local hooks live in `.git/hooks` and are not shared. I use the **pre-commit framework** so the whole team runs the same hooks.',
+      'On hosted Git (Azure Repos, GitHub, GitLab), I cannot add server-side hooks. Branch policies, push protection, and required status checks do that job.',
+    ],
+    deeper: [
+      'Local hooks can be skipped with `git commit --no-verify`. That is why the same checks also run in CI, where they cannot be skipped.',
+      'SonarQube, Trivy, and Checkov are CI gates, not Git hooks.',
+      'tfsec is now part of Trivy (`trivy config .`).',
+      'Kyverno or Gatekeeper stop a bad manifest at the cluster even if it got past CI. Azure Policy stops a bad resource even if it was created outside Terraform.',
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'Checks inside and outside Git',
+        caption: 'Each layer catches what the one before it let through.',
+        nodes: [
+          { label: 'Laptop', detail: 'pre-commit: fmt, lint, Gitleaks', tone: 'accent' },
+          { label: 'Git server', detail: 'Branch policies, push protection' },
+          { label: 'CI', detail: 'Tests, SonarQube, Trivy, Checkov' },
+          { label: 'Kubernetes', detail: 'Kyverno or Gatekeeper, PSA' },
+          { label: 'Azure', detail: 'Azure Policy', tone: 'success' },
+        ],
+      },
+    ],
+    code: [
+      {
+        title: '.pre-commit-config.yaml',
+        language: 'yaml',
+        code: `# .pre-commit-config.yaml (pin rev to a current release)
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: trailing-whitespace
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.2
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.99.0
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_tflint`,
+      },
+      {
+        title: 'Install and run the hooks',
+        language: 'bash',
+        code: `pre-commit install          # install the hooks for this clone
+pre-commit run --all-files`,
+      },
+      {
+        title: 'Checks outside Git',
+        language: 'text',
+        code: `Laptop      -> pre-commit: fmt, lint, Gitleaks
+Git server  -> branch policies, required reviewers, PR build validation, push protection
+CI          -> tests, SonarQube Quality Gate, dependency scan, Trivy, Checkov, TFLint, Hadolint, kubeconform
+Kubernetes  -> admission control: Kyverno or OPA Gatekeeper, Pod Security Admission
+Azure       -> Azure Policy (deny public storage, require tags, allowed regions)`,
+      },
+    ],
+    followUps: [
+      'How do you stop someone bypassing hooks with `--no-verify`?',
+      'What would you put in a `commit-msg` hook?',
+    ],
+    tags: ['git', 'hooks', 'devsecops'],
+  },
 ]

@@ -114,7 +114,7 @@ Every course works the same way:
 
 ## 6. Interview preparation
 
-**2,734 questions in 53 topics**: your own question bank, real interview rounds (Deloitte, ATC, SimCorp, InnovarTech, BASF, Cognizant, EPAM, Inmar, Wipro, managerial), Azure topics and DevOps topics.
+**2,889 questions in 53 topics**: your own question bank, real interview rounds (Deloitte, ATC, SimCorp, InnovarTech, BASF, Cognizant, EPAM, Inmar, Wipro, managerial), Azure topics and DevOps topics.
 
 ### The question bank (Sidebar → 💬 Interview preparation)
 
@@ -229,7 +229,7 @@ Tap a button or type what you want:
 | "what should I study today?"                  | Your plan for today from your progress.                                                        |
 | **Rapid-fire**                                | 8 quick timed questions on what you are most likely to forget.                                 |
 | **Troubleshooting**                           | The incident labs, in chat form.                                                               |
-| Anything else                                 | Searches all 2,734 questions and shows short answers.                                          |
+| Anything else                                 | Searches all 2,889 questions and shows short answers.                                          |
 
 - 🎙️ **Voice input** uses your browser's speech service, which usually needs internet.
 - **Smart search** (bot Settings) understands questions worded differently. It downloads about 30 MB once, then works offline.

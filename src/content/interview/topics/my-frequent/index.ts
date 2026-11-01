@@ -4,16 +4,18 @@ import { myFrequentAutomationQuestions } from './automation'
 import { myFrequentPipelineQuestions } from './pipelines'
 import { myFrequentReleaseQuestions } from './releases'
 import { myFrequentAzureQuestions } from './azure'
+import { myFrequentFundamentalsQuestions } from './fundamentals'
+import { myFrequentIntegrationQuestions } from './integrations'
 
 export const myFrequentTopic: InterviewTopic = {
   id: 'my-frequent',
   group: 'bank',
-  title: 'Frequently asked questions',
-  shortTitle: 'Frequently asked',
+  title: 'Repetitive questions',
+  shortTitle: 'Repetitive questions',
   icon: '🔂',
   order: 118,
   oneLiner:
-    'The questions that come up in almost every round: CI/CD flow and sample pipelines, branching, rollback and zero-downtime releases, Production incidents, secrets, security, cost, storage, 3-tier architecture and automation scripts.',
+    'The questions that come up in almost every round: CI/CD flow and sample pipelines, branching, rollback and zero-downtime releases, Production incidents, secrets, security, cost, storage, 3-tier architecture, tool integrations, Azure fundamentals and automation scripts.',
   headlines: [
     'Build one versioned image, scan it, and promote that same image through Dev to Production - never rebuild, never deploy `latest`.',
     'Production incidents: impact, evidence (Events, logs, metrics, recent changes), restore, verify as a user, fix the cause, prevent recurrence - told with STAR.',
@@ -29,6 +31,8 @@ export const myFrequentTopic: InterviewTopic = {
     ...myFrequentReleaseQuestions,
     ...myFrequentSecurityQuestions,
     ...myFrequentAzureQuestions,
+    ...myFrequentFundamentalsQuestions,
+    ...myFrequentIntegrationQuestions,
     ...myFrequentAutomationQuestions,
   ],
 }

@@ -15,9 +15,9 @@ An installable, offline-capable study app for Microsoft Azure certifications and
 
 The CKAD, Terraform and Docker courses come from the original DevOps Learning Hub (`~/Documents/A/devopsApp/Devops`), copied unchanged into `src/content/ckad`, `terraform` and `docker`.
 
-**Interview preparation** — 2,734 questions in 53 topics, in four sections:
+**Interview preparation** — 2,889 questions in 53 topics, in four sections:
 
-- **My question bank** — 1,605 questions in 22 topics, imported from your own notes (`~/Desktop/github/interview-questions`)
+- **My question bank** — 1,760 questions in 22 topics, imported from your own notes (`~/Desktop/github/interview-questions`)
 - **Real interview rounds** — 267 questions from Deloitte, ATC, SimCorp, InnovarTech, BASF, Cognizant, EPAM, Inmar, Wipro and managerial rounds
 - **Azure topics** — 165 questions in 8 topics written for this app
 - **DevOps topics** — 697 questions in 13 topics from the original DevOps Learning Hub
@@ -145,7 +145,7 @@ Run `npm run validate` before pushing; CI runs it too.
 
 ## Spaced repetition and the mistake notebook
 
-All 2,734 interview questions and every auto-marked practice question are flashcards scheduled with **FSRS-5** (`src/lib/srs.ts`).
+All 2,889 interview questions and every auto-marked practice question are flashcards scheduled with **FSRS-5** (`src/lib/srs.ts`).
 
 - **Due today** (`/review`, also on Home and in the sidebar) holds every card due by the end of your local day, then new cards up to a daily limit you set (default 20). A 30-day forecast shows what is coming.
 - After revealing an interview answer, rate it **Again / Hard / Good / Easy**; each button shows when the card would come back. Again brings it back later in the same session.
@@ -176,7 +176,7 @@ All 2,734 interview questions and every auto-marked practice question are flashc
   If you said a point in other words, tick it on the checklist and re-score.
 
 - **Tutor.** With a question open, ask for a **hint** (three levels), the **short** or **long** answer, **simpler**, an **analogy**, **related** questions, **mistakes**, **follow-ups** or a **what if** variant.
-- **Search.** Anything that is not a command is searched across all 2,734 questions, with their 30-second answers.
+- **Search.** Anything that is not a command is searched across all 2,889 questions, with their 30-second answers.
 - **Coach.** "What should I study today?" reads your progress:
   - reviews due;
   - your weakest interview topics;
@@ -222,7 +222,7 @@ The content is vendor-neutral, with Azure and AWS names side by side. It leaves 
 - **Command palette.** Press **Ctrl+K** (**⌘K** on a Mac), or the 🔎 in the top bar, from any page. It searches:
   - pages;
   - lessons;
-  - all 2,734 interview questions;
+  - all 2,889 interview questions;
   - command-reference entries;
   - SQL/KQL/Python challenges, CLI missions and config-lab exercises;
   - incident and guided labs;

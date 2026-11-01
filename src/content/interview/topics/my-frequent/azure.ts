@@ -12,8 +12,8 @@ export const myFrequentAzureQuestions: InterviewQuestion[] = [
     answer: [
       'For an Azure DevOps interview, give practical cost-saving examples and explain **what you changed, why, and how you measured it**.',
       '**Strong interview answer:** "I have approached cost optimization mainly through resource utilization and automation. First, I used Azure Monitor metrics to identify underutilized VMs and right-size them. For non-production environments, I automated VM shutdown and startup during non-working hours. For AKS, I monitored node and pod utilization and used appropriate node sizing and cluster autoscaling to avoid running unnecessary nodes."',
-      '"I also cleaned up orphaned resources such as unattached managed disks, unused public IPs, snapshots and old container images. For storage, I used lifecycle policies to move older data from Hot to Cool or Archive tiers. For stable production workloads, I would evaluate Azure Reservations or Savings Plans based on historical usage."',
-      '"On the DevOps side, I optimized Docker images using multi-stage builds and cleaned up self-hosted agent resources. I also reviewed Log Analytics ingestion and retention so we weren\'t unnecessarily storing verbose logs. Finally, I used resource tagging and Azure Cost Management to identify which applications and environments were actually driving the cost."',
+      '"I also used Spot node pools for interruptible jobs, and kept Dev App Service plans on lower tiers with autoscale only in production. I cleaned up orphaned resources such as unattached managed disks, unused public IPs, snapshots and old container images. For storage, I used lifecycle policies to move older data from Hot to Cool or Archive tiers. For stable production workloads, I would evaluate Azure Reservations or Savings Plans based on historical usage."',
+      '"On the DevOps side, I optimized Docker images using multi-stage builds and cleaned up self-hosted agent resources. I also reviewed Log Analytics ingestion and retention so we weren\'t unnecessarily storing verbose logs. Finally, I used resource tagging and Azure Cost Management to identify which applications and environments were actually driving the cost, and I set budgets and cost alerts so we found any new spike early."',
     ],
     followUps: [
       'How did you prove the saving?',
@@ -1150,7 +1150,7 @@ Web/App      Web/App      Web/App`,
     answer: [
       'A good answer walks the layers: Internet, WAF, Application Gateway, Web NSG, web tier, App NSG, app tier, DB NSG / Private Endpoint, database.',
       'And the controls themselves:',
-      '- No public IP on application servers where possible\n- No public database access\n- NSGs between tiers\n- WAF at the entry point\n- Azure Firewall when centralized inspection is required\n- Key Vault for secrets\n- Managed Identity instead of hardcoded credentials\n- Private Endpoints for PaaS services\n- TLS for application communication\n- RBAC for Azure access',
+      '- No public IP on application servers where possible\n- No public database access\n- NSGs between tiers\n- WAF at the entry point\n- Azure Firewall when centralized inspection is required\n- Key Vault for secrets\n- Managed Identity instead of hardcoded credentials\n- Private Endpoints for PaaS services\n- TLS for application communication\n- RBAC for Azure access\n- Entra ID sign-in in front of the app',
     ],
     code: [
       {
@@ -1176,5 +1176,1006 @@ Database`,
       },
     ],
     tags: ['architecture', 'security'],
+  },
+  {
+    id: 'itv-myfaq-600',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'Which App Service plan do you use, and how does it affect cost?',
+    probing:
+      'Knowing that you pay for plan instances, not apps, and matching tiers and autoscale limits to each environment.',
+    answer: [
+      'The **App Service plan** is the compute that the Web App runs on. I pay for the plan instances, not for each app. So the plan tier and the instance count drive the cost.',
+      '- **Free / Shared:** Learning only\n- **Basic (B1-B3):** Dev and QA - dedicated compute, manual scale only\n- **Standard (S1-S3):** Smaller production apps - autoscale and deployment slots\n- **Premium v3 (P0v3, P1v3...):** Most production apps - more slots, better VNet integration, faster scaling\n- **Isolated v2 (App Service Environment):** Apps that need full network isolation',
+      'How I keep it cheap: Dev and QA run on a Basic plan with 1 instance, and Production runs on Premium v3 with autoscale min 2 / max 4.',
+      'Things to remember here:',
+      '- **Scale out** = more instances (autoscale). **Scale up** = bigger tier or size.\n- Several small apps can share one plan to save money, but they share the same CPU and memory. A noisy app can slow the others.\n- Delete empty plans. An App Service plan with no apps is still billed.\n- Use different scale-out and scale-in thresholds so the plan does not keep flapping.',
+    ],
+    code: [
+      {
+        title: 'Plan per environment',
+        language: 'text',
+        code: `Dev / QA   -> Basic plan, 1 instance
+Production -> Premium v3, autoscale min 2 / max 4`,
+      },
+      {
+        title: 'Example autoscale rule on the plan',
+        language: 'text',
+        code: `CPU > 70% for 10 min -> add 1 instance (max 4)
+CPU < 35% for 15 min -> remove 1 instance (min 2)`,
+      },
+    ],
+    followUps: [
+      'Why should the scale-in threshold be lower than the scale-out threshold?',
+      'When would you split apps onto separate plans?',
+    ],
+    tags: ['cost', 'app service', 'autoscale'],
+  },
+  {
+    id: 'itv-myfaq-601',
+    level: 'basic',
+    kind: 'open',
+    prompt: 'How do you stop Azure cost from creeping back up after you optimize it?',
+    probing:
+      'Guardrails: Advisor recommendations, budgets with alerts, anomaly alerts and Azure Policy.',
+    answer: [
+      'Saving money once is not enough. I also put guardrails in place so cost does not creep back up.',
+      '- **Azure Advisor:** cost recommendations (idle VMs, right-size, reservations)\n- **Budgets:** monthly limit per subscription or resource group\n- **Cost alerts:** email / Action Group at 50%, 80%, 100% of budget\n- **Anomaly alerts:** Cost Management flags an unusual daily spike\n- **Azure Policy:** deny expensive VM SKUs in Dev, require cost tags',
+      'For Dev subscriptions, an Azure Policy idea is to allow only B-series and D2s/D4s VM SKUs, and to require the Environment, Owner and CostCenter tags.',
+    ],
+    code: [
+      {
+        title: 'Guardrails',
+        language: 'text',
+        code: `Azure Advisor        -> cost recommendations (idle VMs, right-size, reservations)
+Budgets              -> monthly limit per subscription or resource group
+Cost alerts          -> email / Action Group at 50%, 80%, 100% of budget
+Anomaly alerts       -> Cost Management flags an unusual daily spike
+Azure Policy         -> deny expensive VM SKUs in Dev, require cost tags`,
+      },
+      {
+        title: 'Example Azure Policy idea for Dev subscriptions',
+        language: 'text',
+        code: `Allowed VM SKUs  -> B-series and D2s/D4s only
+Required tags    -> Environment, Owner, CostCenter`,
+      },
+    ],
+    tags: ['cost', 'budgets', 'advisor', 'azure policy'],
+  },
+  {
+    id: 'itv-myfaq-602',
+    level: 'advanced',
+    kind: 'scenario',
+    prompt: 'You notice the Azure cost has increased a lot. What will you do?',
+    probing:
+      'A calm detect, fix, root cause, prevent flow using Cost analysis and the Activity Log - not deleting things blindly.',
+    answer: [
+      'I follow **detect -> fix -> root cause -> prevent**.',
+      'In Cost Management I open Cost analysis, group by subscription, then resource group, then resource or meter, and compare with last week or last month.',
+      'Then I find the cause: new resources, bigger SKUs, unexpected scale-out, storage growth, data transfer, Log Analytics ingestion, or something left running after a test. The Activity Log tells me who created or changed it, and when.',
+      'Fix: stop, resize or delete (after checking with the owner). Prevent: budgets and alerts, Azure Policy, tags, RBAC and scheduled shutdown.',
+      '"I would not just delete the expensive resource. I would confirm with the owner, find out from the Activity Log how it was created, and then add a budget alert, a policy and the right RBAC so the same thing cannot happen again."',
+    ],
+    code: [
+      {
+        title: 'Investigation flow',
+        language: 'text',
+        code: `Cost Management -> Cost analysis
+        |
+Group by subscription -> resource group -> resource / meter
+        |
+Compare with last week / last month
+        |
+Find the cause:
+  new resources, bigger SKUs, unexpected scale-out,
+  storage growth, data transfer, Log Analytics ingestion,
+  something left running after a test
+        |
+Activity Log -> who created or changed it, and when
+        |
+Fix: stop / resize / delete (after checking with the owner)
+        |
+Prevent: budgets + alerts, Azure Policy, tags, RBAC, scheduled shutdown`,
+      },
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'Cost spike: detect to prevent',
+        caption: 'Find the meter, find who changed it, fix with the owner, then add guardrails.',
+        nodes: [
+          { label: 'Cost analysis', detail: 'Group by RG, resource, meter' },
+          { label: 'Compare periods', detail: 'Last week / last month' },
+          { label: 'Activity Log', detail: 'Who created or changed it' },
+          {
+            label: 'Fix with owner',
+            detail: 'Stop, resize or delete',
+            tone: 'warning',
+          },
+          {
+            label: 'Prevent',
+            detail: 'Budgets, Policy, tags, RBAC',
+            tone: 'success',
+          },
+        ],
+      },
+    ],
+    followUps: [
+      'The spike is Log Analytics ingestion. What do you check next?',
+      'How would you get warned earlier next time?',
+    ],
+    tags: ['cost', 'troubleshooting', 'cost management'],
+  },
+  {
+    id: 'itv-myfaq-603',
+    level: 'advanced',
+    kind: 'scenario',
+    prompt: 'A Storage Account has become public. How do you remediate it?',
+    probing:
+      'Separating public network access from anonymous blob access, closing both safely, checking whether data was read, and preventing it in code and policy.',
+    answer: [
+      'First I find out **what kind of public** it is. There are two separate settings, and I check both:',
+      '- **Public network access:** Anyone on the internet can reach the account endpoint (they still need a key, SAS or RBAC)\n- **Anonymous blob access:** Anyone can read blobs **without any credentials** - this is the dangerous one',
+      'Remediation flow: identify the exposure, disable anonymous blob access and set containers to Private, disable public network access and use a Private Endpoint or selected networks, review keys, SAS tokens and RBAC, check the Activity Log and storage logs, and prevent it with Azure Policy and Terraform/Bicep.',
+      'If some clients really need internet access, I set it to **selected networks** with IP rules instead of all networks.',
+      'After closing the exposure, I check:',
+      '- If anonymous access was on, I check the storage logs (diagnostic settings to Log Analytics) to see whether data was read.\n- If a key or SAS may have leaked, I rotate the account keys. Rotating keys invalidates account SAS tokens signed with that key.\n- I remove extra RBAC roles such as Storage Blob Data Contributor or Owner where they are not needed.',
+      'For prevention I use the built-in Azure Policies "Storage accounts should disable public network access" and "Storage account public access should be disallowed" with the **Deny** effect.',
+    ],
+    deeper: [
+      'Public network access and anonymous blob access are different controls.',
+      'Turn on private access only after the Private Endpoint and Private DNS are tested, or the application will break.',
+      'Before disabling shared keys, check that nothing still uses a connection string. Some tools and older SDKs need keys.',
+    ],
+    code: [
+      {
+        title: 'Quick commands',
+        language: 'bash',
+        code: `# Which containers allow anonymous access?
+az storage container list --account-name <account> --auth-mode login \\
+  --query "[].{name:name, access:properties.publicAccess}" -o table
+
+# Lock the account down
+az storage account update -g <rg> -n <account> \\
+  --allow-blob-public-access false \\
+  --public-network-access Disabled`,
+        placeholders: ['<account>', '<rg>'],
+      },
+      {
+        title: 'Prevention in code',
+        language: 'hcl',
+        code: `resource "azurerm_storage_account" "app" {
+  name                     = "stappprod001"
+  resource_group_name      = azurerm_resource_group.app.name
+  location                 = azurerm_resource_group.app.location
+  account_tier             = "Standard"
+  account_replication_type = "ZRS"
+
+  public_network_access_enabled   = false
+  allow_nested_items_to_be_public = false # no anonymous blob access
+  shared_access_key_enabled       = false # Entra ID only, no account keys
+  min_tls_version                 = "TLS1_2"
+}`,
+      },
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'Public Storage Account remediation',
+        caption:
+          'Close anonymous access first, then the network, then check what leaked and prevent it.',
+        nodes: [
+          { label: 'Identify exposure', detail: 'Network access or anonymous container?' },
+          {
+            label: 'Disable anonymous access',
+            detail: 'Containers set to Private',
+            tone: 'danger',
+          },
+          {
+            label: 'Disable public network',
+            detail: 'Private Endpoint or selected networks',
+          },
+          { label: 'Review access', detail: 'Keys, SAS tokens, RBAC, logs' },
+          { label: 'Prevent', detail: 'Azure Policy + Terraform/Bicep', tone: 'success' },
+        ],
+      },
+    ],
+    followUps: [
+      'How do you know whether data was actually read while it was public?',
+      'What breaks if you disable shared key access?',
+    ],
+    tags: ['storage', 'security', 'remediation'],
+  },
+  {
+    id: 'itv-myfaq-604',
+    level: 'intermediate',
+    kind: 'scenario',
+    prompt:
+      'An Azure Function generates a PDF and stores it in a Storage Account. How is the storage part set up?',
+    probing:
+      'Private containers, managed identity with a scoped role, identity-based host storage, Event Grid triggers, idempotent names and lifecycle rules.',
+    answer: [
+      'In my project, an Azure Function picked up requests from Service Bus, generated the document, and saved it to Blob Storage.',
+      'The storage-side points are:',
+      '- **Separate containers** for input, output and failed files, all private.\n- **Managed identity** on the Function App, with **Storage Blob Data Contributor** scoped to the account or to the output container. No account keys in app settings.\n- The Function App also has its own **host storage** (`AzureWebJobsStorage`). I use an identity-based connection (`AzureWebJobsStorage__accountName`) instead of a connection string.\n- If the flow starts from a file upload, a **Blob Created** event through **Event Grid** triggers the Function. This is faster and more reliable than the old polling blob trigger.\n- **Idempotent writes:** use a fixed blob name such as `output/<request-id>.pdf`, so a retry overwrites the same file instead of creating duplicates.\n- **Lifecycle rule:** move PDFs older than 30 days to Cool and delete them after the retention period.\n- Users download through a **short-lived user delegation SAS** or through the API, never through a public container.',
+      'Things to remember here:',
+      '- Blob is the right choice here because PDFs are unstructured files.\n- Keep the generated-file account private, with a Private Endpoint if the Function is VNet-integrated.',
+    ],
+    code: [
+      {
+        title: 'Function to Blob flow',
+        language: 'text',
+        code: `Request -> Service Bus queue
+              |
+         Azure Function (managed identity)
+              |
+         Generate PDF
+              |
+         Blob Storage
+           input/      <- source files (if a file upload starts the flow)
+           output/     <- generated PDFs
+           failed/     <- files that could not be processed`,
+      },
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'Generated PDF to Blob Storage',
+        caption: 'The Function writes with its managed identity into a private output container.',
+        nodes: [
+          { label: 'Service Bus queue', detail: 'Incoming request' },
+          { label: 'Azure Function', detail: 'Managed identity' },
+          { label: 'Generate PDF' },
+          {
+            label: 'Blob output container',
+            detail: 'output/request-id.pdf',
+            tone: 'success',
+            branch: { label: 'failed container', detail: 'Could not be processed', tone: 'danger' },
+          },
+        ],
+      },
+    ],
+    tags: ['storage', 'azure functions', 'blob', 'managed identity'],
+  },
+  {
+    id: 'itv-myfaq-605',
+    level: 'intermediate',
+    kind: 'open',
+    prompt:
+      'Which applications did you use in the frontend and backend, and how does the frontend connect to the backend?',
+    probing:
+      'Understanding that React runs in the browser, so the browser calls the API through the gateway or ingress - not the React pod.',
+    answer: [
+      'The frontend was **React.js**, served by **Nginx**. The backend was **Java Spring Boot** REST APIs. The data was in **Azure Database for PostgreSQL**. Both apps ran as separate containers in AKS.',
+      "The key point: **React runs in the user's browser.** So the browser calls the backend over HTTPS, not the React pod.",
+      'Things to remember here:',
+      '- React never talks to the database. Only the backend does.\n- Same domain for UI and API (`/` and `/api`) means **no CORS problem**. If the API is on another domain, the backend must allow the frontend origin in its CORS settings.\n- Values like `VITE_API_URL` or `REACT_APP_API_URL` are baked in at **build time**. A relative `/api` path lets the same image run in every environment.\n- `backend-service:8080` works only inside the cluster. The browser cannot resolve it.',
+    ],
+    code: [
+      {
+        title: 'Request path',
+        language: 'text',
+        code: `Browser (React code)
+   |
+   | GET https://myapp.com/api/orders
+   v
+Application Gateway / Ingress
+   |
+   +-- /       -> frontend-service (ClusterIP) -> Nginx pods (React files)
+   |
+   +-- /api/*  -> backend-service  (ClusterIP) -> Spring Boot pods :8080
+                                                     |
+                                                     v
+                                               PostgreSQL :5432`,
+      },
+      {
+        title: 'React calls a relative path',
+        language: 'text',
+        code: `const response = await fetch("/api/orders");`,
+      },
+      {
+        title: 'Spring Boot exposes it',
+        language: 'text',
+        code: `@GetMapping("/api/orders")
+public List<Order> getOrders() {
+    return orderService.findAll();
+}`,
+      },
+    ],
+    diagrams: [
+      {
+        kind: 'sequence',
+        title: 'Browser to API to database',
+        caption: 'The browser, not the React pod, calls the backend.',
+        participants: [
+          { id: 'browser', label: 'Browser (React)' },
+          { id: 'gw', label: 'App Gateway / Ingress' },
+          { id: 'api', label: 'Spring Boot' },
+          { id: 'db', label: 'PostgreSQL' },
+        ],
+        messages: [
+          { from: 'browser', to: 'gw', label: 'GET /api/orders (HTTPS)' },
+          { from: 'gw', to: 'api', label: 'backend-service :8080' },
+          { from: 'api', to: 'db', label: 'SQL on 5432' },
+          { from: 'db', to: 'api', label: 'rows', kind: 'return' },
+          { from: 'api', to: 'browser', label: 'JSON', kind: 'return' },
+        ],
+      },
+    ],
+    tags: ['architecture', 'frontend', 'backend', 'aks'],
+  },
+  {
+    id: 'itv-myfaq-606',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'What types of load balancers are there? Which one have you used in Azure?',
+    probing:
+      'Layer 4 versus Layer 7, the Azure service for each scope, and how an L4 load balancer actually distributes connections.',
+    answer: [
+      'Load balancers are mainly **Layer 4** or **Layer 7**.',
+      '- **Layer 4:** works on TCP / UDP, routes by IP and port, no TLS termination (pass-through), no WAF. Azure service: Azure Load Balancer.\n- **Layer 7:** works on HTTP / HTTPS, routes by host, URL path, headers, cookies, terminates TLS, supports WAF. Azure services: Application Gateway, Front Door.',
+      'The Azure load balancing options:',
+      '- **Azure Load Balancer:** L4, regional - VMs, VMSS, AKS `LoadBalancer` Services\n- **Application Gateway (+ WAF):** L7, regional - web apps, path-based routing, TLS, WAF\n- **Azure Front Door (+ WAF):** L7, global - multi-region web apps, CDN, global failover\n- **Traffic Manager:** DNS, global - DNS-based failover for any protocol',
+      'Azure Load Balancer comes as **public** (has a public IP) or **internal** (private IP inside the VNet).',
+      '**How a Layer 4 load balancer distributes traffic:** it builds a **5-tuple hash** (source IP, source port, destination IP, destination port, protocol) and sends the whole connection to one healthy backend. It is not strict round-robin. If a client must stick to one VM, I set **session persistence** to client IP.',
+      'What I used: "I mainly used Azure Load Balancer. AKS creates it automatically for a `LoadBalancer` Service, such as the ingress controller. I also used internal load balancers for private services and configured health probes and rules for VM Scale Sets. For web traffic, Application Gateway with WAF was the entry point, because it gives TLS termination and path-based routing."',
+      'Things to remember here:',
+      '- The **Basic** SKU of Azure Load Balancer was retired in September 2025. Use **Standard**.\n- Standard Load Balancer is closed by default. The NSG must allow the traffic.',
+    ],
+    diagrams: [
+      {
+        kind: 'decision',
+        title: 'Choosing an Azure load balancer',
+        caption: 'Pick by layer and scope: regional or global, TCP or HTTP.',
+        question: 'What traffic are you balancing?',
+        branches: [
+          { condition: 'TCP/UDP in one region', result: 'Azure Load Balancer' },
+          {
+            condition: 'HTTP in one region, needs WAF',
+            result: 'Application Gateway + WAF',
+            tone: 'accent',
+          },
+          { condition: 'HTTP across regions', result: 'Azure Front Door' },
+          { condition: 'Any protocol, DNS failover', result: 'Traffic Manager' },
+        ],
+      },
+    ],
+    tags: ['networking', 'load balancer', 'application gateway'],
+  },
+  {
+    id: 'itv-myfaq-607',
+    level: 'advanced',
+    kind: 'scenario',
+    prompt:
+      'How do you set up health probes in a load balancer, and what do you check when a running VM shows as unhealthy?',
+    probing:
+      'Probe types and rules, Application Gateway custom probes, and the classic causes: bind address, NSG blocking 168.63.129.16, guest firewall.',
+    answer: [
+      'A health probe checks each backend regularly. Only healthy backends get **new** connections.',
+      'Probe types: **TCP** (port is open), **HTTP** and **HTTPS** (path must return 200).',
+      'On **Application Gateway**, I add a custom probe with the host name and path, for example `/actuator/health` for Spring Boot. It accepts 200-399 by default.',
+      'If a running VM shows as unhealthy, I check:',
+      '- Is the app listening on the probe port, and on `0.0.0.0`, not only `127.0.0.1`? (`ss -lntp`)\n- Does `curl -i http://localhost:8080/health` return 200?\n- Does the NSG allow the `AzureLoadBalancer` service tag? Probes come from `168.63.129.16`. A custom "deny all inbound" rule blocks them.\n- Is the guest OS firewall blocking the port?',
+    ],
+    deeper: [
+      'Keep the health endpoint light. If it checks the database and the database is slow, every backend can be marked unhealthy at once.',
+      'In AKS, readiness probes decide which pods get traffic. The load balancer probe checks the node or ingress level.',
+    ],
+    code: [
+      {
+        title: 'Probe results',
+        language: 'text',
+        code: `Load Balancer -- probe HTTP :8080 /health every 5s -->  VM1  200  -> healthy
+                                                        VM2  200  -> healthy
+                                                        VM3  timeout -> removed`,
+      },
+      {
+        title: 'Create a probe and a rule',
+        language: 'bash',
+        code: `az network lb probe create -g my-rg --lb-name my-lb -n app-probe \\
+  --protocol Http --port 8080 --path /health --interval 5 --probe-threshold 2
+
+az network lb rule create -g my-rg --lb-name my-lb -n app-rule \\
+  --protocol Tcp --frontend-port 80 --backend-port 8080 \\
+  --frontend-ip-name my-frontend --backend-pool-name my-pool --probe-name app-probe`,
+      },
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'Unhealthy backend checklist',
+        caption: 'Work from the app outwards: listener, local response, NSG, guest firewall.',
+        nodes: [
+          { label: 'App listening?', detail: 'ss -lntp, bound to 0.0.0.0' },
+          { label: 'Local health check', detail: 'curl localhost:8080/health = 200' },
+          {
+            label: 'NSG allows probes',
+            detail: 'AzureLoadBalancer tag, 168.63.129.16',
+            tone: 'warning',
+          },
+          { label: 'Guest OS firewall', detail: 'Port open inside the VM' },
+        ],
+      },
+    ],
+    followUps: [
+      'Why can a deep health check take the whole backend pool down?',
+      'How do readiness probes in AKS relate to the load balancer probe?',
+    ],
+    tags: ['networking', 'load balancer', 'health probes', 'troubleshooting'],
+  },
+  {
+    id: 'itv-myfaq-608',
+    level: 'advanced',
+    kind: 'open',
+    prompt:
+      'What are the Kubernetes Service types, and how do you expose an application in AKS with Ingress and NGINX?',
+    probing:
+      'Service types and when to use each, the difference between Ingress rules and the Ingress Controller, and current controller options in AKS.',
+    answer: [
+      'A **Service** gives a stable name and IP to a group of pods, because pod IPs change.',
+      '- **ClusterIP (default):** inside the cluster - backend APIs, internal services\n- **NodePort:** `NodeIP:30000-32767` - testing\n- **LoadBalancer:** public or private IP (Azure Load Balancer) - exposing one service, or the ingress controller\n- **ExternalName:** DNS alias to an outside name - external database or API\n- **Headless (`clusterIP: None`):** DNS returns pod IPs - StatefulSets such as Kafka',
+      '**What is an Ingress Controller?** An **Ingress** is only a set of HTTP routing rules. The **Ingress Controller** is the pod that reads those rules and actually routes the traffic. Without a controller, an Ingress does nothing. One controller gives one IP for many apps, instead of one load balancer per app.',
+      '**What is NGINX?** NGINX is a fast web server and reverse proxy. I used it in two places:',
+      '- **Inside the frontend image:** it serves the React build files and can send `/api` to the backend.\n- **As the ingress controller:** it routes HTTP traffic to Services, terminates TLS and load balances across pods.',
+      'Things to remember here:',
+      '- Backend apps stay **ClusterIP**. Only the ingress controller gets a `LoadBalancer` Service.\n- `kubectl port-forward` is for debugging only.',
+    ],
+    deeper: [
+      'Options for the controller in AKS:',
+      '- **Community ingress-nginx:** The Kubernetes project retired it in March 2026. No more fixes, so plan a move\n- **AKS application routing add-on:** Managed NGINX by Microsoft, with a limited support window. Check the current AKS notes\n- **AGIC (Application Gateway Ingress Controller):** Uses Application Gateway + WAF as the L7 entry point\n- **Application Gateway for Containers:** Newer Azure option. Supports the **Gateway API**, the successor to Ingress',
+    ],
+    code: [
+      {
+        title: 'Internal-only load balancer in AKS',
+        language: 'yaml',
+        code: `metadata:
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+spec:
+  type: LoadBalancer`,
+      },
+      {
+        title: 'Ingress traffic path',
+        language: 'text',
+        code: `Internet
+   |
+Azure Load Balancer (public IP)
+   |
+Ingress controller pods (LoadBalancer Service)
+   |
+   +-- myapp.com/      -> frontend-service (ClusterIP)
+   +-- myapp.com/api   -> backend-service  (ClusterIP)`,
+      },
+      {
+        title: 'Ingress',
+        language: 'yaml',
+        code: `apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myapp
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [myapp.com]
+      secretName: myapp-tls
+  rules:
+    - host: myapp.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service: { name: backend-service, port: { number: 8080 } }
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: frontend-service, port: { number: 80 } }`,
+      },
+      {
+        title: 'NGINX inside the frontend image',
+        language: 'text',
+        code: `server {
+  listen 80;
+  root /usr/share/nginx/html;
+
+  location / {
+    try_files $uri /index.html;   # React client-side routing
+  }
+
+  location /api/ {
+    proxy_pass http://backend-service:8080;
+  }
+}`,
+      },
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'Exposing apps through one ingress',
+        caption: 'Only the ingress controller is a LoadBalancer Service; apps stay ClusterIP.',
+        nodes: [
+          { label: 'Internet' },
+          { label: 'Azure Load Balancer', detail: 'Public IP' },
+          { label: 'Ingress controller pods', detail: 'Reads Ingress rules', tone: 'accent' },
+          { label: 'ClusterIP Services', detail: '/ frontend, /api backend' },
+          { label: 'Pods' },
+        ],
+      },
+    ],
+    followUps: [
+      'ingress-nginx is retired. Which option would you migrate to, and why?',
+      'Why not give every app its own LoadBalancer Service?',
+    ],
+    tags: ['aks', 'kubernetes', 'ingress', 'nginx'],
+  },
+  {
+    id: 'itv-myfaq-609',
+    level: 'advanced',
+    kind: 'scenario',
+    prompt: 'Your frontend and backend use HTTP. How do you move them to HTTPS?',
+    probing:
+      'Certificates in Key Vault, HTTPS listener and redirect, TLS policy, backend TLS, app config (mixed content, cookies, redirect URIs) and testing.',
+    answer: [
+      'It is more than changing `http` to `https`. I need certificates, HTTPS listeners, a redirect, backend TLS and app config changes.',
+      'The steps I follow are:',
+      '- **Certificate:** from a trusted CA, stored in **Key Vault**. The CN/SAN must match `app.company.com`. Application Gateway reads it through a user-assigned managed identity. In AKS, **cert-manager** can issue and renew certificates automatically.\n- **HTTPS listener** on port 443, plus a **redirect rule** from HTTP 80 to HTTPS 443.\n- **SSL policy:** TLS 1.2 or higher.\n- **Backend:** backend settings on HTTPS 443, with a host name that matches the backend certificate.\n- **App config:** change API URLs to `https://`, so the browser does not block **mixed content**. Mark cookies `Secure`, add HSTS, and update Entra ID redirect URIs.\n- **NSG:** allow 443. Keep 80 only for the redirect.\n- **Test** in Dev and QA first: certificate chain, redirect, API calls, login callback.',
+    ],
+    deeper: [
+      'Azure Load Balancer is Layer 4 and cannot terminate TLS. Use Application Gateway, Front Door or the ingress controller.',
+      'TLS only up to Application Gateway is enough if policy allows it. If the requirement is end-to-end encryption, the backend must also use HTTPS.',
+      'Add certificate expiry alerts, or use auto-renewal.',
+    ],
+    code: [
+      {
+        title: 'HTTPS end to end',
+        language: 'text',
+        code: `User --HTTPS 443--> Application Gateway (cert from Key Vault, WAF)
+                          |
+                          | HTTPS (end-to-end TLS, if required)
+                          v
+                    Ingress / frontend / backend
+                          |
+                          | TLS
+                          v
+                      PostgreSQL (TLS enforced)`,
+      },
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'TLS along the request path',
+        caption:
+          'Terminate at the gateway; re-encrypt to the backend when end-to-end TLS is required.',
+        nodes: [
+          { label: 'User', detail: 'HTTPS 443, HTTP 80 redirected' },
+          {
+            label: 'Application Gateway',
+            detail: 'Cert from Key Vault, WAF',
+            tone: 'accent',
+          },
+          {
+            label: 'Ingress / frontend / backend',
+            arrowLabel: 'HTTPS if end-to-end',
+          },
+          { label: 'PostgreSQL', detail: 'TLS enforced', arrowLabel: 'TLS' },
+        ],
+      },
+    ],
+    followUps: [
+      'The site loads but API calls fail after the switch. What do you check?',
+      'How do you avoid a certificate expiring in production?',
+    ],
+    tags: ['security', 'tls', 'https', 'application gateway'],
+  },
+  {
+    id: 'itv-myfaq-610',
+    level: 'advanced',
+    kind: 'open',
+    prompt: 'Have you created a private Kubernetes cluster? How?',
+    probing:
+      'Private API server, private DNS zone links, Entra ID access, self-hosted agents for CI/CD, and command invoke.',
+    answer: [
+      'Yes. In a private AKS cluster, the **API server has only a private IP** in our VNet. `kubectl` works only from a connected network.',
+      'What I set up for the cluster:',
+      '- **Network:** VNet with subnets for nodes, private endpoints and build agents. No overlap with peered or on-premises ranges. Egress through Azure Firewall if needed.\n- **DNS:** AKS creates a private DNS zone. In hub-spoke, I link it to the hub VNet or bring my own zone with `--private-dns-zone`.\n- **Access:** Entra ID login with Azure RBAC for Kubernetes. Engineers connect through a jumpbox, Bastion or VPN.\n- **CI/CD:** a **self-hosted Azure DevOps agent** (VM or VMSS agent pool) inside the VNet. Microsoft-hosted agents cannot reach the private API server.\n- **Quick admin command without network access:** `az aks command invoke` runs `kubectl` through Azure.',
+      'Things to remember here:',
+      '- If `kubectl` times out or the name does not resolve, check the private DNS zone link first.\n- A private cluster hides the **control plane**. App traffic still comes through the ingress or Application Gateway.',
+    ],
+    code: [
+      {
+        title: 'Create a private cluster',
+        language: 'bash',
+        code: `az aks create -g rg-prod -n aks-prod \\
+  --enable-private-cluster \\
+  --network-plugin azure \\
+  --vnet-subnet-id <aks-subnet-id> \\
+  --enable-managed-identity \\
+  --enable-aad --enable-azure-rbac \\
+  --generate-ssh-keys`,
+        placeholders: ['<aks-subnet-id>'],
+      },
+      {
+        title: 'How kubectl reaches the API server',
+        language: 'text',
+        code: `Jumpbox / VPN / self-hosted agent (in VNet or peered VNet)
+        |
+Private DNS zone (privatelink.<region>.azmk8s.io) -> private IP
+        |
+AKS API server private endpoint`,
+      },
+      {
+        title: 'Admin command without network access',
+        language: 'bash',
+        code: `az aks command invoke -g rg-prod -n aks-prod --command "kubectl get pods -A"`,
+      },
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'Reaching a private AKS API server',
+        caption: 'Name resolution through the private DNS zone is what usually breaks.',
+        nodes: [
+          { label: 'Jumpbox / VPN / agent', detail: 'In VNet or peered VNet' },
+          {
+            label: 'Private DNS zone',
+            detail: 'privatelink.region.azmk8s.io',
+            tone: 'warning',
+          },
+          { label: 'API server private endpoint', tone: 'accent' },
+        ],
+      },
+    ],
+    followUps: [
+      'Your pipeline cannot deploy to the private cluster. Why, and what do you change?',
+      'In hub-and-spoke, where do you link the private DNS zone?',
+    ],
+    tags: ['aks', 'private cluster', 'networking', 'security'],
+  },
+  {
+    id: 'itv-myfaq-611',
+    level: 'advanced',
+    kind: 'open',
+    prompt:
+      'How do you connect the AKS backend to the database through a private endpoint? How does the request flow with VNet, subnet and private endpoint?',
+    probing:
+      'That a private endpoint is a NIC plus DNS: the app keeps the host name, the private DNS zone returns a private IP, and most failures are DNS.',
+    answer: [
+      'A **private endpoint** is a NIC with a private IP in my subnet that connects to one PaaS resource through **Private Link**. The app keeps using the normal host name. **DNS is what changes.**',
+      'The flow: the Spring Boot pod connects to `mydb.postgres.database.azure.com:5432`. DNS returns a CNAME to `mydb.privatelink.postgres.database.azure.com`, and the private DNS zone linked to the VNet returns the A record `10.0.2.5`. The pod sends TCP 5432 to that IP (NSG, UDR and firewall are checked), the private endpoint NIC forwards it over Private Link on the Microsoft backbone to PostgreSQL with public access disabled, and authentication is Entra ID (workload identity) or a password from Key Vault.',
+      'Private DNS zones and ports I use:',
+      '- **Azure SQL:** `privatelink.database.windows.net`, 1433\n- **PostgreSQL:** `privatelink.postgres.database.azure.com`, 5432\n- **Key Vault:** `privatelink.vaultcore.azure.net`, 443\n- **Blob Storage:** `privatelink.blob.core.windows.net`, 443\n- **ACR:** `privatelink.azurecr.io`, 443',
+      'Things to remember here:',
+      '- Most failures are DNS. With custom or hub DNS servers, they must forward to Azure DNS `168.63.129.16` or a DNS Private Resolver.\n- Use the host name, not the IP. TLS certificates expect the host name.\n- NSGs apply to the private endpoint subnet only if network policies are enabled on that subnet.\n- Disable public access **after** private connectivity is tested.',
+    ],
+    deeper: [
+      'A **service endpoint** is different: the service keeps its public IP, but only allows chosen subnets.',
+      'PostgreSQL Flexible Server has a second model: **VNet integration** in a delegated subnet. You choose it at creation time. The private endpoint model is used with the "public access" networking mode.',
+    ],
+    code: [
+      {
+        title: 'Request flow',
+        language: 'text',
+        code: `Spring Boot pod (snet-aks 10.0.1.0/24)
+   |
+   | 1. connect mydb.postgres.database.azure.com:5432
+   v
+DNS: CNAME -> mydb.privatelink.postgres.database.azure.com
+     Private DNS zone (linked to the VNet) -> A record 10.0.2.5
+   |
+   | 2. TCP 5432 to 10.0.2.5 (NSG / UDR / firewall checked)
+   v
+Private endpoint NIC (snet-private-endpoints 10.0.2.5)
+   |
+   | 3. Private Link over the Microsoft backbone
+   v
+PostgreSQL (public access disabled)
+   |
+   | 4. Authentication: Entra ID (workload identity) or password from Key Vault`,
+      },
+      {
+        title: 'Setup',
+        language: 'bash',
+        code: `az network private-endpoint create -g my-rg -n pe-postgres \\
+  --vnet-name aks-vnet --subnet snet-private-endpoints \\
+  --private-connection-resource-id <postgres-id> \\
+  --group-id postgresqlServer --connection-name pe-postgres-conn
+
+az network private-dns zone create -g my-rg -n privatelink.postgres.database.azure.com
+
+az network private-dns link vnet create -g my-rg \\
+  --zone-name privatelink.postgres.database.azure.com \\
+  --name aks-vnet-link --virtual-network aks-vnet --registration-enabled false
+
+az network private-endpoint dns-zone-group create -g my-rg \\
+  --endpoint-name pe-postgres --name default \\
+  --private-dns-zone privatelink.postgres.database.azure.com --zone-name postgres`,
+        placeholders: ['<postgres-id>'],
+      },
+      {
+        title: 'Test from inside the cluster',
+        language: 'bash',
+        code: `kubectl run net-test -it --rm --image=busybox -- sh
+nslookup mydb.postgres.database.azure.com   # must return 10.x, not a public IP
+nc -zv mydb.postgres.database.azure.com 5432`,
+      },
+    ],
+    diagrams: [
+      {
+        kind: 'sequence',
+        title: 'Pod to PostgreSQL via private endpoint',
+        caption: 'Same host name, private answer from DNS, traffic over Private Link.',
+        participants: [
+          { id: 'pod', label: 'Spring Boot pod' },
+          { id: 'dns', label: 'Private DNS zone' },
+          { id: 'pe', label: 'Private endpoint NIC' },
+          { id: 'db', label: 'PostgreSQL' },
+        ],
+        messages: [
+          { from: 'pod', to: 'dns', label: 'Resolve mydb host name' },
+          { from: 'dns', to: 'pod', label: 'A record 10.0.2.5', kind: 'return' },
+          { from: 'pod', to: 'pe', label: 'TCP 5432 to 10.0.2.5' },
+          { from: 'pe', to: 'db', label: 'Private Link, backbone' },
+          { from: 'db', to: 'pod', label: 'TLS session, auth', kind: 'return' },
+        ],
+      },
+    ],
+    followUps: [
+      'nslookup returns a public IP from the pod. What is wrong?',
+      'When would you choose VNet integration instead of a private endpoint for PostgreSQL?',
+    ],
+    tags: ['networking', 'private endpoint', 'aks', 'postgresql', 'dns'],
+  },
+  {
+    id: 'itv-myfaq-612',
+    level: 'intermediate',
+    kind: 'open',
+    prompt: 'Tell me about the PostgreSQL database in your project.',
+    probing:
+      'Flexible Server with private access, Entra auth, zone-redundant HA, backups and PITR, monitoring, and connection-pool sizing.',
+    answer: [
+      'We used **Azure Database for PostgreSQL Flexible Server**. (Single Server was retired in March 2025.) I provisioned it with Bicep and handled backups, connectivity and basic performance checks.',
+      '- **Network:** Private access only, through a private endpoint or VNet integration. Port 5432\n- **Auth:** Entra ID authentication where possible. Otherwise the password is kept in Key Vault\n- **HA:** Zone-redundant HA in production: a standby in another zone, with automatic failover\n- **Backup:** Automatic backups, 7-35 days retention, point-in-time restore. Geo-redundant backup for DR\n- **Scale:** Read replicas for reporting. Compute and storage scaled by tier\n- **Monitoring:** Azure Monitor metrics: CPU, connections, storage. Alerts through Action Groups',
+      'Things to remember here:',
+      '- **Connection pools:** 20 pods x 50 connections = 1000 connections, which can exceed `max_connections`. Size the pool per pod, or use the built-in **PgBouncer** (port 6432).\n- For "app cannot connect", check in order: DNS -> `nc` on 5432 -> NSG/firewall -> credentials -> connection limits.',
+    ],
+    code: [
+      {
+        title: 'Connect',
+        language: 'bash',
+        code: `psql "host=mydb.postgres.database.azure.com port=5432 dbname=orders user=appuser sslmode=require"`,
+      },
+      {
+        title: 'Connections and long-running queries',
+        language: 'text',
+        code: `SELECT count(*) FROM pg_stat_activity;                -- current connections
+SELECT pid, now() - query_start AS duration, query
+FROM pg_stat_activity WHERE state = 'active'
+ORDER BY duration DESC;                               -- long-running queries`,
+      },
+      {
+        title: 'Logical backup and restore',
+        language: 'bash',
+        code: `pg_dump -Fc -h <host> -U <user> -d orders -f orders.dump    # logical backup
+pg_restore -h <host> -U <user> -d orders orders.dump`,
+        placeholders: ['<host>', '<user>'],
+      },
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'App cannot connect to PostgreSQL',
+        caption: 'Check in order, from name resolution to connection limits.',
+        nodes: [
+          { label: 'DNS', detail: 'Resolves to private IP?' },
+          { label: 'nc on 5432', detail: 'Port reachable?' },
+          { label: 'NSG / firewall' },
+          { label: 'Credentials', detail: 'Entra ID or Key Vault password' },
+          { label: 'Connection limits', detail: 'max_connections, PgBouncer', tone: 'warning' },
+        ],
+      },
+    ],
+    tags: ['database', 'postgresql', 'high availability', 'backup'],
+  },
+  {
+    id: 'itv-myfaq-613',
+    level: 'basic',
+    kind: 'open',
+    prompt: 'How do you connect two VNets?',
+    probing:
+      'VNet peering both ways with non-overlapping ranges, non-transitivity, hub-and-spoke and gateway transit.',
+    answer: [
+      'I use **VNet peering**. Traffic stays on the Microsoft backbone, and no gateway is needed.',
+      'Steps: address spaces must not overlap -> create both peerings -> status **Connected** -> tighten NSGs (for example, allow only TCP 5432 from the app subnet) -> test with `nc -zv`.',
+      'Things to remember here:',
+      "- Different regions -> **global VNet peering**. Different subscriptions or tenants also work, with Network Contributor on both sides.\n- Peering is **not transitive**. A <-> B <-> C does not let A reach C. Use **hub-and-spoke** with Azure Firewall or an NVA in the hub, or **Virtual WAN**.\n- Spokes can share the hub's VPN gateway with **gateway transit** (`--allow-gateway-transit` on the hub, `--use-remote-gateways` on the spoke).\n- VNet-to-VNet **VPN** is used only when an IPsec tunnel is required. It is slower and costs more.",
+    ],
+    code: [
+      {
+        title: 'Peering',
+        language: 'text',
+        code: `VNet-A 10.0.0.0/16  <--- peering (both directions) --->  VNet-B 10.1.0.0/16`,
+      },
+      {
+        title: 'Create both peerings',
+        language: 'bash',
+        code: `az network vnet peering create -g rg-a --vnet-name vnet-a -n a-to-b \\
+  --remote-vnet <vnet-b-id> --allow-vnet-access
+az network vnet peering create -g rg-b --vnet-name vnet-b -n b-to-a \\
+  --remote-vnet <vnet-a-id> --allow-vnet-access`,
+        placeholders: ['<vnet-a-id>', '<vnet-b-id>'],
+      },
+    ],
+    followUps: ['A is peered with B, and B with C. Can A reach C?'],
+    tags: ['networking', 'vnet peering', 'hub-spoke'],
+  },
+  {
+    id: 'itv-myfaq-614',
+    level: 'advanced',
+    kind: 'open',
+    prompt: 'How can you restrict users before their requests reach the application?',
+    probing:
+      'Layering network controls (WAF, access restrictions, private endpoints) with identity controls (Easy Auth, assignment required, Conditional Access).',
+    answer: [
+      'I restrict at two levels: **network** (where the request comes from) and **identity** (who the user is).',
+      '- **WAF:** OWASP rules, plus custom IP, geo and rate-limit rules.\n- **Lock the app to the gateway:** App Service access restrictions allow only the Application Gateway subnet, or the `AzureFrontDoor.Backend` service tag plus the `X-Azure-FDID` header check. Otherwise users can bypass the gateway through `*.azurewebsites.net`.\n- **Entra ID:** App Service Authentication (Easy Auth) with "Require authentication". In the Enterprise application, set **Assignment required = Yes** and assign only the allowed group.\n- **Conditional Access:** require MFA or a compliant device, and block risky locations.\n- For internal apps: no public endpoint at all. Users come through VPN and the private network.',
+    ],
+    deeper: [
+      'WAF stops bad **traffic**. It does not know **who** the user is. Entra ID handles identity, so the two work together.',
+      'The app must still check roles for sensitive operations.',
+    ],
+    code: [
+      {
+        title: 'Layers in front of the app',
+        language: 'text',
+        code: `User
+ |
+Front Door / Application Gateway + WAF   -> blocks SQL injection, XSS, bots,
+ |                                          bad IPs or countries, rate limits
+ |
+Access restrictions / Private Endpoint   -> app accepts traffic only from the gateway
+ |
+Entra ID sign-in (Easy Auth)             -> not signed in -> redirect to login
+ |                                          not in the allowed group -> denied
+Application                              -> checks app roles for admin actions`,
+      },
+    ],
+    diagrams: [
+      {
+        kind: 'flow',
+        title: 'Restricting users before the app',
+        caption:
+          'Network controls decide where traffic may come from; Entra ID decides who gets in.',
+        nodes: [
+          { label: 'User' },
+          {
+            label: 'Front Door / App Gateway + WAF',
+            detail: 'OWASP, IP, geo, rate limits',
+            branch: { label: 'Blocked', detail: 'Bad traffic', tone: 'danger' },
+          },
+          { label: 'Access restrictions', detail: 'Only from the gateway' },
+          {
+            label: 'Entra ID sign-in',
+            detail: 'Easy Auth, allowed group only',
+            tone: 'accent',
+            branch: { label: 'Denied', detail: 'Not in group', tone: 'danger' },
+          },
+          { label: 'Application', detail: 'Checks app roles', tone: 'success' },
+        ],
+      },
+    ],
+    followUps: [
+      'How do you stop users bypassing Front Door through the azurewebsites.net host name?',
+      'Why is WAF alone not enough?',
+    ],
+    tags: ['security', 'waf', 'entra id', 'app service'],
+  },
+  {
+    id: 'itv-myfaq-615',
+    level: 'advanced',
+    kind: 'scenario',
+    prompt:
+      'Dev, QA and UAT are in one resource group and subscription. Pre-Prod and Prod are in another, but both are in the same region. How do you achieve DR?',
+    probing:
+      'Knowing subscriptions are isolation, not DR; a second region with replicated data, IaC rebuild, global routing, and RTO/RPO-driven design.',
+    answer: [
+      'Separate subscriptions give **access and billing isolation**. They do **not** give DR, because one regional outage hits both. For DR, Production needs a **second region**.',
+      'What I would do for DR:',
+      '- Keep Terraform/Bicep and Helm charts ready, so the DR environment can be built the same way.\n- Replicate data: PostgreSQL geo-redundant backups or a cross-region read replica, GRS/GZRS storage, ACR geo-replication.\n- Put **Front Door** or **Traffic Manager** in front, so traffic can switch regions.\n- Write a runbook and run DR drills. Choose the design (active-passive, warm or cold standby) from the agreed **RTO and RPO**.',
+    ],
+    deeper: [
+      '**HA** = zones in one region (protects against node or zone failure). **DR** = another region (protects against regional failure).',
+      'Dev, QA and UAT usually do not need a DR copy. Production and its dependencies do.',
+    ],
+    code: [
+      {
+        title: 'Primary and DR regions',
+        language: 'text',
+        code: `Users -> Azure Front Door / Traffic Manager
+            |                       |
+      Primary region            DR region (paired or chosen region)
+      Prod subscription         DR resources (same or separate subscription)
+      AKS + App Gateway         AKS (warm standby, or built by IaC on demand)
+      PostgreSQL       ---->    geo-redundant backup / cross-region read replica
+      ACR Premium      ---->    geo-replicated images
+      Key Vault                 Key Vault with the same secrets`,
+      },
+    ],
+    diagrams: [
+      {
+        kind: 'nested',
+        title: 'DR needs a second region',
+        caption:
+          'Subscriptions isolate access and billing; only another region protects against a regional outage.',
+        root: {
+          label: 'Front Door / Traffic Manager',
+          children: [
+            {
+              label: 'Primary region',
+              tone: 'accent',
+              children: [
+                { label: 'AKS + App Gateway' },
+                { label: 'PostgreSQL', detail: 'Geo-redundant backup' },
+                { label: 'ACR Premium', detail: 'Geo-replicated' },
+              ],
+            },
+            {
+              label: 'DR region',
+              tone: 'muted',
+              children: [
+                { label: 'AKS', detail: 'Warm standby or built by IaC' },
+                { label: 'PostgreSQL', detail: 'Replica or restore' },
+                { label: 'Key Vault', detail: 'Same secrets' },
+              ],
+            },
+          ],
+        },
+      },
+    ],
+    followUps: [
+      'What RTO and RPO would push you from cold standby to warm standby?',
+      'How do you test the DR plan without affecting production?',
+    ],
+    tags: ['architecture', 'disaster recovery', 'subscriptions', 'high availability'],
+  },
+  {
+    id: 'itv-myfaq-616',
+    level: 'basic',
+    kind: 'open',
+    prompt:
+      'Give a brief on Azure Container Apps and Azure Container Instances. Where else can the tiers run?',
+    probing:
+      'Choosing compute by how much control you need: AKS, App Service, Container Apps or ACI.',
+    answer: [
+      'The same 3-tier design can run on different compute. I choose by how much control we need.',
+      '- **AKS:** Managed Kubernetes. We manage node pools, ingress and upgrades. Good for many microservices, full control\n- **App Service:** Managed web hosting for code or containers. Good for simple web apps and APIs\n- **Azure Container Apps:** Serverless containers on managed Kubernetes. KEDA autoscaling (can scale to zero), revisions, traffic splitting, built-in ingress. Good for microservices without running AKS\n- **Azure Container Instances:** Run a single container or group quickly. No orchestration. Good for short jobs, tests, build tasks',
+    ],
+    code: [
+      {
+        title: 'Easy way to remember',
+        language: 'text',
+        code: `ACI            -> run a container
+Container Apps -> run and scale an app made of containers
+AKS            -> run your own Kubernetes platform`,
+      },
+    ],
+    diagrams: [
+      {
+        kind: 'decision',
+        title: 'Where to run a container tier',
+        caption: 'Pick the least platform that meets the need.',
+        question: 'How much control do you need?',
+        branches: [
+          { condition: 'Short job or test', result: 'Container Instances' },
+          { condition: 'Simple web app or API', result: 'App Service' },
+          {
+            condition: 'Microservices, scale to zero',
+            result: 'Container Apps',
+            tone: 'accent',
+          },
+          { condition: 'Full Kubernetes control', result: 'AKS' },
+        ],
+      },
+    ],
+    tags: ['compute', 'container apps', 'aci', 'app service', 'aks'],
   },
 ]
