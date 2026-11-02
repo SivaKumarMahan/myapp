@@ -35,7 +35,8 @@ describe('App quality', () => {
     trigger.focus()
     await user.keyboard('{Control>}k{/Control}')
     const input = await screen.findByRole('combobox', { name: /Search lessons/ }, { timeout: 8000 })
-    expect(input).toHaveFocus()
+    // The palette is lazy-loaded and focuses its input in an effect, which can land after it renders.
+    await waitFor(() => expect(input).toHaveFocus())
     await user.type(input, 'glossary')
     await waitFor(() => expect(screen.getAllByRole('option').length).toBeGreaterThan(0))
     expect(screen.getAllByRole('option')[0]).toHaveAttribute('aria-selected', 'true')
