@@ -67,6 +67,7 @@ export function pageItems(): PaletteItem[] {
     ['/interview/mock', '🎤 Mock interview', 'record timer'],
     ['/interview/stories', '⭐ STAR stories', 'behavioural'],
     ['/interview/packs', '🏢 Prep packs', 'company round tags'],
+    ['/interview/jd', '📄 Job description prep', 'jd job description skills company'],
     ['/interview/review', '↻ Interview revision queue', 'needs review'],
     ['/progress', '💾 Progress & data', 'export import backup'],
   ]

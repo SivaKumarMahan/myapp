@@ -60,6 +60,12 @@ export function InterviewHubPage() {
           </Link>
         </div>
         <div className="itv-practice-grid">
+          <Link className="card card--interactive stack-sm" to="/interview/jd">
+            <strong className="card__title">📄 Job description prep</strong>
+            <span className="subtle">
+              Paste a JD and get the questions and answers for every skill it asks for.
+            </span>
+          </Link>
           <Link className="card card--interactive stack-sm" to="/interview/mock">
             <strong className="card__title">🎤 Mock interview</strong>
             <span className="subtle">

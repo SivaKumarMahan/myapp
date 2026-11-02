@@ -75,6 +75,7 @@ const StoriesPage = lazy(() =>
   import('./pages/StoriesPage').then((m) => ({ default: m.StoriesPage })),
 )
 const PacksPage = lazy(() => import('./pages/PacksPage').then((m) => ({ default: m.PacksPage })))
+const JdPrepPage = lazy(() => import('./pages/JdPrepPage').then((m) => ({ default: m.JdPrepPage })))
 const IncidentLabsPage = lazy(() =>
   import('./pages/IncidentLabsPage').then((m) => ({ default: m.IncidentLabsPage })),
 )
@@ -273,6 +274,14 @@ function Routed() {
               element={
                 <Loading>
                   <PacksPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/interview/jd"
+              element={
+                <Loading>
+                  <JdPrepPage />
                 </Loading>
               }
             />

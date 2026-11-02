@@ -134,6 +134,19 @@ Every course works the same way:
 | **🚨 Incident labs**  | Ten real-world problems (e.g. "pipeline gets 403 from ACR", "pods in ImagePullBackOff"). Choose what to check; each step shows new evidence. Find the root cause. You get a score for good steps, for being direct, and for the right answer.                                                                                                                                                                                                     |
 | **🏢 Prep packs**     | Questions grouped by company: the real rounds are already packs, and every tag you add becomes a pack. Open a pack to revise it or start a mock interview from it.                                                                                                                                                                                                                                                                                |
 
+### Job description prep (Interview preparation → 📄 Job description prep)
+
+Got a job description? Get the questions for it.
+
+1. Type the **company and role** (it names the prep pack), then **paste the whole JD**.
+2. The app lists every skill the JD asks for (Kubernetes, Terraform, Azure DevOps, Prometheus…), grouped by area, in the order the JD mentions them.
+3. Each skill shows the **questions and answers from your bank** that cover it, best first, with links to the topics they come from. **Show more** loads the rest.
+4. A skill your app has no questions on is marked **Not in the app yet**, with buttons that open **Google, Microsoft Learn and YouTube** searches in a new browser tab. **Only mentioned inside answers** means it comes up in some answers but no question is about it directly, so read up on it too.
+5. **Missing a skill?** Type it in, or click one of the suggested terms the scan found in the JD. **✕** hides a skill that does not matter.
+6. **🏷 Save as prep pack** tags the top questions for every skill as `JD: <company and role>`. Open it from **Prep packs** or start a **mock interview** from it.
+
+The JD you paste stays in this browser until you press **Clear**. To teach the scanner a new skill or another spelling of one, add it to `src/content/jd/skills.ts`.
+
 ---
 
 ## 7. Hands-on practice
