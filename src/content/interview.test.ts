@@ -66,7 +66,7 @@ describe('interview track', () => {
     expect(counts.get('azure')).toBe(8)
     expect(counts.get('devops')).toBe(13)
     expect(counts.get('bank')).toBe(22)
-    expect(counts.get('rounds')).toBe(10)
+    expect(counts.get('rounds')).toBe(13)
   })
 
   it('covers every topic the track promises', () => {
@@ -95,7 +95,7 @@ describe('interview track', () => {
         'linux',
       ]),
     )
-    expect(interviewTopics).toHaveLength(53)
+    expect(interviewTopics).toHaveLength(56)
   })
 
   it('is routed apart from the certification courses', () => {
