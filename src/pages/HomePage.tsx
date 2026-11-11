@@ -29,6 +29,8 @@ import { allArchKeys } from '../content/arch'
 import { allIncidentKeys } from '../lib/incident'
 import { allGuidedLabKeys, guidedLabById, isRunning } from '../content/labs'
 import { allLinuxKeys } from '../content/linuxlab'
+import { allTfKeys } from '../content/tflab'
+import { allK8sKeys } from '../content/k8slab'
 import { roles } from '../content/roles'
 import { roleMatch } from '../lib/roles'
 
@@ -96,6 +98,8 @@ export function HomePage() {
   const incidentsDone = allIncidentKeys.filter((key) => state.challenges[key]?.solvedAt).length
   const labsDone = allGuidedLabKeys.filter((key) => state.challenges[key]?.solvedAt).length
   const linuxDone = allLinuxKeys.filter((key) => state.challenges[key]?.solvedAt).length
+  const k8sDone = allK8sKeys.filter((key) => state.challenges[key]?.solvedAt).length
+  const tfDone = allTfKeys.filter((key) => state.challenges[key]?.solvedAt).length
   const runningLabs = Object.entries(state.guidedLabs)
     .filter(([, progress]) => isRunning(progress))
     .map(([id]) => guidedLabById.get(id))
@@ -220,7 +224,9 @@ export function HomePage() {
                 archDone +
                 incidentsDone +
                 labsDone +
-                linuxDone}
+                linuxDone +
+                tfDone +
+                k8sDone}
               /
               {sqlChallenges.length +
                 kqlChallenges.length +
@@ -232,7 +238,9 @@ export function HomePage() {
                 allArchKeys.length +
                 allIncidentKeys.length +
                 allGuidedLabKeys.length +
-                allLinuxKeys.length}
+                allLinuxKeys.length +
+                allTfKeys.length +
+                allK8sKeys.length}
             </div>
             <div className="stat__label">
               Challenges solved · SQL {sqlSolved}/{sqlChallenges.length} · KQL {kqlSolved}/
@@ -241,7 +249,8 @@ export function HomePage() {
               Networking {netDone}/{allNetKeys.length} · Visualise {vizDone}/{allVizKeys.length} ·
               Architecture {archDone}/{allArchKeys.length} · Incidents {incidentsDone}/
               {allIncidentKeys.length} · Guided labs {labsDone}/{allGuidedLabKeys.length} · Linux{' '}
-              {linuxDone}/{allLinuxKeys.length}
+              {linuxDone}/{allLinuxKeys.length} · Kubernetes {k8sDone}/{allK8sKeys.length} ·
+              Terraform {tfDone}/{allTfKeys.length}
             </div>
           </div>
           <div className="stat">

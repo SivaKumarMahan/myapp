@@ -44,7 +44,7 @@ The score is the weighted share of key points covered. A detected common mistake
 
 ## Where the data comes from
 
-The bank has 2,889 questions, too many to enrich by hand. `src/lib/bot/enrich.ts` builds a record for every question from the content that already exists:
+The bank has 2,999 questions, too many to enrich by hand. `src/lib/bot/enrich.ts` builds a record for every question from the content that already exists:
 
 | Field            | Derived from                                                                                                                                   |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -168,7 +168,7 @@ Keyword search cannot know that "my pods keep restarting" means the CrashLoopBac
 How it works:
 
 1. **At build time**, `npm run bot:embeddings` (`scripts/build-bot-embeddings.mjs`) embeds the prompt and 30-second answer of every question. It uses [`Xenova/all-MiniLM-L6-v2`](https://huggingface.co/Xenova/all-MiniLM-L6-v2) in its quantized form, with mean pooling and normalized vectors, through transformers.js in Node. It writes two files:
-   - `public/bot/embeddings.bin`: 2,889 × 384 int8 values with one float32 scale per vector, about 1 MB;
+   - `public/bot/embeddings.bin`: 2,999 × 384 int8 values with one float32 scale per vector, about 1 MB;
    - `public/bot/embeddings.json`: the question ids and model metadata.
 
    The run takes about 50 seconds.

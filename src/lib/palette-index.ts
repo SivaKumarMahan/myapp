@@ -12,6 +12,8 @@ import { guidedLabs } from '../content/labs'
 import { iacResources } from '../content/iac'
 import { archScenarios } from '../content/arch'
 import { linuxChallenges } from '../content/linuxlab'
+import { tfScenarios } from '../content/tflab'
+import { k8sScenarios } from '../content/k8slab'
 import { glossaryTerms } from './glossary'
 import { incidentScenarios } from './incident'
 import { linkTo } from './bot/engine'
@@ -183,6 +185,20 @@ export function buildItems(): PaletteItem[] {
       entry.title,
       `Linux & Bash lab · ${entry.category}`,
       `/linux-lab?c=${entry.id}`,
+    )
+  for (const entry of k8sScenarios)
+    challenge(
+      `k8s:${entry.id}`,
+      entry.title,
+      `Kubernetes lab · ${entry.category}`,
+      `/k8s-lab?s=${entry.id}`,
+    )
+  for (const entry of tfScenarios)
+    challenge(
+      `tf:${entry.id}`,
+      entry.title,
+      `Terraform lab · ${entry.category}`,
+      `/terraform-lab?s=${entry.id}`,
     )
   for (const entry of archScenarios)
     challenge(`arch:${entry.id}`, entry.title, 'Architecture scenario', '/architecture')

@@ -85,6 +85,10 @@ const GuidedLabsPage = lazy(() =>
 const LinuxLabPage = lazy(() =>
   import('./pages/LinuxLabPage').then((m) => ({ default: m.LinuxLabPage })),
 )
+const K8sLabPage = lazy(() => import('./pages/K8sLabPage').then((m) => ({ default: m.K8sLabPage })))
+const TerraformLabPage = lazy(() =>
+  import('./pages/TerraformLabPage').then((m) => ({ default: m.TerraformLabPage })),
+)
 const IacComparePage = lazy(() =>
   import('./pages/IacComparePage').then((m) => ({ default: m.IacComparePage })),
 )
@@ -314,6 +318,22 @@ function Routed() {
               element={
                 <Loading>
                   <LinuxLabPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/k8s-lab"
+              element={
+                <Loading>
+                  <K8sLabPage />
+                </Loading>
+              }
+            />
+            <Route
+              path="/terraform-lab"
+              element={
+                <Loading>
+                  <TerraformLabPage />
                 </Loading>
               }
             />

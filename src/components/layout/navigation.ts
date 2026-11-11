@@ -81,6 +81,13 @@ export function utilityNav(): NavItem[] {
       matchPrefix: true,
     },
     { to: '/linux-lab', label: 'Linux & Bash lab', shortLabel: 'Linux', icon: '🐧' },
+    { to: '/k8s-lab', label: 'Kubernetes lab', shortLabel: 'K8s', icon: '☸️' },
+    {
+      to: '/terraform-lab',
+      label: 'Terraform plan & state lab',
+      shortLabel: 'Terraform',
+      icon: '🧱',
+    },
     { to: '/iac', label: 'IaC compare', shortLabel: 'IaC', icon: '📐' },
     { to: '/glossary', label: 'Glossary', shortLabel: 'Glossary', icon: '📖' },
     { to: '/sql', label: 'SQL playground', shortLabel: 'SQL', icon: '🗃️', matchPrefix: true },
